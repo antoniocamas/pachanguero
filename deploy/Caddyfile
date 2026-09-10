@@ -1,0 +1,26 @@
+# Port 443 is already taken by another service, so pick ONE of these.
+#
+# Option A — a subdomain. Cleanest: Caddy handles TLS for both names on 443,
+# routing by hostname. Nothing else has to move. Point the DuckDNS record at
+# the same IP, or add a CNAME.
+pachanguero.example.duckdns.org {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:8787
+}
+
+# Option B — a path on the existing site. No new DNS record needed. The SPA is
+# served from the root, so it needs handle_path to strip the prefix, and the
+# frontend must be built with `base: '/pachanguero/'` in vite.config.ts.
+#
+# existing.example.duckdns.org {
+# 	handle_path /pachanguero* {
+# 		reverse_proxy 127.0.0.1:8787
+# 	}
+# }
+
+# Option C — a different port. Works without touching DNS, but browsers will
+# want the port in the URL and some networks block non-standard ports.
+#
+# example.duckdns.org:8443 {
+# 	reverse_proxy 127.0.0.1:8787
+# }

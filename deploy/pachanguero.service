@@ -1,0 +1,27 @@
+# /etc/systemd/system/pachanguero.service
+#   sudo systemctl enable --now pachanguero
+[Unit]
+Description=Pachanguero
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/opt/pachanguero
+Environment=NODE_ENV=production
+Environment=PORT=8787
+Environment=HOST=127.0.0.1
+Environment=PACHANGUERO_DB=/var/lib/pachanguero/pachanguero.db
+ExecStart=/usr/bin/node server/dist/index.js
+Restart=on-failure
+RestartSec=5
+
+# The app only ever needs its own data directory.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/pachanguero
+
+[Install]
+WantedBy=multi-user.target
