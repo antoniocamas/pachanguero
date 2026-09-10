@@ -161,7 +161,11 @@ nav.tabs button[aria-current='true'] { color: var(--accent); }
 
 .chip:active { transform: scale(0.96); }
 .chip[data-on='true'] { color: var(--text); }
-.chip.signed[data-on='true'] { background: var(--surface-2); border-color: var(--muted); }
+.chip.signed[data-on='true'] {
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  border-color: var(--accent);
+  color: #d4f7dc;
+}
 .chip.paid[data-on='true'] { background: var(--accent-dim); border-color: var(--accent); color: #d4f7dc; }
 .chip.debt[data-on='true'] { background: color-mix(in srgb, var(--danger) 22%, transparent); border-color: var(--danger); color: #ffd9d6; }
 
