@@ -1,0 +1,15 @@
+{
+  "repo_name": "specs",
+  "architectural_guidelines": [
+    { "doc": "AGENTS.md" },
+    { "doc": "docs/domain-model/README.md" }
+  ],
+  "code_guidelines": [{ "doc": "AGENTS.md" }],
+  "test_runner": [{ "command": "npm test" }],
+  "regression_guidelines": [{ "command": "npm test" }],
+  "testing_guidelines": [{ "doc": "AGENTS.md" }],
+  "code_checkers_guidelines": [{ "doc": "AGENTS.md" }],
+  "code_checkers_runner": [{ "command": "npm run lint" }],
+  "deployment_guidelines": [{ "doc": "README.md" }],
+  "configuration_guidelines": [{ "doc": "README.md" }]
+}

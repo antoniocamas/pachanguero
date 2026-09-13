@@ -2,7 +2,9 @@
 #
 # setup-claude.sh
 #
-# Installs the Claude Code plugins this repo uses.
+# Installs the Claude Code plugins this repo uses, then the skills
+# (scripts/setup-skills.sh: Auctor, ai-docs-editor, memory-manager) into
+# .claude/skills/ and .agents/skills/.
 # Requires the LSP binaries from scripts/setup-devel-environment.sh
 # (typescript-language-server) to be on PATH.
 #
@@ -16,6 +18,9 @@ Usage: $0
 
 Install the Claude Code plugins for this repository:
   - typescript-lsp  (LSP tool: goToDefinition, findReferences, hover, ...)
+
+Then install the skills into .claude/skills/ and .agents/skills/ (see
+scripts/setup-skills.sh): Auctor, ai-docs-editor, memory-manager.
 
 Options:
   -h, --help    Show this help message
@@ -88,6 +93,13 @@ echo ""
 echo "=================================="
 echo "✅ Claude Code plugins setup complete!"
 echo ""
+
+# --- Install skills (Auctor + the extra agentic-resources skills) ---
+echo "=================================="
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+"${SCRIPT_DIR}/setup-skills.sh"
+echo ""
+
 echo "Restart Claude Code (or run /reload-plugins) to activate the plugin."
 echo "You can verify the server started in the /plugin Errors tab."
 

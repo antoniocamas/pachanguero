@@ -44,6 +44,21 @@ The hook is installed automatically by `npm install` (via the `prepare` script).
 
 **No rule may be downgraded, disabled, or skipped without asking first.** If a lint rule flags something and the real fix seems out of scope, expensive, or wrong for the codebase, stop and ask the user — never lower a rule's severity, add an `eslint-disable`, or otherwise route around it unilaterally. Only the user decides to relax a rule.
 
+## Auctor (work-package workflow)
+
+Non-trivial work goes through Auctor work packages, not ad-hoc edits. Skills live at `.claude/skills/` and `.agents/skills/` (identical content, one per agent-tooling convention; `auctor-workflow` is the entry point — start there). The specs repo (`wp.py`, `active/`, `concluded/`, `actions/`) lives at `specs/`.
+
+```bash
+./scripts/setup-skills.sh   # installs everything below, into both .claude/skills/ and .agents/skills/
+cd specs && python3 wp.py list
+```
+
+`./scripts/setup-skills.sh` calls `./scripts/setup-auctor.sh` (renders the Auctor skills from `ai-kit/auctor-config.json` and scaffolds `specs/`), symlinks two more skills from the `agentic-resources` repo (`ai-docs-editor`, `memory-manager`), and (re)writes `.claudeignore`. Run it after editing `ai-kit/auctor-config.json`, or after `auctor`/`agentic-resources` change.
+
+`ai-kit/auctor-config.json` is the project's Auctor config (repo name, which docs count as architecture/code guidelines, the test and lint runners). It points at `AGENTS.md` for both `code_guidelines` and `code_checkers_guidelines`, `npm test` as the test runner, and `npm run lint` as the code-checker runner — update it if those commands change.
+
+`.claude/` and `.agents/` are gitignored (generated/symlinked content, not source). `.claudeignore` tells Claude Code to ignore `.agents/` (so it isn't scanned as a duplicate of `.claude/`); it's gitignored too and is (re)written by `setup-skills.sh` every run, since nothing else recreates it after a fresh clone.
+
 ## Architecture
 
 npm workspaces, both ESM (TS imports use `.js` extensions). Data flow is strictly layered — respect it:

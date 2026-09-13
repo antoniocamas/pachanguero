@@ -5,6 +5,9 @@
 # Sets up everything needed to develop pachanguero:
 #   - project dependencies (server + web workspaces)
 #   - global TypeScript LSP tooling for Claude Code
+#   - Claude Code plugins (scripts/setup-claude.sh)
+#   - skills: Auctor, ai-docs-editor, memory-manager, into .claude/skills/
+#     and .agents/skills/ (scripts/setup-skills.sh)
 #
 # No pyright / pyrightconfig.json: those are Python-only (unlike
 # trading-monolith, this repo has no Python).
@@ -17,8 +20,9 @@ show_help() {
     cat <<EOF
 Usage: $0
 
-Install project dependencies and the TypeScript LSP tooling
-(typescript + typescript-language-server, global via npm).
+Install project dependencies, the TypeScript LSP tooling
+(typescript + typescript-language-server, global via npm), the Claude Code
+plugins, and the skills (Auctor, ai-docs-editor, memory-manager).
 
 Options:
   -h, --help    Show this help message
@@ -70,4 +74,7 @@ echo "   node                       $(node --version)"
 echo "   tsc                        $(tsc --version)"
 echo "   typescript-language-server $(typescript-language-server --version)"
 echo ""
-echo "Now run ./scripts/setup-claude.sh to install the Claude Code plugin."
+
+# --- Claude Code plugins + skills (Auctor, ai-docs-editor, memory-manager) ---
+echo "======================================"
+"${REPO_ROOT}/scripts/setup-claude.sh"
