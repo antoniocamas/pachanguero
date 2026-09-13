@@ -1,0 +1,31 @@
+@startuml use-cases
+left to right direction
+actor Developer
+
+rectangle "server/src (backend)" {
+  usecase "UC-002-01\nPointsCalculator preserves\nthe points formula" as UC1
+  usecase "UC-002-02\nSeniorityCurve preserves\nthe seniority curve" as UC2
+  usecase "UC-002-03\nConvocatoriaBuilder preserves\nselection/mercy/demotion" as UC3
+  usecase "UC-002-04\nRepository classes preserve\npersistence behavior" as UC4
+  usecase "UC-002-05\nroutes/api.ts keeps serving\nworking endpoints" as UC5
+  usecase "UC-002-06\nResult conforms to the\ncoding standard" as UC6
+  usecase "UC-002-07\nDocs no longer assert the\nold architecture" as UC7
+
+  UC5 ..> UC4 : <<include>>
+  UC4 ..> UC1 : <<include>>
+  UC4 ..> UC3 : <<include>>
+  UC3 ..> UC1 : <<include>>
+  UC6 ..> UC1 : <<extend>>
+  UC6 ..> UC2 : <<extend>>
+  UC6 ..> UC3 : <<extend>>
+  UC6 ..> UC4 : <<extend>>
+}
+
+Developer --> UC1
+Developer --> UC2
+Developer --> UC3
+Developer --> UC4
+Developer --> UC5
+Developer --> UC6
+Developer --> UC7
+@enduml

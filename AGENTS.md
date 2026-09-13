@@ -10,7 +10,8 @@ Pachanguero replaces the `Futbol_Miercoles` spreadsheet + Apps Script for a Wedn
 npm install          # workspaces: server + web
 npm run dev          # API on :8787 (tsx watch), web on :5173 (vite, proxies /api)
 npm run seed         # import the 2024/2025 season from data/seed/*.csv (-- --reset to wipe first)
-npm test             # domain tests (vitest, server workspace only)
+npm test             # domain/route tests (vitest, server workspace)
+npm run test:e2e     # full-stack browser tests (playwright, e2e workspace)
 npm run build        # tsc for both workspaces; also copies schema.sql into server/dist/db
 npm start            # production: one port, Express serves the SPA + API
 ```
@@ -18,11 +19,14 @@ npm start            # production: one port, Express serves the SPA + API
 Run a single test file or case from `server/`:
 
 ```bash
-npx vitest run src/domain/domain.test.ts
+npx vitest run src/domain/convocatoria.test.ts
 npx vitest run -t "reproduces the legacy remainder bug"
 ```
 
-There are no web tests; all tests live in `server/src/domain/`.
+See `docs/test-strategy.md` for what belongs at each layer (unit/domain, route integration, E2E)
+and when to reach for each. E2E specs live in `e2e/tests/` and run via `npm run test:e2e`; they
+boot the real server and web dev server against an isolated SQLite file (`PACHANGUERO_DB`), not
+mocks.
 
 ## Linting & formatting
 
@@ -44,31 +48,24 @@ The hook is installed automatically by `npm install` (via the `prepare` script).
 
 **No rule may be downgraded, disabled, or skipped without asking first.** If a lint rule flags something and the real fix seems out of scope, expensive, or wrong for the codebase, stop and ask the user — never lower a rule's severity, add an `eslint-disable`, or otherwise route around it unilaterally. Only the user decides to relax a rule.
 
-## Auctor (work-package workflow)
+## Coding standard
 
-Non-trivial work goes through Auctor work packages, not ad-hoc edits. Skills live at `.claude/skills/` and `.agents/skills/` (identical content, one per agent-tooling convention; `auctor-workflow` is the entry point — start there). The specs repo (`wp.py`, `active/`, `concluded/`, `actions/`) lives at `specs/`.
+**Read [`.agents/rules/coding-standard.md`](.agents/rules/coding-standard.md) before any design or coding work on `server/src`.** It mandates an object-oriented, SOLID-based style — no free functions, no stateless `static` methods. `server/src/domain/` and `server/src/repo/` already follow it.
 
-```bash
-./scripts/setup-skills.sh   # installs everything below, into both .claude/skills/ and .agents/skills/
-cd specs && python3 wp.py list
-```
-
-`./scripts/setup-skills.sh` calls `./scripts/setup-auctor.sh` (renders the Auctor skills from `ai-kit/auctor-config.json` and scaffolds `specs/`), symlinks two more skills from the `agentic-resources` repo (`ai-docs-editor`, `memory-manager`), and (re)writes `.claudeignore`. Run it after editing `ai-kit/auctor-config.json`, or after `auctor`/`agentic-resources` change.
-
-`ai-kit/auctor-config.json` is the project's Auctor config (repo name, which docs count as architecture/code guidelines, the test and lint runners). It points at `AGENTS.md` for both `code_guidelines` and `code_checkers_guidelines`, `npm test` as the test runner, and `npm run lint` as the code-checker runner — update it if those commands change.
-
-`.claude/` and `.agents/` are gitignored (generated/symlinked content, not source). `.claudeignore` tells Claude Code to ignore `.agents/` (so it isn't scanned as a duplicate of `.claude/`); it's gitignored too and is (re)written by `setup-skills.sh` every run, since nothing else recreates it after a fresh clone.
+**Read [`.agents/rules/frontend-coding-standard.md`](.agents/rules/frontend-coding-standard.md) before any design or coding work on `web/src`.** React's hooks model requires function components, so this is SOLID translated into function/hook/composition terms rather than classes — not an exemption from discipline.
 
 ## Architecture
 
 npm workspaces, both ESM (TS imports use `.js` extensions). Data flow is strictly layered — respect it:
 
 ```
-server/src/domain/    pure functions: points, seniority, convocatoria (+ all tests).
-                      Knows nothing of SQLite or HTTP. THE rules live here.
+server/src/domain/    classes: PointsCalculator, SeniorityCurve, ConvocatoriaBuilder,
+                      ExclusionHistory (+ all tests). Knows nothing of SQLite or HTTP.
+                      THE rules live here.
 server/src/db/        better-sqlite3 singleton; schema.sql runs idempotently on open
                       (no migration system — additive edits to schema.sql are the mechanism)
-server/src/repo.ts    SQL queries and use cases; converts snake_case rows to domain types
+server/src/repo/      repository/service classes; converts snake_case rows to domain
+                      types; server/src/repo/index.ts is the composition root
 server/src/routes/    Express router; route() wrapper turns throws into 400s
 server/src/index.ts   mounts /api, then serves web/dist if it exists (single port for the Pi)
 web/src/              React 18 + Vite, no router/state lib: App.tsx holds three tabs

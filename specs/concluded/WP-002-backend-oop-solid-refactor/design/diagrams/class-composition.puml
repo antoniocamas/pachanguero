@@ -1,0 +1,55 @@
+@startuml class-composition
+skinparam componentStyle rectangle
+
+component "routes/api.ts" as api
+component "repo/index.ts\n(composition root)" as root
+
+package "Persistence" {
+  component SeasonRepository
+  component PlayerRepository
+  component GameRepository
+  component ParticipationRepository
+  component ExclusionRepository
+  component ConvocatoriaService
+  component StandingsService
+}
+
+package "Domain" {
+  component PointsCalculator
+  component SeniorityCurve
+  component ConvocatoriaBuilder
+  component ExclusionHistory
+}
+
+component "db()\n(server/src/db/index.ts, unchanged)" as dbSingleton
+
+api --> root
+root --> SeasonRepository
+root --> PlayerRepository
+root --> GameRepository
+root --> ParticipationRepository
+root --> ExclusionRepository
+root --> ConvocatoriaService
+root --> StandingsService
+
+SeasonRepository --> dbSingleton
+PlayerRepository --> dbSingleton
+GameRepository --> dbSingleton
+ParticipationRepository --> dbSingleton
+ExclusionRepository --> dbSingleton
+ExclusionRepository ..> ExclusionHistory : constructs
+
+StandingsService --> PlayerRepository
+StandingsService --> ParticipationRepository
+StandingsService --> ExclusionRepository
+StandingsService --> SeasonRepository
+StandingsService --> PointsCalculator
+
+ConvocatoriaService --> GameRepository
+ConvocatoriaService --> ParticipationRepository
+ConvocatoriaService --> ExclusionRepository
+ConvocatoriaService --> StandingsService
+ConvocatoriaService --> ConvocatoriaBuilder
+
+ConvocatoriaBuilder ..> ExclusionHistory : uses
+@enduml

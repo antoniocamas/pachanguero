@@ -36,23 +36,24 @@ npm start             # producción, un solo puerto, sirve la SPA y la API
 ```
 docs/domain-model/   Las reglas, de dónde salen y qué se verificó
 data/seed/           Rejillas de 2024/2025 recuperadas del PDF
-server/src/domain/   Lógica pura: puntos, antigüedad, convocatoria (+ tests)
+server/src/domain/   Lógica pura, en clases: puntos, antigüedad, convocatoria (+ tests)
 server/src/db/       Esquema SQLite
-server/src/repo.ts   Consultas y casos de uso
+server/src/repo/     Repositorios y servicios (casos de uso)
 web/src/             React + Vite, mobile-first
 deploy/              systemd + Caddy
 ```
 
-La carpeta `domain/` no sabe nada de SQLite ni de HTTP: son funciones puras con
-sus tests. Es donde viven las reglas, y donde hay que tocar para cambiarlas.
+La carpeta `domain/` no sabe nada de SQLite ni de HTTP: son clases con sus
+tests, sin dependencias externas. Es donde viven las reglas, y donde hay que
+tocar para cambiarlas.
 
 ## Configuración
 
-| Variable | Por defecto | |
-|---|---|---|
-| `PORT` | `8787` | |
-| `HOST` | `0.0.0.0` | Ponlo a `127.0.0.1` detrás de Caddy |
-| `PACHANGUERO_DB` | `data/pachanguero.db` | Ruta del fichero SQLite |
+| Variable         | Por defecto           |                                     |
+| ---------------- | --------------------- | ----------------------------------- |
+| `PORT`           | `8787`                |                                     |
+| `HOST`           | `0.0.0.0`             | Ponlo a `127.0.0.1` detrás de Caddy |
+| `PACHANGUERO_DB` | `data/pachanguero.db` | Ruta del fichero SQLite             |
 
 Las reglas de juego son **por temporada**, en la base de datos, editables desde
 Ajustes: plazas, mercy seats, partidos de espera, dirección de degradación, y si

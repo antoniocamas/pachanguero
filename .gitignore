@@ -9,5 +9,9 @@ dist/
 *~
 .eslintcache
 .claude/
-.agents/
+.agents/*
+!.agents/rules/
 .claudeignore
+e2e/.tmp/
+e2e/test-results/
+e2e/playwright-report/

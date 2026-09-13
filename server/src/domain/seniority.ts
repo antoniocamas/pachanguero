@@ -7,21 +7,22 @@
  *
  * The legacy sheet held this as a lookup table on the `Aux` tab, read with
  * `INDIRECT("Aux!D" & F3)` — which silently breaks if a row is inserted. Here it
- * is a function, so it also extends past the 13 rows the table happened to have.
+ * is a class method, so it also extends past the 13 rows the table happened to have.
  */
-
-/** What season number `n` alone contributes. */
-export function seasonContribution(n: number): number {
-  if (!Number.isFinite(n) || n < 1) return 0;
-  return 1 / (Math.log(n + 2) / Math.log(3));
-}
-
-/** Total seniority points for a player who has played `seasons` seasons. */
-export function seniorityPoints(seasons: number): number {
-  if (!Number.isFinite(seasons) || seasons < 1) return 0;
-  let total = 0;
-  for (let n = 1; n <= Math.floor(seasons); n++) {
-    total += seasonContribution(n);
+export class SeniorityCurve {
+  /** What season number `n` alone contributes. */
+  contribution(n: number): number {
+    if (!Number.isFinite(n) || n < 1) return 0;
+    return 1 / (Math.log(n + 2) / Math.log(3));
   }
-  return total;
+
+  /** Total seniority points for a player who has played `seasons` seasons. */
+  total(seasons: number): number {
+    if (!Number.isFinite(seasons) || seasons < 1) return 0;
+    let sum = 0;
+    for (let n = 1; n <= Math.floor(seasons); n++) {
+      sum += this.contribution(n);
+    }
+    return sum;
+  }
 }

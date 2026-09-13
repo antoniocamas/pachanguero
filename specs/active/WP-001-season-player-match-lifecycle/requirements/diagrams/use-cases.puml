@@ -1,0 +1,49 @@
+@startuml use-cases
+left to right direction
+
+actor Organizer
+
+rectangle Pachanguero {
+  usecase "UC-001-01\nCreate a season with\nno roster re-entry" as UC01
+  usecase "UC-001-02\nCapture seniority on\nfirst appearance" as UC02
+  usecase "UC-001-08\nResolve which game a\ncandidate paste targets" as UC08
+  usecase "UC-001-03\nPaste & resolve the\nSunday candidate list" as UC03
+  usecase "UC-001-04\nRegister a new player\ninline" as UC04
+  usecase "UC-001-09\nMaintain a player's\nnicknames/aliases" as UC09
+  usecase "UC-001-05\nRun the algorithmic\nConvocatoria" as UC05
+  usecase "UC-001-10\nResolve which game a\nfinal-list paste targets" as UC10
+  usecase "UC-001-06\nPaste & resolve the\nfinal Claros/Oscuros list" as UC06
+  usecase "UC-001-07\nBackfill a historical\ngame (final list only)" as UC07
+}
+
+Organizer --> UC01
+Organizer --> UC03
+Organizer --> UC05
+Organizer --> UC06
+Organizer --> UC07
+
+UC03 ..> UC08 : <<include>>
+UC06 ..> UC10 : <<include>>
+
+UC03 ..> UC04 : <<include>>
+UC06 ..> UC04 : <<include>>
+
+UC03 ..> UC09 : <<include>>
+UC06 ..> UC09 : <<include>>
+
+UC03 ..> UC02 : <<include>>
+UC06 ..> UC02 : <<include>>
+
+UC03 .[#gray].> UC05 : <<precedes>>
+UC05 .[#gray].> UC06 : <<precedes>>
+
+UC07 ..> UC06 : <<extend>>
+UC07 ..> UC10 : <<extend>>
+note right of UC07
+  reuses UC-001-06's resolution and
+  finalization behaviour, and UC-001-10's
+  explicit-override path (S3), skipping
+  UC-001-03 / UC-001-08 / UC-001-05
+end note
+
+@enduml

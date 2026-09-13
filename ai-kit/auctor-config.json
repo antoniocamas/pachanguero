@@ -4,11 +4,22 @@
     { "doc": "AGENTS.md" },
     { "doc": "docs/domain-model/README.md" }
   ],
-  "code_guidelines": [{ "doc": "AGENTS.md" }],
-  "test_runner": [{ "command": "npm test" }],
+  "code_guidelines": [
+    { "doc": "AGENTS.md" },
+    { "doc": ".agents/rules/coding-standard.md" },
+    { "doc": ".agents/rules/frontend-coding-standard.md" }
+  ],
+  "test_runner": [{ "command": "npm test" }, { "command": "npm run test:e2e" }],
   "regression_guidelines": [{ "command": "npm test" }],
-  "testing_guidelines": [{ "doc": "AGENTS.md" }],
-  "code_checkers_guidelines": [{ "doc": "AGENTS.md" }],
+  "testing_guidelines": [
+    { "doc": "AGENTS.md" },
+    { "doc": "docs/test-strategy.md" }
+  ],
+  "code_checkers_guidelines": [
+    { "doc": "AGENTS.md" },
+    { "doc": ".agents/rules/coding-standard.md" },
+    { "doc": ".agents/rules/frontend-coding-standard.md" }
+  ],
   "code_checkers_runner": [{ "command": "npm run lint" }],
   "deployment_guidelines": [{ "doc": "README.md" }],
   "configuration_guidelines": [{ "doc": "README.md" }]

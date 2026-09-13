@@ -1,0 +1,61 @@
+@startuml increment-0-schema
+!define REMOVED(x) <color:red><s>x</s></color>
+!define ADDED(x) <color:green>x</color>
+
+entity seasons {
+  * id
+  --
+  name
+  starts_on
+  ends_on
+  REMOVED(is_active)
+  price_cents
+  slots
+  mercy_seats
+  games_out_for_mercy
+  mercy_resets_counter
+  demotion_direction
+}
+
+entity season_players {
+  * season_id
+  * player_id
+  --
+  seasons <i>(now: complete prior seasons, default 0)</i>
+  REMOVED(active)
+}
+
+entity players {
+  * id
+  --
+  name
+  ADDED(introduced_by) <i>(nullable, self-FK)</i>
+}
+
+entity player_aliases {
+  * id
+  --
+  ADDED(player_id)
+  ADDED(alias) <i>(UNIQUE, NOCASE)</i>
+}
+
+entity weekly_schedule {
+  * id
+  --
+  ADDED(weekday)
+  ADDED(kickoff_time)
+  ADDED(effective_from) <i>(append-only)</i>
+}
+
+players ||--o{ season_players
+seasons ||--o{ season_players
+players ||--o{ player_aliases
+players }o--o| players : introduced_by
+
+note right of weekly_schedule
+  Global, not per-season.
+  "Setting in effect on date D" =
+  row with MAX(effective_from) <= D.
+end note
+
+@enduml
