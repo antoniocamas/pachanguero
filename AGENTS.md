@@ -22,7 +22,27 @@ npx vitest run src/domain/domain.test.ts
 npx vitest run -t "reproduces the legacy remainder bug"
 ```
 
-There is no linter. There are no web tests; all tests live in `server/src/domain/`.
+There are no web tests; all tests live in `server/src/domain/`.
+
+## Linting & formatting
+
+ESLint (flat config, `eslint.config.js` at the repo root) covers both workspaces; Prettier handles formatting.
+
+```bash
+npm run lint          # eslint . (cached)
+npm run lint:fix       # eslint . --fix
+npm run format         # prettier --write .
+npm run format:check   # prettier --check .
+```
+
+A git pre-commit hook (Husky, `.husky/pre-commit`) gates every commit:
+
+1. `lint-staged` runs ESLint (`--fix`) and Prettier (`--write`) on staged files only.
+2. `npm test --workspace=server` runs the full domain test suite; a failure blocks the commit.
+
+The hook is installed automatically by `npm install` (via the `prepare` script). The existing codebase predates Prettier, so most untouched files aren't reformatted yet — `format:check` will flag them; only files you actually touch get reformatted by the hook.
+
+**No rule may be downgraded, disabled, or skipped without asking first.** If a lint rule flags something and the real fix seems out of scope, expensive, or wrong for the codebase, stop and ask the user — never lower a rule's severity, add an `eslint-disable`, or otherwise route around it unilaterally. Only the user decides to relax a rule.
 
 ## Architecture
 
@@ -42,9 +62,9 @@ web/src/              React 18 + Vite, no router/state lib: App.tsx holds three 
 
 ## Domain invariants
 
-- **Points = paid games + scoring exclusions + seniority.** Attendance counts *payments*, not appearances. Seniority is a log curve (`seniority.ts`), not a table. Only exclusions of kind `points` or `demoted` score; a `mercy` seat does not.
-- **Default behaviour reproduces the legacy Apps Script, including its bugs.** Notably, with `mercy_resets_counter = 0` a mercy seat *subtracts* from the wait counter and it can go negative — this is deliberate; tests assert it. The flag switches to the organiser's stated rule (reset to zero). Any change away from legacy behaviour must be opt-in per season, never a default. Background: `docs/domain-model/legacy-script-review.md`.
-- **The legacy `*` meant three things; they are separate columns now**: `signed_up`, `played`, `paid_cents` with `paid_on` (when the money *arrived*, not the game date). Never collapse them.
+- **Points = paid games + scoring exclusions + seniority.** Attendance counts _payments_, not appearances. Seniority is a log curve (`seniority.ts`), not a table. Only exclusions of kind `points` or `demoted` score; a `mercy` seat does not.
+- **Default behaviour reproduces the legacy Apps Script, including its bugs.** Notably, with `mercy_resets_counter = 0` a mercy seat _subtracts_ from the wait counter and it can go negative — this is deliberate; tests assert it. The flag switches to the organiser's stated rule (reset to zero). Any change away from legacy behaviour must be opt-in per season, never a default. Background: `docs/domain-model/legacy-script-review.md`.
+- **The legacy `*` meant three things; they are separate columns now**: `signed_up`, `played`, `paid_cents` with `paid_on` (when the money _arrived_, not the game date). Never collapse them.
 - **Convocatorias are frozen**: running one stores `rules_json` plus every entry with the points it saw, so past selections stay auditable after late payments change current standings.
 - **Rules are per-season** (columns on `seasons`, editable from Ajustes), so history is never rewritten when rules change.
 - **Money is integer cents** (`price_cents`, `paid_cents`).

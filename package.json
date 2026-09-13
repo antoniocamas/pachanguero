@@ -2,12 +2,36 @@
   "name": "pachanguero",
   "private": true,
   "version": "0.1.0",
-  "workspaces": ["server", "web"],
+  "type": "module",
+  "workspaces": [
+    "server",
+    "web"
+  ],
   "scripts": {
     "dev": "npm run dev --workspace=server & npm run dev --workspace=web",
     "build": "npm run build --workspace=web && npm run build --workspace=server",
     "start": "npm run start --workspace=server",
     "test": "npm run test --workspace=server",
-    "seed": "npm run seed --workspace=server"
+    "seed": "npm run seed --workspace=server",
+    "lint": "eslint . --cache --cache-location .eslintcache",
+    "lint:fix": "eslint . --cache --cache-location .eslintcache --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js}": "eslint --fix",
+    "*.{ts,tsx,js,json,md,css}": "prettier --write"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.10.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.6",
+    "globals": "^17.12.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.5.1",
+    "prettier": "^3.9.6",
+    "typescript-eslint": "^8.70.0"
   }
 }

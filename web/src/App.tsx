@@ -18,7 +18,7 @@ export function App() {
     try {
       const all = await api.seasons();
       setSeasons(all);
-      setSeason(all.find((s) => s.is_active) ?? all[0] ?? null);
+      setSeason(all.find(s => s.is_active) ?? all[0] ?? null);
       setError(null);
     } catch (e) {
       setError((e as Error).message);
@@ -28,7 +28,10 @@ export function App() {
   const loadSeasonData = useCallback(async () => {
     if (!season) return;
     try {
-      const [p, g] = await Promise.all([api.players(season.id), api.games(season.id)]);
+      const [p, g] = await Promise.all([
+        api.players(season.id),
+        api.games(season.id),
+      ]);
       setPlayers(p);
       setGames(g);
     } catch (e) {
@@ -36,8 +39,16 @@ export function App() {
     }
   }, [season]);
 
-  useEffect(() => { void loadSeasons(); }, [loadSeasons]);
-  useEffect(() => { void loadSeasonData(); }, [loadSeasonData]);
+  useEffect(() => {
+    void (async () => {
+      await loadSeasons();
+    })();
+  }, [loadSeasons]);
+  useEffect(() => {
+    void (async () => {
+      await loadSeasonData();
+    })();
+  }, [loadSeasonData]);
 
   const refresh = useCallback(async () => {
     await loadSeasons();
@@ -76,22 +87,47 @@ export function App() {
           </div>
         </div>
       ) : tab === 'game' ? (
-        <GameDay season={season} players={players} games={games} onGamesChanged={loadSeasonData} />
+        <GameDay
+          season={season}
+          players={players}
+          games={games}
+          onGamesChanged={loadSeasonData}
+        />
       ) : tab === 'standings' ? (
         <Standings season={season} />
       ) : (
-        <Manage season={season} seasons={seasons} players={players} onChanged={refresh} />
+        <Manage
+          season={season}
+          seasons={seasons}
+          players={players}
+          onChanged={refresh}
+        />
       )}
 
       <nav className="tabs">
         <button aria-current={tab === 'game'} onClick={() => setTab('game')}>
-          <span className="ico" aria-hidden>📋</span>Partido
+          <span className="ico" aria-hidden>
+            📋
+          </span>
+          Partido
         </button>
-        <button aria-current={tab === 'standings'} onClick={() => setTab('standings')}>
-          <span className="ico" aria-hidden>🏆</span>Puntos
+        <button
+          aria-current={tab === 'standings'}
+          onClick={() => setTab('standings')}
+        >
+          <span className="ico" aria-hidden>
+            🏆
+          </span>
+          Puntos
         </button>
-        <button aria-current={tab === 'manage'} onClick={() => setTab('manage')}>
-          <span className="ico" aria-hidden>⚙️</span>Ajustes
+        <button
+          aria-current={tab === 'manage'}
+          onClick={() => setTab('manage')}
+        >
+          <span className="ico" aria-hidden>
+            ⚙️
+          </span>
+          Ajustes
         </button>
       </nav>
     </div>

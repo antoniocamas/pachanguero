@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { api, type ConvocatoriaResult, type Game, type GameDetail, type Player, type Season } from '../api';
+import {
+  api,
+  type ConvocatoriaResult,
+  type Game,
+  type GameDetail,
+  type Player,
+  type Season,
+} from '../api';
 
 const euros = (cents: number) => (cents / 100).toFixed(2).replace('.', ',');
 const fmtDate = (iso: string) =>
@@ -25,19 +32,27 @@ export function GameDay({
   games: Game[];
   onGamesChanged: () => void;
 }) {
-  const [gameId, setGameId] = useState<number | null>(null);
+  const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
   const [detail, setDetail] = useState<GameDetail | null>(null);
   const [preview, setPreview] = useState<ConvocatoriaResult | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Default to the next scheduled game, else the most recent one.
-  useEffect(() => {
-    if (gameId || !games.length) return;
+  const defaultGameId = useMemo(() => {
+    if (!games.length) return null;
     const today = new Date().toISOString().slice(0, 10);
-    const upcoming = games.find((g) => g.played_on >= today && g.status !== 'cancelled');
-    setGameId((upcoming ?? games[games.length - 1]).id);
-  }, [games, gameId]);
+    const upcoming = games.find(
+      g => g.played_on >= today && g.status !== 'cancelled'
+    );
+    return (upcoming ?? games[games.length - 1]).id;
+  }, [games]);
+  const gameId = selectedGameId ?? defaultGameId;
+
+  const selectGame = useCallback((id: number | null) => {
+    setSelectedGameId(id);
+    setPreview(null);
+  }, []);
 
   const load = useCallback(async () => {
     if (!gameId) return;
@@ -50,29 +65,37 @@ export function GameDay({
   }, [gameId]);
 
   useEffect(() => {
-    setPreview(null);
-    void load();
+    void (async () => {
+      await load();
+    })();
   }, [load]);
 
   const perHead = Math.round(season.price_cents / season.slots);
 
   const byPlayer = useMemo(() => {
-    const map = new Map(detail?.participations.map((p) => [p.player_id, p]) ?? []);
+    const map = new Map(
+      detail?.participations.map(p => [p.player_id, p]) ?? []
+    );
     return map;
   }, [detail]);
 
-  const signedCount = detail?.participations.filter((p) => p.signed_up).length ?? 0;
-  const paidCount = detail?.participations.filter((p) => p.paid_cents > 0).length ?? 0;
+  const signedCount =
+    detail?.participations.filter(p => p.signed_up).length ?? 0;
+  const paidCount =
+    detail?.participations.filter(p => p.paid_cents > 0).length ?? 0;
   const owed = (detail?.participations ?? [])
-    .filter((p) => p.played && p.paid_cents === 0)
-    .reduce((sum) => sum + perHead, 0);
+    .filter(p => p.played && p.paid_cents === 0)
+    .reduce(sum => sum + perHead, 0);
 
-  async function mutate(playerId: number, patch: Parameters<typeof api.setParticipation>[2]) {
+  async function mutate(
+    playerId: number,
+    patch: Parameters<typeof api.setParticipation>[2]
+  ) {
     if (!gameId) return;
     setBusy(true);
     try {
       const rows = await api.setParticipation(gameId, playerId, patch);
-      setDetail((d) => (d ? { ...d, participations: rows } : d));
+      setDetail(d => (d ? { ...d, participations: rows } : d));
       setPreview(null);
       setError(null);
     } catch (e) {
@@ -83,20 +106,25 @@ export function GameDay({
   }
 
   async function addGame() {
-    const iso = prompt('Fecha del partido (AAAA-MM-DD)', new Date().toISOString().slice(0, 10));
+    const iso = prompt(
+      'Fecha del partido (AAAA-MM-DD)',
+      new Date().toISOString().slice(0, 10)
+    );
     if (!iso) return;
     try {
       const game = await api.createGame(season.id, iso);
       onGamesChanged();
-      setGameId(game.id);
+      selectGame(game.id);
     } catch (e) {
       setError((e as Error).message);
     }
   }
 
   const outcomeOf = (playerId: number) => {
-    const saved = detail?.convocatoria?.entries.find((e) => e.player_id === playerId);
-    const live = preview?.entries.find((e) => e.playerId === playerId);
+    const saved = detail?.convocatoria?.entries.find(
+      e => e.player_id === playerId
+    );
+    const live = preview?.entries.find(e => e.playerId === playerId);
     return live?.outcome ?? saved?.outcome ?? null;
   };
 
@@ -108,17 +136,21 @@ export function GameDay({
         <h2>
           Partido
           <span className="right">
-            <button className="btn" onClick={addGame}>+ Nuevo</button>
+            <button className="btn" onClick={addGame}>
+              + Nuevo
+            </button>
           </span>
         </h2>
         <div style={{ padding: '12px 14px' }}>
           <select
             value={gameId ?? ''}
-            onChange={(e) => setGameId(Number(e.target.value))}
+            onChange={e => selectGame(Number(e.target.value))}
             aria-label="Elegir partido"
           >
-            {games.length === 0 && <option value="">Sin partidos todavía</option>}
-            {[...games].reverse().map((g) => (
+            {games.length === 0 && (
+              <option value="">Sin partidos todavía</option>
+            )}
+            {[...games].reverse().map(g => (
               <option key={g.id} value={g.id}>
                 {fmtDate(g.played_on)}
                 {g.label ? ` (${g.label})` : ''}
@@ -133,7 +165,11 @@ export function GameDay({
             <span>apuntados</span>
           </div>
           <div className="stat">
-            <b style={{ color: signedCount > season.slots ? 'var(--warn)' : undefined }}>
+            <b
+              style={{
+                color: signedCount > season.slots ? 'var(--warn)' : undefined,
+              }}
+            >
               {season.slots}
             </b>
             <span>plazas</span>
@@ -143,7 +179,9 @@ export function GameDay({
             <span>pagados</span>
           </div>
           <div className="stat">
-            <b style={{ color: owed ? 'var(--danger)' : undefined }}>{euros(owed)}</b>
+            <b style={{ color: owed ? 'var(--danger)' : undefined }}>
+              {euros(owed)}
+            </b>
             <span>deuda €</span>
           </div>
         </div>
@@ -157,8 +195,10 @@ export function GameDay({
               {signedCount > season.slots ? 'hay que convocar' : 'entran todos'}
             </span>
           </h2>
-          {players.length === 0 && <div className="empty">Añade jugadores primero.</div>}
-          {players.map((p) => {
+          {players.length === 0 && (
+            <div className="empty">Añade jugadores primero.</div>
+          )}
+          {players.map(p => {
             const row = byPlayer.get(p.id);
             const signed = !!row?.signed_up;
             const played = !!row?.played;
@@ -168,9 +208,24 @@ export function GameDay({
               <div key={p.id} className={`row ${signed ? '' : 'out'}`}>
                 <span className="name">
                   {p.name}
-                  {outcome === 'mercy' && <> <span className="tag mercy">mercy</span></>}
-                  {outcome === 'demoted' && <> <span className="tag demoted">fuera</span></>}
-                  {played && !paid && <> <span className="tag debt">debe</span></>}
+                  {outcome === 'mercy' && (
+                    <>
+                      {' '}
+                      <span className="tag mercy">mercy</span>
+                    </>
+                  )}
+                  {outcome === 'demoted' && (
+                    <>
+                      {' '}
+                      <span className="tag demoted">fuera</span>
+                    </>
+                  )}
+                  {played && !paid && (
+                    <>
+                      {' '}
+                      <span className="tag debt">debe</span>
+                    </>
+                  )}
                 </span>
                 <div className="chips">
                   <button
@@ -187,11 +242,14 @@ export function GameDay({
                     data-on={played}
                     disabled={busy}
                     onClick={() =>
-                      mutate(p.id, played && paid
-                        ? { played: false, paid_cents: 0 }
-                        : played
-                          ? { paid_cents: perHead }
-                          : { signed_up: true, played: true })
+                      mutate(
+                        p.id,
+                        played && paid
+                          ? { played: false, paid_cents: 0 }
+                          : played
+                            ? { paid_cents: perHead }
+                            : { signed_up: true, played: true }
+                      )
                     }
                     title="Sin jugar → jugó (debe) → pagó"
                   >
@@ -226,7 +284,8 @@ export function GameDay({
               className="btn primary"
               disabled={busy || !signedCount}
               onClick={async () => {
-                if (!confirm('Guardar la convocatoria y marcar quién juega?')) return;
+                if (!confirm('Guardar la convocatoria y marcar quién juega?'))
+                  return;
                 try {
                   setPreview(await api.commit(gameId));
                   await load();
@@ -240,22 +299,24 @@ export function GameDay({
             </button>
           </div>
 
-          {(preview ?? detail?.convocatoria) && <ConvocatoriaList
-            slots={season.slots}
-            rows={
-              preview
-                ? preview.entries.map((e) => ({ ...e, id: e.playerId }))
-                : (detail!.convocatoria!.entries.map((e) => ({
-                    id: e.player_id,
-                    name: e.name,
-                    points: e.points,
-                    position: e.position,
-                    outcome: e.outcome,
-                    waitCounter: e.wait_counter,
-                    playing: !!e.playing,
-                  })))
-            }
-          />}
+          {(preview ?? detail?.convocatoria) && (
+            <ConvocatoriaList
+              slots={season.slots}
+              rows={
+                preview
+                  ? preview.entries.map(e => ({ ...e, id: e.playerId }))
+                  : detail!.convocatoria!.entries.map(e => ({
+                      id: e.player_id,
+                      name: e.name,
+                      points: e.points,
+                      position: e.position,
+                      outcome: e.outcome,
+                      waitCounter: e.wait_counter,
+                      playing: !!e.playing,
+                    }))
+              }
+            />
+          )}
         </div>
       )}
     </>
@@ -280,7 +341,7 @@ function ConvocatoriaList({
   if (!rows.length) return <div className="empty">Nadie apuntado.</div>;
   return (
     <>
-      {rows.map((e) => (
+      {rows.map(e => (
         <div
           key={e.id}
           className={[
@@ -294,10 +355,24 @@ function ConvocatoriaList({
           <span className="pos">{e.position}</span>
           <span className="name">
             {e.name}
-            {e.outcome === 'mercy' && <> <span className="tag mercy">mercy</span></>}
-            {e.outcome === 'demoted' && <> <span className="tag demoted">degradado</span></>}
+            {e.outcome === 'mercy' && (
+              <>
+                {' '}
+                <span className="tag mercy">mercy</span>
+              </>
+            )}
+            {e.outcome === 'demoted' && (
+              <>
+                {' '}
+                <span className="tag demoted">degradado</span>
+              </>
+            )}
           </span>
-          {e.waitCounter > 0 && <span className="pts" title="Partidos esperando">⏳{e.waitCounter}</span>}
+          {e.waitCounter > 0 && (
+            <span className="pts" title="Partidos esperando">
+              ⏳{e.waitCounter}
+            </span>
+          )}
           <span className="pts">{e.points.toFixed(2)}</span>
         </div>
       ))}
