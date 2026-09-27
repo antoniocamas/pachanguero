@@ -5,6 +5,7 @@ import argparse
 import json
 import re
 import shutil
+import subprocess
 import sys
 from datetime import date
 from pathlib import Path
@@ -59,7 +60,6 @@ def check_status_vocabulary():
 # Identifier syntax, strict on purpose: an identifier that is not greppable cannot be
 # resolved, and matching loosely reports a hit that is not one.
 ID_PATTERNS = [
-    r"REQ-(?:DPL|OBS)-\d+",
     r"REQ-\d+",
     r"UC-\d+-\d+(?:-S\d+)?",
     r"MT-[A-Z]+-\d+",
@@ -761,7 +761,7 @@ def cites(identifier, wp_id=None, search_all=False):
     """Resolve an identifier's citations transitively. Returns an exit code."""
     if not ID_EXACT_RE.match(identifier):
         print(f"Not an identifier: {identifier}")
-        print("Accepted: REQ-nnn, REQ-DPL-nnn, REQ-OBS-nnn, UC-nnn-nn[-Snn], MT-LEVEL-nn,")
+        print("Accepted: REQ-nnn, UC-nnn-nn[-Snn], MT-LEVEL-nn,")
         print("          ACT-nnn, OI-nn, A-nnn, D-nnn, R-nnn, Q-nn, and element ids Rn / Fn")
         return 2
 
@@ -935,6 +935,37 @@ def cancel_wp(wp_id):
     return 0
 
 
+def update():
+    """Re-run the install command recorded at install/update time.
+
+    Every project installs Auctor differently (different -r/-s/-d, a --config file, a
+    different cwd), so this reads back the exact command install.py recorded in
+    .update-command.json rather than guessing one.
+    """
+    record_file = SPECS_DIR / ".update-command.json"
+    if not record_file.exists():
+        print("No update command recorded (.update-command.json not found).")
+        print("This specs repo was not installed by install.py, or predates this feature.")
+        return 1
+
+    try:
+        record = json.loads(record_file.read_text())
+    except (json.JSONDecodeError, OSError) as e:
+        print(f"Could not read .update-command.json: {e}")
+        return 1
+
+    command = record.get("command")
+    cwd = record.get("cwd")
+    if not command or not cwd:
+        print(".update-command.json is missing 'command' or 'cwd'.")
+        return 1
+
+    print(f"Running: {' '.join(command)}")
+    print(f"  (from {cwd})")
+    result = subprocess.run(command, cwd=cwd)
+    return result.returncode
+
+
 def main():
     parser = argparse.ArgumentParser(description="Work Package CLI utility")
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
@@ -996,6 +1027,9 @@ def main():
     cancel_parser = subparsers.add_parser("cancel", help="Cancel a WP and move it to concluded/")
     cancel_parser.add_argument("wp_id", help="Work package ID (full, partial, or number only: WP-001, 1, 001)")
 
+    # update command
+    subparsers.add_parser("update", help="Re-run the recorded install command to update Auctor")
+
     # create command
     create_parser = subparsers.add_parser("create", help="Create new work package")
     create_parser.add_argument("--name", help="Short identifier (e.g., 'user-auth')")
@@ -1039,6 +1073,8 @@ def main():
         sys.exit(elements(args.wp_id))
     elif args.command == "cancel":
         sys.exit(cancel_wp(args.wp_id))
+    elif args.command == "update":
+        sys.exit(update())
     elif args.command == "create":
         create_wp(
             name=getattr(args, "name", None),

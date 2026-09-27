@@ -1,0 +1,39 @@
+@startuml
+title WP-001 — Component architecture (this work package's edits highlighted)
+
+package "Database Schema" as DB {
+}
+package "Domain" as Domain {
+}
+package "Repositories & Services" as Repo {
+}
+package "API Routes" as Routes {
+}
+package "Web UI" as Web {
+}
+
+Web --> Routes : REST calls\n(paste, resolve, commit)
+Routes --> Repo : delegates
+Repo --> Domain : uses (NameMatcher,\nScheduleResolver,\nGuestSlotAllocator,\nPointsCalculator,\nConvocatoriaBuilder)
+Repo --> DB : reads/writes
+
+note right of DB
+  seasons (drop is_active)
+  season_players (drop active,
+    redefine 'seasons' meaning)
+  players (add introduced_by)
+  player_aliases (new)
+  weekly_schedule (new)
+  guest_candidates (new)
+  participations (add team)
+end note
+
+note right of Domain
+  NameMatcher (new)
+  ScheduleResolver (new)
+  GuestSlotAllocator (new)
+  PointsCalculator, SeniorityCurve,
+  ConvocatoriaBuilder, ExclusionHistory
+  (unchanged)
+end note
+@enduml

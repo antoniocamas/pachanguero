@@ -7,6 +7,8 @@ dist/
 .env
 .DS_Store
 *~
+#*#
+*#
 .eslintcache
 .claude/
 .agents/*
@@ -15,3 +17,4 @@ dist/
 e2e/.tmp/
 e2e/test-results/
 e2e/playwright-report/
+specs/.update-command.json

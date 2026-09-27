@@ -49,7 +49,7 @@ citations transitively, printing each hop with the file and line that defines it
 `WP-042`, `42`, `042`, or the full `WP-042-name`. `--all` searches every work package instead of
 scoping to one. **It exits non-zero when any identifier in the closure
 resolves nowhere**, and names those: a query that silently drops a citation reports _contained_ when
-it is not. Identifier syntax is strict rather than fuzzy — `REQ-nnn`, `REQ-DPL-nnn`, `REQ-OBS-nnn`,
+it is not. Identifier syntax is strict rather than fuzzy — `REQ-nnn`,
 `UC-nnn-nn[-Snn]`, `MT-LEVEL-nn`, `ACT-nnn`, `OI-nn`, `A-nnn`, `D-nnn`, `R-nnn`, `Q-nn`, and the
 element ids `Rn` and `Fn` — and anything else is rejected rather than matched loosely.
 

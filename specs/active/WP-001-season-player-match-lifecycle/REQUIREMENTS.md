@@ -64,7 +64,8 @@ When the new season begins, before that player has appeared in any of its games
 Then their attendance and exclusion points for the new season are zero — only seniority carries
 forward, and only via the explicit prompt of UC-001-02, never by copying last season's point total.
 This is `inferred` from the existing, unchanged scoping of `standings()` by `season_id`
-(verified — source, `repo.ts` function `standings`, `WHERE g.season_id = @seasonId`) — worth stating
+(verified — source, `server/src/repo/standings-service.ts` `StandingsService.standings`,
+`WHERE g.season_id = @seasonId`) — worth stating
 explicitly here because the roster no longer resets, and a reader could otherwise assume points
 carry over the way the roster now does.
 
@@ -75,7 +76,8 @@ edits after creation
 When those edits are saved
 Then no player is enrolled, unenrolled, or otherwise touched — season rules and season roster are
 independent, and editing one has no side effect on the other (unchanged behaviour, verified —
-source, `repo.ts` function `updateSeason`, touches only the `seasons` row).
+source, `server/src/repo/season-repository.ts` `SeasonRepository.update`, touches only the
+`seasons` row).
 
 #### UC-001-01-S5 — The current season is derived from the calendar, not activated (author decision, revised)
 
@@ -86,7 +88,8 @@ on the August 31th and start on September 1st. Don't over complicate things."_)
 When today's date falls within a season's Sept 1–Aug 31 range
 Then that season is the current one automatically — there is no manual "activate" action, and no
 date is ever outside every season's range. This removes today's manual mechanism entirely
-(verified — source, `repo.ts` function `activateSeason`, `schema.sql` `seasons.is_active`), per the
+(verified — source, `server/src/repo/season-repository.ts` `SeasonRepository.activate`,
+`schema.sql` `seasons.is_active`), per the
 author's separate correction this phase: _"the seasons move with the natural pass of time, we can't
 activate anything from the past... why should the user have to activate anything, the clock does."_
 
@@ -117,7 +120,8 @@ or override it before the appearance is recorded.
 Given a player with no seniority recorded in any earlier season — this is their first season ever
 When that player first appears on any list in a season
 Then the Organizer is prompted with a pre-filled seniority value of **0**, not 1. This reverses
-today's default (verified — source, `repo.ts` function `addPlayer`'s `seasons = 1` default) per the
+today's default (verified — source, `server/src/repo/player-repository.ts`
+`PlayerRepository.add`'s `seasons = 1` default) per the
 author's correction this phase: a rookie has zero _complete prior_ seasons, and
 `seniorityPoints(1)` already scores a full 1.0 (verified — source, `seniority.ts`, doc comment
 _"Season 1 is worth exactly 1.0"_) — crediting that in a player's own first season would be wrong.
@@ -198,8 +202,8 @@ exception to the weekly cadence
 When the Organizer changes that game's date directly
 Then the change applies to that single game record; this is the author's own stated fallback for
 exceptions (_"if this happens we just change the date of the [game]"_) and needs no new mechanism —
-today's date-editing capability already covers it (verified — source, `repo.ts` function
-`updateGame`, `played_on` is an editable field).
+today's date-editing capability already covers it (verified — source,
+`server/src/repo/game-repository.ts` `GameRepository.update`, `played_on` is an editable field).
 
 Graduation: hard requirement (S1–S4). (A full calendar view/management — seeing every week's game,
 cancelling one in advance — was raised only as a comment, not a requirement; left for a future work
@@ -423,7 +427,8 @@ Graduation: hard requirement.
 ### UC-001-05 — Run the algorithmic Convocatoria over resolved candidates
 
 Rests on [points-trigger.md](study/points-trigger.md) (Q-06). The selection algorithm itself
-(`domain/convocatoria.ts`, `buildConvocatoria`) is unchanged and out of scope (`VISION.md` §3); this
+(`domain/convocatoria.ts`, `ConvocatoriaBuilder.build`) is unchanged and out of scope
+(`VISION.md` §3); this
 use case is about what committing its result does and does not do to attendance.
 
 #### UC-001-05-S1 — Committing still grants the exclusion point immediately
@@ -431,8 +436,9 @@ use case is about what committing its result does and does not do to attendance.
 Given a game with more signed-up candidates than the season's slots
 When the Organizer commits the Convocatoria
 Then every candidate the algorithm excludes (kind `points` or `demoted`) is recorded with that
-exclusion immediately, exactly as today (verified — source, `repo.ts` `commitConvocatoria`,
-unchanged), so the "guaranteed point for being cut" rule holds without waiting for the game to be
+exclusion immediately, exactly as today (verified — source,
+`server/src/repo/convocatoria-service.ts` `ConvocatoriaService.commit`, unchanged), so the
+"guaranteed point for being cut" rule holds without waiting for the game to be
 played — unless later retracted by the final list (UC-001-06-S6).
 
 #### UC-001-05-S2 — Committing no longer finalizes attendance
@@ -441,8 +447,9 @@ Given the same commit
 When the algorithm marks a candidate as playing (`called_up` or `mercy`)
 Then that candidate's final attendance (`participations.played`) is **not** set by this step — it
 stays open until UC-001-06 resolves the game's actual outcome. This reverses today's behaviour
-(verified — source, `repo.ts` `commitConvocatoria` currently calls `setParticipation(gameId,
-e.playerId, { played: e.playing })` inside the same transaction) and is the fix for Study Q-02's
+(verified — source, `server/src/repo/convocatoria-service.ts` `ConvocatoriaService.commit`
+currently calls `this.participations.set(gameId, e.playerId, { played: e.playing })` inside the
+same transaction) and is the fix for Study Q-02's
 surprising finding.
 
 #### UC-001-05-S3 — Ephemeral guest candidates are ranked, not specially exempted
@@ -468,8 +475,9 @@ Given a game whose Convocatoria was already committed once, and its candidate li
 changed (UC-001-03-S9)
 When the Organizer commits the Convocatoria again for the same game
 Then the previous commit's entries and exclusions are replaced by the new run, not accumulated
-alongside it (unchanged behaviour, verified — source, `repo.ts` `commitConvocatoria`'s `DELETE FROM
-convocatorias/exclusions WHERE game_id = ?` before inserting).
+alongside it (unchanged behaviour, verified — source, `server/src/repo/convocatoria-service.ts`
+`ConvocatoriaService.commit`'s `DELETE FROM convocatorias/exclusions WHERE game_id = ?` before
+inserting).
 
 Graduation: hard requirement.
 
@@ -745,13 +753,15 @@ Exact new file names are Design/Anatomy's to fix; based on the project's layered
   - `seasons.price_cents` stays as-is (already the configurable price, per-season, unchanged);
   - whatever staging structure Design chooses for candidate/final-list resolution, including
     representing ephemeral (non-persistent) anonymous-guest candidates (UC-001-03-S5).
-- `server/src/domain/*.ts` (existing: `points.ts`, `seniority.ts`, `convocatoria.ts`, `types.ts`,
-  unchanged in their own logic; new: a name/alias/decoration-matching module, a weekly-schedule
-  resolution module for UC-001-08/UC-001-10, and the regulars-vs-guests arrival-order rule of
-  UC-001-03-S6) — pure functions only, per the existing layering rule.
+- `server/src/domain/*.ts` (existing: `points.ts`, `seniority.ts`, `convocatoria.ts`,
+  `exclusion-history.ts`, `types.ts`, unchanged in their own logic; new: a name/alias/
+  decoration-matching class, a weekly-schedule resolution class for UC-001-08/UC-001-10, and the
+  regulars-vs-guests arrival-order rule of UC-001-03-S6) — classes, no free functions, no stateless
+  `static` methods, per `.agents/rules/coding-standard.md` (the domain layer was rewritten to this
+  standard since this document was first drafted; it no longer says "pure functions only").
 - `server/src/domain/*.test.ts` — new and extended test coverage for the above.
-- `server/src/repo.ts` — season/player/game/participation/convocatoria query and use-case changes,
-  including the exclusion-retraction logic of UC-001-06-S6.
+- `server/src/repo/*.ts` — repository/service class changes (season/player/game/participation/
+  convocatoria), including the exclusion-retraction logic of UC-001-06-S6.
 - `server/src/routes/api.ts` — the endpoints listed in §3.
 - `web/src/pages/GameDay.tsx`, `web/src/pages/Manage.tsx` — the paste UI and resolution view
   (UC-001-03, UC-001-04, UC-001-06, UC-001-09), and removal of the manual "activate season"/"add
