@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { CandidatePaste } from '../components/CandidatePaste';
+import { RecordPastGame } from '../components/RecordPastGame';
 import { FinalListPaste } from '../components/FinalListPaste';
 import {
   api,
@@ -28,11 +29,13 @@ export function GameDay({
   players,
   games,
   onGamesChanged,
+  onSelectSeason,
 }: {
   season: Season;
   players: Player[];
   games: Game[];
   onGamesChanged: () => void;
+  onSelectSeason: (seasonId: number) => void;
 }) {
   const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
   const [detail, setDetail] = useState<GameDetail | null>(null);
@@ -107,20 +110,19 @@ export function GameDay({
     }
   }
 
-  async function addGame() {
-    const iso = prompt(
-      'Fecha del partido (AAAA-MM-DD)',
-      new Date().toISOString().slice(0, 10)
-    );
-    if (!iso) return;
-    try {
-      const game = await api.createGame(season.id, iso);
+  // A game closed with a final list but never selected for has nothing to
+  // show under candidates or convocatoria.
+  const recordedAfterTheFact =
+    detail?.game.status === 'played' && !detail.convocatoria;
+
+  const gameRecorded = (game: Game) => {
+    if (game.season_id !== season.id) {
+      onSelectSeason(game.season_id);
+    } else {
       onGamesChanged();
-      selectGame(game.id);
-    } catch (e) {
-      setError((e as Error).message);
     }
-  }
+    selectGame(game.id);
+  };
 
   const outcomeOf = (playerId: number) => {
     const saved = detail?.convocatoria?.entries.find(
@@ -135,14 +137,8 @@ export function GameDay({
       {error && <div className="err">{error}</div>}
 
       <div className="card">
-        <h2>
-          Partido
-          <span className="right">
-            <button className="btn" onClick={addGame}>
-              + Nuevo
-            </button>
-          </span>
-        </h2>
+        <h2>Partido</h2>
+        <RecordPastGame onRecorded={gameRecorded} />
         <div style={{ padding: '12px 14px' }}>
           <select
             value={gameId ?? ''}
@@ -189,7 +185,7 @@ export function GameDay({
         </div>
       </div>
 
-      {gameId && (
+      {gameId && !recordedAfterTheFact && (
         <CandidatePaste
           key={gameId}
           gameId={gameId}
@@ -202,7 +198,7 @@ export function GameDay({
         <FinalListPaste
           key={`final-${gameId}`}
           gameId={gameId}
-          seasonId={season.id}
+          seasonId={detail?.game.season_id ?? season.id}
           players={players}
           onChanged={load}
         />
@@ -283,7 +279,7 @@ export function GameDay({
         </div>
       )}
 
-      {gameId && (
+      {gameId && !recordedAfterTheFact && (
         <div className="card">
           <h2>Convocatoria</h2>
           <div className="actions">

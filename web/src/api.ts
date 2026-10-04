@@ -190,8 +190,8 @@ export const api = {
     }),
 
   games: (seasonId: number) => call<Game[]>(`/seasons/${seasonId}/games`),
-  createGame: (seasonId: number, played_on: string, label?: string) =>
-    call<Game>(`/seasons/${seasonId}/games`, {
+  createGame: (played_on: string, label?: string) =>
+    call<Game>('/games', {
       method: 'POST',
       body: body({ played_on, label }),
     }),

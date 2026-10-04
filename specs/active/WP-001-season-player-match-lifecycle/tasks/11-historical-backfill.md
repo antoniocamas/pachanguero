@@ -68,15 +68,15 @@ not this backend logic).
 
 ## Definition of Done
 
-- [ ] `POST /games` derives `season_id` from the backfilled `played_on` date, never today's date.
-- [ ] `POST /seasons/:id/games` is deleted; LSP find-references confirms no other caller of
+- [x] `POST /games` derives `season_id` from the backfilled `played_on` date, never today's date.
+- [x] `POST /seasons/:id/games` is deleted; LSP find-references confirms no other caller of
       `games.create` breaks.
-- [ ] The three route-integration fixtures above pass, including the gap-year throw and the
+- [x] The three route-integration fixtures above pass, including the gap-year throw and the
       season-scoped pricing/seniority checks.
-- [ ] The "record a past game" form renders and behaves per the Manual Test Plan.
-- [ ] **Graduation:** F10 realises UC-001-07-S1..S6 — graduation value is the modified
+- [x] The "record a past game" form renders and behaves per the Manual Test Plan.
+- [x] **Graduation:** F10 realises UC-001-07-S1..S6 — graduation value is the modified
       `api.test.ts` + the Manual Test Plan above.
-- [ ] **Documentation:** none — F10 is not named in `DESIGN_PLAN.md` §2.8/§4.
-- [ ] **Tests:** `npm test --workspace=server` passes.
-- [ ] **Regression:** deferred to task 12.
-- [ ] **Code checks:** `npm run lint` and `npm run format:check` pass on every touched file.
+- [x] **Documentation:** none — F10 is not named in `DESIGN_PLAN.md` §2.8/§4.
+- [x] **Tests:** `npm test --workspace=server` passes.
+- [x] **Regression:** deferred to task 12.
+- [x] **Code checks:** `npm run lint` and `npm run format:check` pass on every touched file.

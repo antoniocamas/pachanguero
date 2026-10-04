@@ -252,20 +252,17 @@ api.get(
   route((req, res) => res.json(games.list(id(req.params.id))))
 );
 
+/** The season is never picked: it is whichever one the date falls in. */
 api.post(
-  '/seasons/:id/games',
+  '/games',
   route((req, res) => {
-    if (!req.body?.played_on) throw new Error('played_on is required');
-    res
-      .status(201)
-      .json(
-        games.create(
-          id(req.params.id),
-          req.body.played_on,
-          req.body.label,
-          req.body.status
-        )
-      );
+    const playedOn = String(req.body?.played_on ?? '');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(playedOn)) {
+      throw new Error('played_on must be YYYY-MM-DD');
+    }
+    const season = seasons.current(playedOn);
+    if (!season) throw new Error(`No hay temporada para el ${playedOn}`);
+    res.status(201).json(games.create(season.id, playedOn, req.body.label));
   })
 );
 

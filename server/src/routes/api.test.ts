@@ -346,4 +346,93 @@ describe('API', () => {
       expect(res.status).toBe(400);
     });
   });
+
+  describe('POST /games', () => {
+    const post = (path: string, body: unknown) =>
+      fetch(`${base}${path}`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+    it("puts a past game in the season its date falls in, not today's", async () => {
+      seasons.create({ name: '1991/1992' });
+      const middle = seasons.create({ name: '1992/1993' });
+      seasons.create({ name: '1993/1994' });
+
+      const res = await post('/games', { played_on: '1992-11-04' });
+      expect(res.status).toBe(201);
+      expect(await res.json()).toMatchObject({
+        season_id: middle.id,
+        played_on: '1992-11-04',
+      });
+    });
+
+    it('refuses a date no season covers, naming it', async () => {
+      const res = await post('/games', { played_on: '1980-03-05' });
+      expect(res.status).toBe(400);
+      expect(((await res.json()) as { error: string }).error).toContain(
+        '1980-03-05'
+      );
+    });
+
+    it('refuses a malformed date', async () => {
+      expect((await post('/games', { played_on: 'ayer' })).status).toBe(400);
+      expect((await post('/games', {})).status).toBe(400);
+    });
+
+    it('no longer lets the caller pick the season', async () => {
+      const season = seasons.create({ name: '1994/1995' });
+      const res = await post(`/seasons/${season.id}/games`, {
+        played_on: '1994-10-01',
+      });
+      expect(res.status).toBe(404);
+    });
+
+    it("records a past game at its own season's price and seniority", async () => {
+      const older = seasons.create({ name: '1989/1990' });
+      const past = seasons.create({ name: '1990/1991' });
+      seasons.update(past.id, { price_cents: 8000 });
+      const asReturning = await post(`/seasons/${older.id}/players`, {
+        name: 'Veterano',
+        seasons: 2,
+      });
+      const veteran = (await asReturning.json()) as { id: number };
+      await post(`/seasons/${past.id}/players`, {
+        name: 'Habitual',
+        seasons: 1,
+      });
+
+      const created = await post('/games', { played_on: '1990-11-07' });
+      const game = (await created.json()) as { id: number; season_id: number };
+      expect(game.season_id).toBe(past.id);
+
+      const pasted = await post('/games/final:paste', {
+        text: 'Claros\nVeterano\nOscuros\nHabitual',
+        gameId: game.id,
+      });
+      const body = (await pasted.json()) as {
+        matched: {
+          name: string;
+          paidCents: number;
+          seniorityPrompt?: boolean;
+          suggested?: number;
+        }[];
+      };
+      // 8000 / 14 slots, this season's price rather than the default 5600.
+      expect(body.matched.map(m => m.paidCents)).toEqual([571, 571]);
+      const byName = Object.fromEntries(body.matched.map(m => [m.name, m]));
+      expect(byName.Veterano).toMatchObject({
+        seniorityPrompt: true,
+        suggested: 3,
+      });
+      expect(byName.Habitual.seniorityPrompt).toBeUndefined();
+      expect(veteran.id).toBeGreaterThan(0);
+
+      // Nothing was ever selected for it.
+      expect(
+        await (await fetch(`${base}/games/${game.id}`)).json()
+      ).toMatchObject({ convocatoria: null });
+    });
+  });
 });

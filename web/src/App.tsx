@@ -97,6 +97,9 @@ export function App() {
           players={players}
           games={games}
           onGamesChanged={loadSeasonData}
+          onSelectSeason={seasonId =>
+            setSeason(prev => seasons.find(s => s.id === seasonId) ?? prev)
+          }
         />
       ) : tab === 'standings' ? (
         <Standings season={season} />

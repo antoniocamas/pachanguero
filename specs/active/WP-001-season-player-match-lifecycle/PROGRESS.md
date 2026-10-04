@@ -31,5 +31,5 @@
 | 08  | Candidate list paste & resolution                | 1    | done    | 2026-10-04 |
 | 09  | Convocatoria commit decoupled, guest-aware       | 1    | done    | 2026-10-04 |
 | 10  | Final list paste & resolution                    | 1    | done    | 2026-10-04 |
-| 11  | Historical backfill                              | 1    | pending | —          |
+| 11  | Historical backfill                              | 1    | done    | 2026-10-04 |
 | 12  | Closing regression                               | 1    | pending | —          |

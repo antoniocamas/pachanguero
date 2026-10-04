@@ -55,7 +55,7 @@ test('pastes a candidate list and settles an ambiguous name', async ({
   });
   // 'Juanito' is now both one player's name and another's nickname.
   await post(`/players/${juan.id}/aliases`, { alias: 'Juanito' });
-  await post(`/seasons/${season.id}/games`, {
+  await post('/games', {
     played_on: `${startYearOfSeason}-11-10`,
   });
 
@@ -118,7 +118,7 @@ test('a final list retracts the exclusion of a player who did play', async ({
   const startYear = Number(season.name.slice(0, 4));
   // Two slots, three players: one of them is cut by the selection.
   await send('patch', `/seasons/${season.id}`, { slots: 2 });
-  const game = await send('post', `/seasons/${season.id}/games`, {
+  const game = await send('post', '/games', {
     played_on: `${startYear}-11-17`,
   });
   const ids: Record<string, number> = {};
@@ -160,4 +160,49 @@ test('a final list retracts the exclusion of a player who did play', async ({
   await page.getByRole('button', { name: 'Puntos' }).click();
   const row = page.getByRole('row').filter({ hasText: 'Gc' });
   await expect(row.getByRole('cell').nth(3)).toHaveText('0');
+});
+
+test('records a past game in the season its date belongs to', async ({
+  page,
+  request,
+}) => {
+  const current = await (await request.get('/api/seasons/current')).json();
+  const startYear = Number(current.name.slice(0, 4));
+  const pastName = `${startYear - 1}/${startYear}`;
+  const known = (await (await request.get('/api/seasons')).json()) as {
+    name: string;
+  }[];
+  if (!known.some(s => s.name === pastName)) {
+    const created = await request.post('/api/seasons', {
+      data: { name: pastName },
+    });
+    expect(created.ok()).toBeTruthy();
+  }
+
+  await page.goto('/');
+  await expect(page.locator('.season')).toHaveText(current.name);
+
+  await page.getByLabel('Fecha del partido').fill(`${startYear - 1}-10-07`);
+  await page.getByRole('button', { name: 'Registrar partido' }).click();
+
+  // The app moves to the season the date falls in, not the current one.
+  await expect(page.locator('.season')).toHaveText(pastName);
+
+  await page
+    .getByLabel('Lista final pegada')
+    .fill('Claros\n-----\nGa\nOscuros\n-----\nGb');
+  await page.getByRole('button', { name: 'Registrar lista final' }).click();
+  await expect(page.getByTestId('final-line')).toHaveCount(2);
+
+  // First time in that season, so their seniority is asked for.
+  await expect(page.getByTestId('seniority-prompt')).toHaveCount(2);
+  await expect(page.getByLabel('Temporadas de Ga')).toHaveValue('2');
+
+  // Nothing was ever selected for it, so there is no convocatoria to show.
+  await expect(page.getByRole('heading', { name: 'Convocatoria' })).toHaveCount(
+    0
+  );
+  await expect(
+    page.getByRole('heading', { name: 'Lista de apuntados' })
+  ).toHaveCount(0);
 });
