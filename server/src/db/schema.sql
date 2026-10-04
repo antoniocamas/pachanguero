@@ -98,6 +98,23 @@ CREATE TABLE IF NOT EXISTS guest_candidates (
   PRIMARY KEY (game_id, position)
 );
 
+-- The candidate list as the organiser saved it: one text line per row, in
+-- order. Unmatched names live only here, as text: each load re-reads the lines
+-- against the current players, so nothing is guessed or stored for them.
+CREATE TABLE IF NOT EXISTS candidate_lines (
+  game_id  INTEGER NOT NULL REFERENCES games(id) ON DELETE CASCADE,
+  position INTEGER NOT NULL,   -- 1-based place in the list
+  text     TEXT    NOT NULL,
+  -- Who the organiser said the name (or its host) is, when the spelling alone
+  -- does not say: their choice for this line, not a guess.
+  name_player_id INTEGER REFERENCES players(id) ON DELETE SET NULL,
+  host_player_id INTEGER REFERENCES players(id) ON DELETE SET NULL,
+  -- 1 when this line registered the name as its host's guest: that, not the
+  -- host in the brackets, is what makes a named guest.
+  introduced     INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (game_id, position)
+);
+
 -- One row per player left out of (or mercy-seated into) a game. The legacy
 -- FueraDeConvocatoria grid, normalised.
 CREATE TABLE IF NOT EXISTS exclusions (

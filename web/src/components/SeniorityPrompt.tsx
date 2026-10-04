@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 
 /** Asks how many seasons a first-time player has behind them, with a suggestion. */
 export function SeniorityPrompt({
@@ -6,11 +6,14 @@ export function SeniorityPrompt({
   suggested,
   busy,
   onConfirm,
+  extra,
 }: {
   name: string;
   suggested: number;
   busy: boolean;
   onConfirm: (seasons: number) => void;
+  /** Further actions for the same player, shown beside the confirm button. */
+  extra?: ReactNode;
 }) {
   const [seasons, setSeasons] = useState(suggested);
   return (
@@ -30,6 +33,7 @@ export function SeniorityPrompt({
       >
         Confirmar antigüedad
       </button>
+      {extra}
     </div>
   );
 }

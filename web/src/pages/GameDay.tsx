@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { CandidatePaste } from '../components/CandidatePaste';
+import { CandidateList } from '../components/CandidateList';
 import { RecordPastGame } from '../components/RecordPastGame';
+import { DeleteGame } from '../components/DeleteGame';
+import { useKnownPlayers } from '../hooks/useKnownPlayers';
 import { FinalListPaste } from '../components/FinalListPaste';
 import {
   api,
@@ -42,6 +44,10 @@ export function GameDay({
   const [preview, setPreview] = useState<ConvocatoriaResult | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Shown in the convocatoria card itself: the page banner is out of sight from there.
+  const [convocatoriaError, setConvocatoriaError] = useState<string | null>(
+    null
+  );
 
   // Default to the next scheduled game, else the most recent one.
   const defaultGameId = useMemo(() => {
@@ -53,10 +59,13 @@ export function GameDay({
     return (upcoming ?? games[games.length - 1]).id;
   }, [games]);
   const gameId = selectedGameId ?? defaultGameId;
+  const knownPlayers = useKnownPlayers(games);
+  const gameLabel = fmtDate(games.find(g => g.id === gameId)?.played_on ?? '');
 
   const selectGame = useCallback((id: number | null) => {
     setSelectedGameId(id);
     setPreview(null);
+    setConvocatoriaError(null);
   }, []);
 
   const load = useCallback(async () => {
@@ -157,6 +166,17 @@ export function GameDay({
             ))}
           </select>
         </div>
+        {gameId && (
+          <DeleteGame
+            gameId={gameId}
+            label={gameLabel}
+            onDeleted={() => {
+              selectGame(null);
+              setDetail(null);
+              onGamesChanged();
+            }}
+          />
+        )}
         <div className="stat-row">
           <div className="stat">
             <b>{signedCount}</b>
@@ -186,11 +206,14 @@ export function GameDay({
       </div>
 
       {gameId && !recordedAfterTheFact && (
-        <CandidatePaste
+        <CandidateList
           key={gameId}
           gameId={gameId}
-          players={players}
+          seasonId={detail?.game.season_id ?? season.id}
+          gameLabel={gameLabel}
+          players={knownPlayers}
           onChanged={load}
+          onEnrolled={onGamesChanged}
         />
       )}
 
@@ -198,8 +221,9 @@ export function GameDay({
         <FinalListPaste
           key={`final-${gameId}`}
           gameId={gameId}
+          gameLabel={gameLabel}
           seasonId={detail?.game.season_id ?? season.id}
-          players={players}
+          players={knownPlayers}
           onChanged={load}
         />
       )}
@@ -282,6 +306,13 @@ export function GameDay({
       {gameId && !recordedAfterTheFact && (
         <div className="card">
           <h2>Convocatoria</h2>
+          {convocatoriaError && (
+            <div className="err" role="alert">
+              {convocatoriaError}
+              {convocatoriaError.startsWith('Falta la antigüedad') &&
+                '. Confírmala en «Lista de apuntados».'}
+            </div>
+          )}
           <div className="actions">
             <button
               className="btn"
@@ -289,9 +320,9 @@ export function GameDay({
               onClick={async () => {
                 try {
                   setPreview(await api.preview(gameId));
-                  setError(null);
+                  setConvocatoriaError(null);
                 } catch (e) {
-                  setError((e as Error).message);
+                  setConvocatoriaError((e as Error).message);
                 }
               }}
             >
@@ -305,9 +336,9 @@ export function GameDay({
                 try {
                   setPreview(await api.commit(gameId));
                   await load();
-                  setError(null);
+                  setConvocatoriaError(null);
                 } catch (e) {
-                  setError((e as Error).message);
+                  setConvocatoriaError((e as Error).message);
                 }
               }}
             >

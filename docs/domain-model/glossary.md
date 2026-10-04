@@ -50,11 +50,10 @@ Para que entre uno, sale otro.
 
 ## Candidato
 
-Quien se ha apuntado a un partido, tal y como sale de la lista pegada de
-WhatsApp, antes de la convocatoria. Se guarda como `signed_up` y no implica que
-vaya a jugar. Cada pegado de la lista **sustituye** al anterior para ese
-partido: quien ya no aparece deja de estar apuntado (lo jugado y lo pagado se
-conservan).
+Quien se ha apuntado a un partido, en la lista de candidatos (pegada de WhatsApp
+o escrita a mano), antes de la convocatoria. Se guarda como `signed_up` y no
+implica que vaya a jugar. Cómo se arma y se guarda la lista:
+[ciclo del partido](ciclo-del-partido.md#1-candidatos).
 
 ## Reserva
 

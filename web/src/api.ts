@@ -109,13 +109,42 @@ export interface MatchedCandidate {
   name: string | null;
   hostPlayerId: number | null;
   guest: 'named' | 'anonymous' | null;
+  seniorityPrompt?: true;
+  suggested?: number;
 }
 
-export interface CandidatePasteResult {
-  game: Game;
-  matched: MatchedCandidate[];
-  unresolved: UnresolvedEntry[];
+/** Who the organiser said a line's name, or the host it names, is. */
+export interface CandidateLinks {
+  name?: number;
+  host?: number;
 }
+
+/** One line of a candidate list as sent to the server. */
+export interface CandidateLine {
+  text: string;
+  links?: CandidateLinks;
+  /** This line registered the name as its host's guest. */
+  introduced?: true;
+}
+
+/** One line of a game's candidate list and what the known players make of it. */
+export type CandidateRow =
+  | {
+      position: number;
+      text: string;
+      links?: CandidateLinks;
+      introduced?: true;
+      status: 'matched';
+      candidate: MatchedCandidate;
+    }
+  | {
+      position: number;
+      text: string;
+      links?: CandidateLinks;
+      introduced?: true;
+      status: 'unresolved';
+      entry: UnresolvedEntry;
+    };
 
 export type ResolveAction =
   | { type: 'link'; playerId: number }
@@ -123,8 +152,7 @@ export type ResolveAction =
   | { type: 'register'; name: string; introducedBy?: number };
 
 export type ResolveResult =
-  | { outcome: 'resolved'; candidate: MatchedCandidate }
-  | { outcome: 'unresolved'; entry: UnresolvedEntry };
+  { outcome: 'resolved' } | { outcome: 'unresolved'; entry: UnresolvedEntry };
 
 export interface FinalUnresolved extends UnresolvedEntry {
   team: Team;
@@ -174,6 +202,7 @@ export const api = {
   currentSeason: () => call<Season | null>('/seasons/current'),
 
   players: (seasonId: number) => call<Player[]>(`/seasons/${seasonId}/players`),
+  knownPlayers: () => call<Pick<Player, 'id' | 'name'>[]>('/players'),
   addPlayer: (seasonId: number, name: string, seasons: number) =>
     call<Player>(`/seasons/${seasonId}/players`, {
       method: 'POST',
@@ -195,6 +224,8 @@ export const api = {
       method: 'POST',
       body: body({ played_on, label }),
     }),
+  deleteGame: (gameId: number) =>
+    call<{ ok: true }>(`/games/${gameId}`, { method: 'DELETE' }),
   game: (gameId: number) => call<GameDetail>(`/games/${gameId}`),
   updateGame: (gameId: number, patch: Partial<Game>) =>
     call<Game>(`/games/${gameId}`, { method: 'PATCH', body: body(patch) }),
@@ -215,11 +246,23 @@ export const api = {
       body: body(patch),
     }),
 
-  pasteCandidates: (text: string, gameId?: number) =>
-    call<CandidatePasteResult>('/games/candidates:paste', {
+  /** The saved candidate list of a game. */
+  candidateRows: (gameId: number) =>
+    call<{ rows: CandidateRow[] }>(`/games/${gameId}/candidates`).then(
+      r => r.rows
+    ),
+  /** The list with `paste` added to it; nothing is stored. */
+  previewCandidates: (gameId: number, lines: CandidateLine[], paste = '') =>
+    call<{ rows: CandidateRow[] }>(`/games/${gameId}/candidates/preview`, {
       method: 'POST',
-      body: body({ text, gameId }),
-    }),
+      body: body({ lines, paste }),
+    }).then(r => r.rows),
+  /** Makes this list the game's: the lines, the sign-ups and the guests. */
+  saveCandidates: (gameId: number, lines: CandidateLine[]) =>
+    call<{ rows: CandidateRow[] }>(`/games/${gameId}/candidates`, {
+      method: 'PUT',
+      body: body({ lines }),
+    }).then(r => r.rows),
   resolveCandidate: (
     gameId: number,
     entry: Pick<UnresolvedEntry, 'line' | 'field'>,

@@ -11,6 +11,7 @@ import { FinalListTargetResolver } from './final-list-target-resolver.js';
 import { FinalListResolutionService } from './final-list-resolution-service.js';
 import { LineResolver } from './line-resolver.js';
 import { FinalListParser } from '../domain/final-list-parser.js';
+import { CandidateLineRepository } from './candidate-line-repository.js';
 import { GuestCandidateRepository } from './guest-candidate-repository.js';
 import { CandidateResolutionService } from './candidate-resolution-service.js';
 import { CandidateLineParser } from '../domain/candidate-line-parser.js';
@@ -56,6 +57,7 @@ export const candidateResolution = new CandidateResolutionService(
   aliases,
   participations,
   guestCandidates,
+  new CandidateLineRepository(db()),
   new CandidateLineParser(new NameStripper()),
   playerRegistrar,
   db()

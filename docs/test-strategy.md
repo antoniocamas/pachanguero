@@ -59,7 +59,7 @@ they run alongside the domain suite.)
 server, which proxies `/api` to the real Express server, which reads/writes a real SQLite file.
 Nothing is mocked — that is what makes it E2E rather than a frontend smoke test. See
 `e2e/playwright.config.ts`: it boots both the server (pointed at an isolated `e2e/.tmp/e2e.db`
-via `PACHANGUERO_DB`) and the web dev server before running. That database is **shared by every
+via `PACHANGUERO_DB`, on ports 8788/5174 so a manual `npm run dev` on 8787/5173 can stay up) and the web dev server before running. That database is **shared by every
 spec in the run and never reset between them**, so a spec must either build the data it needs
 through the API or not depend on a clean slate — and a spec that needs an empty database (the
 first-season journey) has to run before any that create data, which today means it is the first

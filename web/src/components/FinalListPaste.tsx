@@ -24,11 +24,14 @@ const groupByTeam = (matched: FinalParticipant[]) => {
 /** Paste the post-game list with its two teams: this is what records who played and paid. */
 export function FinalListPaste({
   gameId,
+  gameLabel,
   seasonId,
   players,
   onChanged,
 }: {
   gameId: number;
+  /** The game this paste is recorded on, so it is never a mystery. */
+  gameLabel: string;
   seasonId: number;
   players: Pick<Player, 'id' | 'name'>[];
   onChanged: () => void;
@@ -47,7 +50,10 @@ export function FinalListPaste({
 
   return (
     <div className="card">
-      <h2>Lista final</h2>
+      <h2>
+        Lista final
+        <span className="right muted">{gameLabel}</span>
+      </h2>
       {error && <div className="err">{error}</div>}
       <div style={{ padding: '12px 14px' }}>
         <textarea

@@ -4,7 +4,11 @@ import { CandidateLineParser } from '../domain/candidate-line-parser.js';
 import { NameStripper } from '../domain/name-stripper.js';
 import { TestDatabase } from '../db/test-support.js';
 import { AliasRepository } from './alias-repository.js';
-import { CandidateResolutionService } from './candidate-resolution-service.js';
+import { CandidateLineRepository } from './candidate-line-repository.js';
+import {
+  CandidateResolutionService,
+  type CandidateRow,
+} from './candidate-resolution-service.js';
 import { GameDayResolutionService } from './game-day-resolution-service.js';
 import { GameRepository } from './game-repository.js';
 import { GuestCandidateRepository } from './guest-candidate-repository.js';
@@ -23,8 +27,14 @@ describe('CandidateResolutionService', () => {
   let service: CandidateResolutionService;
   let gameId: number;
   let seasonId: number;
+  let seasons: SeasonRepository;
 
   const enrol = (name: string) => players.add(seasonId, name, 1).id;
+  const L = (...texts: string[]) => texts.map(text => ({ text }));
+  const matchedNames = (rows: CandidateRow[]) =>
+    rows.flatMap(r => (r.status === 'matched' ? (r.candidate.name ?? []) : []));
+  const unresolvedOf = (rows: CandidateRow[]) =>
+    rows.flatMap(r => (r.status === 'unresolved' ? r.entry : []));
   const signedUp = () =>
     participations
       .list(gameId)
@@ -38,7 +48,7 @@ describe('CandidateResolutionService', () => {
     participations = new ParticipationRepository(conn);
     guests = new GuestCandidateRepository(conn);
     const games = new GameRepository(conn);
-    const seasons = new SeasonRepository(conn);
+    seasons = new SeasonRepository(conn);
     const schedule = new ScheduleRepository(conn);
     schedule.create({
       weekday: 1,
@@ -54,210 +64,476 @@ describe('CandidateResolutionService', () => {
       aliases,
       participations,
       guests,
+      new CandidateLineRepository(conn),
       new CandidateLineParser(new NameStripper()),
       new PlayerRegistrar(players, aliases),
       conn
     );
   });
 
-  it('signs up everyone on a clean paste', () => {
-    enrol('Ana');
-    enrol('Beto');
-    const result = service.paste('1 Ana ⚽\n2. Beto', gameId);
-    expect(result.unresolved).toEqual([]);
-    expect(result.matched.map(m => m.name)).toEqual(['Ana', 'Beto']);
-    expect(signedUp()).toEqual(['Ana', 'Beto']);
-    expect(guests.list(gameId)).toEqual([]);
-  });
-
-  it('targets the next game day when no game is given', () => {
-    enrol('Ana');
-    const result = service.paste(
-      '1 Ana',
-      undefined,
-      new Date('2025-11-05T10:00')
-    );
-    expect(result.game.id).toBe(gameId);
-    expect(result.game.played_on).toBe('2025-11-10');
-  });
-
-  it('reports an unmatched name and stores nothing for it', () => {
-    enrol('Ana');
-    const result = service.paste('1 Ana\n2 Desconocido', gameId);
-    expect(result.matched).toHaveLength(1);
-    expect(result.unresolved).toEqual([
-      {
-        line: { position: 2, kind: 'plain', name: 'Desconocido' },
-        field: 'name',
-        reason: 'unmatched',
-        candidates: [],
-      },
-    ]);
-    expect(signedUp()).toEqual(['Ana']);
-  });
-
-  it('reports an ambiguous name with the players it could be', () => {
-    const a = enrol('Juanito');
-    const b = enrol('Juan');
-    aliases.add(b, 'Juanito');
-    const result = service.paste('1 Juanito', gameId);
-    expect(result.unresolved[0]).toMatchObject({
-      reason: 'ambiguous',
-      candidates: [
-        { id: a, name: 'Juanito' },
-        { id: b, name: 'Juan' },
-      ],
+  describe('target', () => {
+    it('is the game given', () => {
+      expect(service.target(String(gameId))).toBe(gameId);
     });
-    expect(signedUp()).toEqual([]);
-  });
 
-  it('settles an ambiguous name by linking, without touching the others', () => {
-    enrol('Ana');
-    const a = enrol('Juanito');
-    const b = enrol('Juan');
-    aliases.add(b, 'Juanito');
-    const { unresolved } = service.paste('1 Ana\n2 Juanito', gameId);
-
-    const result = service.resolve(gameId, unresolved[0], {
-      type: 'link',
-      playerId: a,
+    it('is the next game day for "next", with no game created by hand', () => {
+      expect(service.target('next', new Date('2025-11-05T10:00'))).toBe(gameId);
     });
-    expect(result).toMatchObject({
-      outcome: 'resolved',
-      candidate: { playerId: a, name: 'Juanito', guest: null },
+
+    it('is created for "next" when that game day has no game yet', () => {
+      const id = service.target('next', new Date('2025-11-12T10:00'));
+      expect(id).not.toBe(gameId);
     });
-    expect(signedUp()).toEqual(['Ana', 'Juanito']);
-  });
 
-  it('drops the Reservas section from both lists', () => {
-    enrol('Ana');
-    const result = service.paste('1 Ana\nReservas\n2 Beto\n3 Cris', gameId);
-    expect(result.matched).toHaveLength(1);
-    expect(result.unresolved).toEqual([]);
-  });
-
-  it('registers a first-time named guest and records their host', () => {
-    enrol('Ana');
-    const david = enrol('David');
-    const { unresolved } = service.paste('1 Ana\n2 Adri (David)', gameId);
-    expect(unresolved).toHaveLength(1);
-    expect(unresolved[0]).toMatchObject({ field: 'name', reason: 'unmatched' });
-
-    const result = service.resolve(gameId, unresolved[0], {
-      type: 'register',
-      name: 'Adri',
-      introducedBy: david,
+    it('rejects anything else', () => {
+      expect(() => service.target('ayer')).toThrow(/game/i);
     });
-    expect(result).toMatchObject({
-      outcome: 'resolved',
-      candidate: { name: 'Adri', hostPlayerId: david, guest: 'named' },
+  });
+
+  describe('preview', () => {
+    it('reads each line against the known players and stores nothing', () => {
+      enrol('Ana');
+      const rows = service.preview(gameId, L(), '1 Ana ⚽\n2. Desconocido');
+      expect(rows.map(r => [r.position, r.text, r.status])).toEqual([
+        [1, 'Ana', 'matched'],
+        [2, 'Desconocido', 'unresolved'],
+      ]);
+      expect(signedUp()).toEqual([]);
+      expect(service.load(gameId)).toEqual([]);
     });
-    expect(signedUp()).toEqual(['Adri', 'Ana']);
-    expect(guests.list(gameId)).toEqual([
-      expect.objectContaining({ position: 2, host_player_id: david }),
-    ]);
-    const adri = players.listAll().find(p => p.name === 'Adri')!;
-    expect(guests.list(gameId)[0].player_id).toBe(adri.id);
-    expect(
-      conn
-        .prepare('SELECT introduced_by FROM players WHERE id = ?')
-        .get(adri.id)
-    ).toEqual({ introduced_by: david });
-  });
 
-  it('takes the host from the annotation when none is given', () => {
-    const david = enrol('David');
-    const { unresolved } = service.paste('1 Adri (David)', gameId);
-    service.resolve(gameId, unresolved[0], { type: 'register', name: 'Adri' });
-    expect(guests.list(gameId)[0].host_player_id).toBe(david);
-  });
-
-  it('treats an already-known player with a host annotation as a regular', () => {
-    enrol('David');
-    enrol('Juan');
-    const result = service.paste('1 Juan (David)', gameId);
-    expect(result.unresolved).toEqual([]);
-    expect(result.matched[0]).toMatchObject({ name: 'Juan', guest: null });
-    expect(guests.list(gameId)).toEqual([]);
-    expect(signedUp()).toEqual(['Juan']);
-  });
-
-  it('records an anonymous plus-one against the host', () => {
-    const alvaro = enrol('Álvaro');
-    const result = service.paste('1 Álvaro +1', gameId);
-    expect(result.matched[0]).toMatchObject({
-      playerId: null,
-      hostPlayerId: alvaro,
-      guest: 'anonymous',
+    it('adds a paste after the lines already there, keeping their order', () => {
+      enrol('Ana');
+      enrol('Beto');
+      enrol('Cris');
+      const rows = service.preview(gameId, L('Cris', 'Ana'), '1 Beto');
+      expect(matchedNames(rows)).toEqual(['Cris', 'Ana', 'Beto']);
+      expect(rows.map(r => r.position)).toEqual([1, 2, 3]);
     });
-    expect(signedUp()).toEqual(['Álvaro']);
-    expect(guests.list(gameId)).toEqual([
-      { position: 1, player_id: null, host_player_id: alvaro },
-    ]);
-  });
 
-  it('leaves a line unresolved when its host is unknown', () => {
-    enrol('Juan');
-    const result = service.paste('1 Juan (Nadie)', gameId);
-    expect(result.unresolved[0]).toMatchObject({ field: 'host' });
-    const plus = service.paste('1 Nadie +1', gameId);
-    expect(plus.unresolved[0]).toMatchObject({ field: 'host' });
-    expect(signedUp()).toEqual([]);
-  });
-
-  it('saves the pasted spelling as an alias when linking as alias', () => {
-    const jorge = enrol('Jorge Gutiérrez');
-    const { unresolved } = service.paste('1 Guti ⚽', gameId);
-    service.resolve(gameId, unresolved[0], {
-      type: 'linkAsAlias',
-      playerId: jorge,
+    it('folds a player listed twice into the first place, however it is spelled', () => {
+      const jorge = enrol('Jorge Gutiérrez');
+      aliases.add(jorge, 'Guti');
+      enrol('Ana');
+      const rows = service.preview(
+        gameId,
+        L('Jorge Gutiérrez', 'Ana'),
+        'guti\nANA\nAna'
+      );
+      expect(matchedNames(rows)).toEqual(['Jorge Gutiérrez', 'Ana']);
     });
-    expect(aliases.listAll()).toEqual([{ playerId: jorge, alias: 'Guti' }]);
-    expect(service.paste('1 Guti', gameId).unresolved).toEqual([]);
+
+    it('folds the same unmatched text into one row', () => {
+      const rows = service.preview(gameId, L('Nuevo'), 'nuevo\nNuevo');
+      expect(rows).toHaveLength(1);
+    });
+
+    it('keeps every plus-one, since each is a different guest', () => {
+      enrol('Álvaro');
+      const rows = service.preview(gameId, L(), 'Álvaro\nÁlvaro +1\nÁlvaro +1');
+      expect(rows).toHaveLength(3);
+    });
+
+    it('drops the Reservas section and headings from a paste', () => {
+      enrol('Ana');
+      const rows = service.preview(
+        gameId,
+        [],
+        'Claros\n-----\n1 Ana\nReservas\n2 Beto'
+      );
+      expect(rows.map(r => r.text)).toEqual(['Ana']);
+    });
+
+    it('reports an ambiguous name with the players it could be', () => {
+      const a = enrol('Juanito');
+      const b = enrol('Juan');
+      aliases.add(b, 'Juanito');
+      const [entry] = unresolvedOf(service.preview(gameId, L(), '1 Juanito'));
+      expect(entry).toMatchObject({
+        reason: 'ambiguous',
+        candidates: [
+          { id: a, name: 'Juanito' },
+          { id: b, name: 'Juan' },
+        ],
+      });
+    });
+
+    it('leaves a line unresolved when its host is unknown', () => {
+      enrol('Juan');
+      expect(
+        unresolvedOf(service.preview(gameId, L(), '1 Juan (Nadie)'))[0]
+      ).toMatchObject({ field: 'host' });
+      expect(
+        unresolvedOf(service.preview(gameId, L(), '1 Nadie +1'))[0]
+      ).toMatchObject({
+        field: 'host',
+      });
+    });
+
+    it('treats an already-known player with a host annotation as a regular', () => {
+      enrol('David');
+      enrol('Juan');
+      const [row] = service.preview(gameId, L(), '1 Juan (David)');
+      expect(row).toMatchObject({
+        status: 'matched',
+        candidate: { name: 'Juan', guest: null },
+      });
+    });
+
+    it('records an anonymous plus-one against the host', () => {
+      const alvaro = enrol('Álvaro');
+      const [row] = service.preview(gameId, L(), '1 Álvaro +1');
+      expect(row).toMatchObject({
+        status: 'matched',
+        candidate: { playerId: null, hostPlayerId: alvaro, guest: 'anonymous' },
+      });
+    });
   });
 
-  it('returns a collision unresolved instead of linking silently', () => {
-    const pablo = enrol('Pablo');
-    const { unresolved } = service.paste('1 Pabli', gameId);
-    const result = service.resolve(gameId, unresolved[0], {
-      type: 'register',
-      name: 'Pablo',
+  describe('save', () => {
+    it('signs up the matched players and keeps the list for later', () => {
+      enrol('Ana');
+      enrol('Beto');
+      const rows = service.save(gameId, L('Ana', 'Desconocido', 'Beto'));
+      expect(rows.map(r => r.status)).toEqual([
+        'matched',
+        'unresolved',
+        'matched',
+      ]);
+      expect(signedUp()).toEqual(['Ana', 'Beto']);
+      expect(service.load(gameId).map(r => r.text)).toEqual([
+        'Ana',
+        'Desconocido',
+        'Beto',
+      ]);
     });
-    expect(result).toMatchObject({
-      outcome: 'unresolved',
-      entry: {
-        reason: 'collision',
-        candidates: [{ id: pablo, name: 'Pablo' }],
-      },
+
+    it('stores nothing as a player for an unmatched name', () => {
+      enrol('Ana');
+      service.save(gameId, L('Ana', 'Desconocido'));
+      expect(players.listAll().map(p => p.name)).toEqual(['Ana']);
+      expect(signedUp()).toEqual(['Ana']);
     });
-    expect(signedUp()).toEqual([]);
+
+    it('saves the list consolidated', () => {
+      enrol('Ana');
+      service.save(gameId, L('Ana', 'ana'));
+      expect(service.load(gameId).map(r => r.text)).toEqual(['Ana']);
+    });
+
+    it('replaces the previous list, keeping attendance and payment', () => {
+      enrol('Ana');
+      enrol('Beto');
+      enrol('Cris');
+      enrol('David');
+      service.save(gameId, L('Ana', 'Beto', 'David +1'));
+      const ana = players.listAll().find(p => p.name === 'Ana')!;
+      participations.set(gameId, ana.id, { played: true, paid_cents: 500 });
+
+      service.save(gameId, L('Ana', 'Cris'));
+
+      expect(signedUp()).toEqual(['Ana', 'Cris']);
+      expect(guests.list(gameId)).toEqual([]);
+      expect(
+        participations.list(gameId).find(p => p.name === 'Ana')
+      ).toMatchObject({ played: 1, paid_cents: 500 });
+      expect(
+        participations.list(gameId).find(p => p.name === 'Beto')?.signed_up
+      ).toBe(0);
+    });
+
+    it('an empty list clears the game', () => {
+      enrol('Ana');
+      service.save(gameId, L('Ana'));
+      service.save(gameId, L());
+      expect(signedUp()).toEqual([]);
+      expect(service.load(gameId)).toEqual([]);
+    });
+
+    it('records an anonymous plus-one and signs up its host', () => {
+      const alvaro = enrol('Álvaro');
+      service.save(gameId, L('Álvaro +1'));
+      expect(signedUp()).toEqual(['Álvaro']);
+      expect(guests.list(gameId)).toEqual([
+        { position: 1, player_id: null, host_player_id: alvaro },
+      ]);
+    });
+
+    it('rejects an unknown game', () => {
+      expect(() => service.save(999, L('Ana'))).toThrow(/Unknown game/);
+      expect(() => service.load(999)).toThrow(/Unknown game/);
+    });
   });
 
-  it('replaces the previous paste, keeping attendance and payment', () => {
-    enrol('Ana');
-    enrol('Beto');
-    enrol('Cris');
-    enrol('David');
-    service.paste('1 Ana\n2 Beto\n3 David +1', gameId);
-    const ana = players.listAll().find(p => p.name === 'Ana')!;
-    participations.set(gameId, ana.id, { played: true, paid_cents: 500 });
-
-    service.paste('1 Ana\n2 Cris', gameId);
-
-    expect(signedUp()).toEqual(['Ana', 'Cris']);
-    expect(guests.list(gameId)).toEqual([]);
-    expect(
-      participations.list(gameId).find(p => p.name === 'Ana')
-    ).toMatchObject({
-      played: 1,
-      paid_cents: 500,
+  describe('seniority', () => {
+    it('asks for the seniority of a player who has not yet appeared this season, with a suggestion', () => {
+      const first = seasons.create({ name: '2024/2025' }).id;
+      const veteran = players.add(first, 'Vera', 3).id;
+      const rows = service.preview(gameId, L('Vera'));
+      expect(rows[0]).toMatchObject({
+        status: 'matched',
+        candidate: { playerId: veteran, seniorityPrompt: true, suggested: 4 },
+      });
     });
-    expect(
-      participations.list(gameId).find(p => p.name === 'Beto')?.signed_up
-    ).toBe(0);
+
+    it('stops asking once the seniority is confirmed for the season', () => {
+      const first = seasons.create({ name: '2024/2025' }).id;
+      players.add(first, 'Vera', 3);
+      players.add(seasonId, 'Vera', 4);
+      const [row] = service.preview(gameId, L('Vera'));
+      expect(row).toMatchObject({ status: 'matched' });
+      expect(
+        (row as { candidate: { seniorityPrompt?: true } }).candidate
+          .seniorityPrompt
+      ).toBeUndefined();
+    });
+
+    it('does not ask about a player already enrolled this season, nor about a nameless +1', () => {
+      enrol('Ana');
+      const rows = service.preview(gameId, L('Ana', 'Ana +1'));
+      for (const r of rows) {
+        expect(
+          (r as { candidate: { seniorityPrompt?: true } }).candidate
+            .seniorityPrompt
+        ).toBeUndefined();
+      }
+    });
   });
 
-  it('rejects an unknown game', () => {
-    expect(() => service.paste('1 Ana', 999)).toThrow(/Unknown game/);
+  describe('links', () => {
+    it("settles an ambiguous name for this line only, by the organiser's choice", () => {
+      const a = enrol('Juanito');
+      const b = enrol('Juan');
+      aliases.add(b, 'Juanito');
+      expect(service.preview(gameId, L('Juanito'))[0].status).toBe(
+        'unresolved'
+      );
+
+      const rows = service.preview(gameId, [
+        { text: 'Juanito', links: { name: a } },
+      ]);
+      expect(rows[0]).toMatchObject({
+        status: 'matched',
+        links: { name: a },
+        candidate: { playerId: a, name: 'Juanito' },
+      });
+    });
+
+    it('keeps a link when saved, and signs the chosen player up', () => {
+      const a = enrol('Juanito');
+      const b = enrol('Juan');
+      aliases.add(b, 'Juanito');
+      service.save(gameId, [{ text: 'Juanito', links: { name: a } }]);
+      expect(signedUp()).toEqual(['Juanito']);
+      expect(service.load(gameId)[0]).toMatchObject({
+        status: 'matched',
+        links: { name: a },
+      });
+      expect(aliases.listAll()).toEqual([{ playerId: b, alias: 'Juanito' }]);
+    });
+
+    it('links the host of an annotated line', () => {
+      const a = enrol('Juanito');
+      const b = enrol('Juan');
+      aliases.add(b, 'Juanito');
+      enrol('Ana');
+      const rows = service.preview(gameId, [
+        { text: 'Ana (Juanito)', links: { host: a } },
+      ]);
+      expect(rows[0].status).toBe('matched');
+    });
+
+    it('ignores a link to a player that no longer exists', () => {
+      expect(
+        service.preview(gameId, [{ text: 'Nadie', links: { name: 999 } }])[0]
+          .status
+      ).toBe('unresolved');
+    });
+
+    it('refuses to settle a link as if it were a player change', () => {
+      const a = enrol('Juanito');
+      const [entry] = unresolvedOf(service.preview(gameId, L('Pedro')));
+      expect(() =>
+        service.resolve(gameId, entry, { type: 'link', playerId: a })
+      ).toThrow(/link/);
+    });
+  });
+
+  describe('a game signed up before lists were saved', () => {
+    const signUpEarlierGame = () => {
+      const ana = enrol('Ana');
+      const beto = enrol('Beto');
+      const cris = enrol('Cris');
+      const david = enrol('David');
+      const adri = players.register('Adri', david).id;
+      for (const id of [beto, ana, david, adri, cris]) {
+        participations.set(gameId, id, { signed_up: true });
+      }
+      guests.replaceAll(gameId, [
+        { position: 2, player_id: adri, host_player_id: david },
+        { position: 5, player_id: null, host_player_id: ana },
+      ]);
+    };
+
+    it('shows its sign-ups as the list, each guest back in the place it arrived in', () => {
+      signUpEarlierGame();
+      const rows = service.load(gameId);
+      expect(rows.map(r => r.text)).toEqual([
+        'Ana',
+        'Adri (David)',
+        'Beto',
+        'Cris',
+        'Ana +1',
+        'David',
+      ]);
+      expect(rows.every(r => r.status === 'matched')).toBe(true);
+      expect(rows[1]).toMatchObject({ introduced: true });
+      expect(signedUp()).toHaveLength(5);
+    });
+
+    it("keeps the guests' arrival positions when that list is saved as it is", () => {
+      signUpEarlierGame();
+      const before = guests.list(gameId);
+      service.save(
+        gameId,
+        service.load(gameId).map(r => ({
+          text: r.text,
+          ...(r.introduced && { introduced: true }),
+        }))
+      );
+      expect(
+        guests
+          .list(gameId)
+          .map(g => [g.position, g.player_id, g.host_player_id])
+      ).toEqual(before.map(g => [g.position, g.player_id, g.host_player_id]));
+    });
+
+    it('keeps guests in their relative order when positions run past the list', () => {
+      const ana = enrol('Ana');
+      const beto = enrol('Beto');
+      participations.set(gameId, ana, { signed_up: true });
+      participations.set(gameId, beto, { signed_up: true });
+      guests.replaceAll(gameId, [
+        { position: 9, player_id: null, host_player_id: ana },
+        { position: 12, player_id: null, host_player_id: beto },
+      ]);
+      expect(service.load(gameId).map(r => r.text)).toEqual([
+        'Ana',
+        'Beto',
+        'Ana +1',
+        'Beto +1',
+      ]);
+    });
+
+    it('is not used once a list has been saved', () => {
+      const ana = enrol('Ana');
+      enrol('Beto');
+      participations.set(gameId, ana, { signed_up: true });
+      service.save(gameId, L('Beto'));
+      expect(service.load(gameId).map(r => r.text)).toEqual(['Beto']);
+    });
+  });
+
+  describe('load', () => {
+    it('sees a name settled after the list was saved as matched', () => {
+      const ana = enrol('Ana');
+      service.save(gameId, L('Ana', 'Anita'));
+      aliases.add(ana, 'Anita');
+      expect(unresolvedOf(service.load(gameId))).toEqual([]);
+    });
+
+    it('does not sign anyone up by reading', () => {
+      const ana = enrol('Ana');
+      service.save(gameId, L('Ana'));
+      participations.set(gameId, ana, { signed_up: false });
+      service.load(gameId);
+      expect(signedUp()).toEqual([]);
+    });
+  });
+
+  describe('resolve', () => {
+    it('saves the pasted spelling as an alias when linking as alias', () => {
+      const jorge = enrol('Jorge Gutiérrez');
+      const [entry] = unresolvedOf(service.preview(gameId, L(), '1 Guti ⚽'));
+      service.resolve(gameId, entry, { type: 'linkAsAlias', playerId: jorge });
+      expect(aliases.listAll()).toEqual([{ playerId: jorge, alias: 'Guti' }]);
+      expect(unresolvedOf(service.preview(gameId, L('Guti')))).toEqual([]);
+    });
+
+    it("registers a first-time named guest, who is that host's guest on the line that registered them", () => {
+      enrol('Ana');
+      const david = enrol('David');
+      const [entry] = unresolvedOf(
+        service.preview(gameId, [], '1 Ana\n2 Adri (David)')
+      );
+      expect(entry).toMatchObject({ field: 'name', reason: 'unmatched' });
+
+      service.resolve(gameId, entry, {
+        type: 'register',
+        name: 'Adri',
+        introducedBy: david,
+      });
+
+      const rows = service.save(gameId, [
+        { text: 'Ana' },
+        { text: 'Adri (David)', introduced: true },
+      ]);
+      expect(rows[1]).toMatchObject({
+        status: 'matched',
+        introduced: true,
+        candidate: { name: 'Adri', hostPlayerId: david, guest: 'named' },
+      });
+      expect(signedUp()).toEqual(['Adri', 'Ana']);
+      const adri = players.listAll().find(p => p.name === 'Adri')!;
+      expect(guests.list(gameId)).toEqual([
+        { position: 2, player_id: adri.id, host_player_id: david },
+      ]);
+      expect(service.load(gameId)[1]).toMatchObject({ introduced: true });
+    });
+
+    it('treats a known player written with a host as a regular, even one that host once introduced', () => {
+      const david = enrol('David');
+      const adri = players.register('Adri', david).id;
+      const [row] = service.preview(gameId, L('Adri (David)'));
+      expect(row).toMatchObject({
+        status: 'matched',
+        candidate: { playerId: adri, guest: null },
+      });
+    });
+
+    it('takes the host from the annotation when none is given', () => {
+      enrol('David');
+      const [entry] = unresolvedOf(
+        service.preview(gameId, L(), '1 Adri (David)')
+      );
+      service.resolve(gameId, entry, { type: 'register', name: 'Adri' });
+      expect(unresolvedOf(service.preview(gameId, L('Adri (David)')))).toEqual(
+        []
+      );
+    });
+
+    it('returns a collision unresolved instead of linking silently', () => {
+      const pablo = enrol('Pablo');
+      const [entry] = unresolvedOf(service.preview(gameId, L(), '1 Pabli'));
+      expect(
+        service.resolve(gameId, entry, { type: 'register', name: 'Pablo' })
+      ).toMatchObject({
+        outcome: 'unresolved',
+        entry: {
+          reason: 'collision',
+          candidates: [{ id: pablo, name: 'Pablo' }],
+        },
+      });
+    });
+
+    it('rejects an unknown game', () => {
+      expect(() =>
+        service.resolve(
+          999,
+          { line: { position: 1, kind: 'plain', name: 'Ana' }, field: 'name' },
+          { type: 'register', name: 'Ana' }
+        )
+      ).toThrow(/Unknown game/);
+    });
   });
 });

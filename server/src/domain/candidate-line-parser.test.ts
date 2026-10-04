@@ -72,8 +72,45 @@ describe('CandidateLineParser', () => {
       expect(parser.parseAll('1 Ana\n📋 RESERVAS\n2 Beto')).toHaveLength(1);
     });
 
+    it('drops a separator and the heading above it, whatever it says', () => {
+      const lines = parser.parseAll(
+        'Equipo Rojo\n------------\nTri\nAlberto\n\n🔵 Los Otros\n_____\nNacho'
+      );
+      expect(lines.map(l => [l.position, 'name' in l ? l.name : null])).toEqual(
+        [
+          [1, 'Tri'],
+          [2, 'Alberto'],
+          [3, 'Nacho'],
+        ]
+      );
+    });
+
+    it('finds the heading above a blank line before the separator', () => {
+      expect(parser.parseAll('Claros\n\n=====\nTri')).toHaveLength(1);
+    });
+
+    it('needs five repeats of one symbol to be a separator', () => {
+      expect(parser.parseAll('Ana\n----\nBeto')).toHaveLength(3);
+      expect(parser.parseAll('Ana\n-=-=-=\nBeto')).toHaveLength(3);
+    });
+
     it('keeps a name that merely starts like the heading', () => {
       expect(parser.parseAll('1 Reservado')).toHaveLength(1);
+    });
+  });
+
+  describe('texts', () => {
+    it('gives each candidate line cleaned of decoration, headings and reservas', () => {
+      expect(
+        parser.texts(
+          'Claros\n-----\n1. Ana ⚽\n2. Tave +1\n3. Adri (David)\n\nReservas\n4. Beto'
+        )
+      ).toEqual(['Ana', 'Tave +1', 'Adri (David)']);
+    });
+
+    it('feeds back into parse without changing the line', () => {
+      const [text] = parser.texts('1. Adri (David)');
+      expect(parser.parse(text, 1)).toEqual(parser.parseAll('Adri (David)')[0]);
     });
   });
 });

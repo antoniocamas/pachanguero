@@ -1,3 +1,4 @@
+import { CandidateLineReader } from '../repo/candidate-line-reader.js';
 import {
   Router,
   type Request,
@@ -19,6 +20,7 @@ import {
 } from '../repo/index.js';
 
 export const api = Router();
+const candidateLines = new CandidateLineReader();
 
 /** Wrap a handler so a thrown error becomes a 400 instead of an unhandled crash. */
 const route =
@@ -80,6 +82,12 @@ api.get(
 api.get(
   '/seasons/:id/players',
   route((req, res) => res.json(players.list(id(req.params.id))))
+);
+
+/** Every known player, enrolled in any season or not: what a name can be linked to. */
+api.get(
+  '/players',
+  route((_req, res) => res.json(players.listAll()))
 );
 
 api.post(
@@ -175,18 +183,43 @@ api.put(
 
 /* ------------------------------------------------------------------ games */
 
+api.get(
+  '/games/:gameId/candidates',
+  route((req, res) =>
+    res.json({
+      rows: candidateResolution.load(
+        candidateResolution.target(String(req.params.gameId))
+      ),
+    })
+  )
+);
+
+/** What a list would look like, with the pasted text added to it; stores nothing. */
 api.post(
-  '/games/candidates\\:paste',
+  '/games/:gameId/candidates/preview',
   route((req, res) => {
-    const text = req.body?.text;
-    if (typeof text !== 'string') throw new Error('text is required');
-    const gameId = req.body?.gameId;
-    res.json(
-      candidateResolution.paste(
-        text,
-        gameId === undefined ? undefined : id(gameId)
-      )
-    );
+    const lines = candidateLines.read(req.body?.lines ?? []);
+    const paste = req.body?.paste ?? '';
+    if (typeof paste !== 'string') throw new Error('paste must be text');
+    res.json({
+      rows: candidateResolution.preview(
+        candidateResolution.target(String(req.params.gameId)),
+        lines,
+        paste
+      ),
+    });
+  })
+);
+
+api.put(
+  '/games/:gameId/candidates',
+  route((req, res) => {
+    res.json({
+      rows: candidateResolution.save(
+        candidateResolution.target(String(req.params.gameId)),
+        candidateLines.read(req.body?.lines)
+      ),
+    });
   })
 );
 
@@ -197,7 +230,7 @@ api.post(
     if (!line || !action) throw new Error('line and action are required');
     res.json(
       candidateResolution.resolve(
-        id(req.params.gameId),
+        candidateResolution.target(String(req.params.gameId)),
         { line, field: field ?? (line.kind === 'plusOne' ? 'host' : 'name') },
         action
       )

@@ -1,11 +1,16 @@
 import type Database from 'better-sqlite3';
-import { LocalCalendar } from '../domain/local-calendar.js';
-import type { NameMatcher } from '../domain/name-matcher.js';
+import type { NameMatch, NameMatcher } from '../domain/name-matcher.js';
 import type {
   CandidateLineParser,
   ParsedLine,
 } from '../domain/candidate-line-parser.js';
+import { LocalCalendar } from '../domain/local-calendar.js';
 import type { AliasRepository } from './alias-repository.js';
+import type {
+  CandidateLine,
+  CandidateLineRepository,
+  CandidateLinks,
+} from './candidate-line-repository.js';
 import type { GameDayResolutionService } from './game-day-resolution-service.js';
 import type { GameRepository, GameRow } from './game-repository.js';
 import type { GuestCandidateRepository } from './guest-candidate-repository.js';
@@ -14,12 +19,12 @@ import type { PlayerRegistrar } from './player-registrar.js';
 import type { PlayerRepository } from './player-repository.js';
 import {
   LineResolver,
-  type LineField,
   type ResolveAction,
   type UnresolvedEntry,
 } from './line-resolver.js';
 
-export type { LineField, ResolveAction, UnresolvedEntry };
+export type { ResolveAction, UnresolvedEntry };
+export type { CandidateLine, CandidateLinks };
 
 export interface MatchedCandidate {
   position: number;
@@ -28,31 +33,57 @@ export interface MatchedCandidate {
   /** Who a guest came with; null for a regular. */
   hostPlayerId: number | null;
   guest: 'named' | 'anonymous' | null;
+  /** First time this season: the organiser has to say how many seasons they have. */
+  seniorityPrompt?: true;
+  suggested?: number;
 }
 
-export interface PasteResult {
-  game: GameRow;
-  matched: MatchedCandidate[];
-  unresolved: UnresolvedEntry[];
-}
+/** One line of the candidate list and what the current players make of it. */
+export type CandidateRow =
+  | {
+      position: number;
+      text: string;
+      links?: CandidateLinks;
+      introduced?: true;
+      status: 'matched';
+      candidate: MatchedCandidate;
+    }
+  | {
+      position: number;
+      text: string;
+      links?: CandidateLinks;
+      introduced?: true;
+      status: 'unresolved';
+      entry: UnresolvedEntry;
+    };
 
 export type ResolveResult =
-  | { outcome: 'resolved'; candidate: MatchedCandidate }
-  | { outcome: 'unresolved'; entry: UnresolvedEntry };
+  { outcome: 'resolved' } | { outcome: 'unresolved'; entry: UnresolvedEntry };
 
 /** A line whose players are all settled, ready to persist. */
 interface ResolvedLine {
   line: ParsedLine;
   playerId: number | null;
   hostPlayerId: number | null;
-  /** True when this line registered the player, which is what makes a named guest. */
-  registered: boolean;
+}
+
+interface GuestRow {
+  player_id: number | null;
+  host_player_id: number;
+}
+
+/** A row of the list plus what saving it would store. */
+interface ReadLine {
+  row: CandidateRow;
+  resolved?: ResolvedLine;
+  guest?: GuestRow;
 }
 
 /**
- * Turns a pasted candidate list into sign-ups and guest rows. A name that
- * cannot be matched is never guessed: it comes back unresolved and nothing is
- * stored for it until the organiser settles it with `resolve`.
+ * The candidate list of a game, as the organiser edits and saves it. Lines
+ * are plain text read against the players known right now: a name that cannot
+ * be matched is never guessed, it stays an unresolved row until the organiser
+ * settles it with `resolve`. Only `save` touches sign-ups and guests.
  */
 export class CandidateResolutionService {
   private readonly calendar = new LocalCalendar();
@@ -62,109 +93,222 @@ export class CandidateResolutionService {
     private readonly games: GameRepository,
     private readonly gameDay: GameDayResolutionService,
     private readonly players: PlayerRepository,
-    private readonly aliases: AliasRepository,
+    aliases: AliasRepository,
     private readonly participations: ParticipationRepository,
     private readonly guests: GuestCandidateRepository,
+    private readonly saved: CandidateLineRepository,
     private readonly parser: CandidateLineParser,
-    private readonly registrar: PlayerRegistrar,
+    registrar: PlayerRegistrar,
     private readonly conn: Database.Database
   ) {
     this.lines = new LineResolver(players, aliases, registrar);
   }
 
   /**
-   * Replaces the game's candidates with this paste. Without a `gameId` the
-   * game is the next game day on or after today.
+   * The game a list belongs to: the one given by id, or for `next` the next
+   * game day on or after today, created from the weekly schedule if it does
+   * not exist yet.
    */
-  paste(text: string, gameId?: number, now: Date = new Date()): PasteResult {
-    const game = this.targetGame(gameId, now);
-    const matcher = this.lines.matcher();
-    const names = this.lines.names();
-
-    const resolved: ResolvedLine[] = [];
-    const unresolved: UnresolvedEntry[] = [];
-    for (const line of this.parser.parseAll(text)) {
-      const outcome = this.resolveLine(line, matcher, names);
-      if ('entry' in outcome) unresolved.push(outcome.entry);
-      else resolved.push(outcome.line);
+  target(ref: string, now: Date = new Date()): number {
+    if (ref === 'next') {
+      return this.gameDay.resolveTarget(this.calendar.dateOf(now)).id;
     }
-
-    this.conn.transaction(() => {
-      this.participations.clearSignups(game.id);
-      for (const r of resolved) this.signUp(game.id, r);
-      this.guests.replaceAll(
-        game.id,
-        resolved.flatMap(r => this.guestRow(r) ?? [])
-      );
-    })();
-
-    return {
-      game,
-      matched: resolved.map(r => this.describe(r, names)),
-      unresolved,
-    };
+    if (!/^\d+$/.test(ref)) throw new Error(`Not a game: ${ref}`);
+    return Number(ref);
   }
 
   /**
-   * Settles one unresolved line and stores just that line; the rest of the
-   * game's candidates are left exactly as they are.
+   * The saved list read afresh. A game signed up before lists were saved has
+   * none, so its sign-ups stand in for it, in name order: the order they were
+   * pasted in was never recorded.
+   */
+  load(gameId: number): CandidateRow[] {
+    const game = this.requireGame(gameId);
+    const saved = this.saved.list(gameId);
+    return this.rows(game, saved.length ? saved : this.fromSignUps(gameId)).map(
+      r => r.row
+    );
+  }
+
+  /**
+   * The rows a list would have: the lines already there followed by whatever
+   * `paste` adds. A player listed twice appears once, in the first place.
+   * Writes nothing.
+   */
+  preview(
+    gameId: number,
+    lines: readonly CandidateLine[],
+    paste = ''
+  ): CandidateRow[] {
+    const added = this.parser.texts(paste).map(text => ({ text }));
+    return this.rows(this.requireGame(gameId), [...lines, ...added]).map(
+      r => r.row
+    );
+  }
+
+  /** Makes this list the game's: the lines, the sign-ups and the guests. */
+  save(gameId: number, lines: readonly CandidateLine[]): CandidateRow[] {
+    const all = this.rows(this.requireGame(gameId), lines);
+    this.conn.transaction(() => {
+      this.saved.replaceAll(
+        gameId,
+        all.map(r => ({
+          text: r.row.text,
+          links: r.row.links,
+          introduced: r.row.introduced,
+        }))
+      );
+      this.participations.clearSignups(gameId);
+      const guestRows = [];
+      for (const { resolved, guest } of all) {
+        if (!resolved) continue;
+        this.participations.set(
+          gameId,
+          (resolved.playerId ?? resolved.hostPlayerId)!,
+          { signed_up: true }
+        );
+        if (guest)
+          guestRows.push({ position: resolved.line.position, ...guest });
+      }
+      this.guests.replaceAll(gameId, guestRows);
+    })();
+    return all.map(r => r.row);
+  }
+
+  /**
+   * Settles the name that failed to match by remembering the spelling as an
+   * alias or registering someone new. The list itself is not touched; the row
+   * matches the next time it is read. Choosing a player just for this line is
+   * not done here: that is a link on the line.
    */
   resolve(
     gameId: number,
     entry: Pick<UnresolvedEntry, 'line' | 'field'>,
     action: ResolveAction
   ): ResolveResult {
-    const game = this.games.get(gameId);
-    if (!game) throw new Error(`Unknown game: ${gameId}`);
-
-    const typed = this.lines.settle(entry, action);
-    if (!typed.settled) return { outcome: 'unresolved', entry: typed.entry };
-
-    // Read after `applyAction`, which may have registered a player or alias.
-    const matcher = this.lines.matcher();
-    const names = this.lines.names();
-    const registered = action.type === 'register';
-    const resolved = this.completeLine(
-      entry.line,
-      entry.field,
-      typed.playerId,
-      registered,
-      action,
-      matcher,
-      names
-    );
-    if ('entry' in resolved) {
-      return { outcome: 'unresolved', entry: resolved.entry };
+    this.requireGame(gameId);
+    if (action.type === 'link') {
+      throw new Error('A link is kept on the list line, not on the players');
     }
-
-    this.conn.transaction(() => {
-      this.signUp(game.id, resolved.line);
-      const row = this.guestRow(resolved.line);
-      if (row) this.guests.put(game.id, row);
-    })();
-    return {
-      outcome: 'resolved',
-      candidate: this.describe(resolved.line, names),
-    };
+    const typed = this.lines.settle(entry, action);
+    return typed.settled
+      ? { outcome: 'resolved' }
+      : { outcome: 'unresolved', entry: typed.entry };
   }
 
-  private targetGame(gameId: number | undefined, now: Date): GameRow {
-    if (gameId === undefined) {
-      return this.gameDay.resolveTarget(this.calendar.dateOf(now));
-    }
+  /**
+   * Guests keep the place they arrived in, since their position decides who
+   * gets the open slots; the regulars, whose order never mattered, fill the
+   * rest by name.
+   */
+  private fromSignUps(gameId: number): CandidateLine[] {
+    const names = this.lines.names();
+    const guests = this.guests.list(gameId); // already by position
+    const guestOf = new Map(
+      guests.flatMap(g => (g.player_id === null ? [] : [[g.player_id, g]]))
+    );
+    const regulars = this.participations
+      .list(gameId)
+      .filter(p => p.signed_up && !guestOf.has(p.player_id))
+      .map(p => p.name)
+      .sort((a, b) => a.localeCompare(b, 'es'));
+    const guestLines: CandidateLine[] = guests.map(g =>
+      g.player_id === null
+        ? { text: `${names.get(g.host_player_id)} +1` }
+        : {
+            text: `${names.get(g.player_id)} (${names.get(g.host_player_id)})`,
+            introduced: true,
+          }
+    );
+
+    const total = regulars.length + guestLines.length;
+    const placed = new Array<CandidateLine | undefined>(total);
+    let last = -1;
+    guests.forEach((g, i) => {
+      // Keep the stored position, but never behind an earlier guest or so far
+      // along that the guests after it would not fit.
+      const index = Math.min(
+        Math.max(g.position - 1, last + 1),
+        total - (guests.length - i)
+      );
+      placed[index] = guestLines[i];
+      last = index;
+    });
+    const rest = regulars.map(text => ({ text }));
+    return Array.from(placed, slot => slot ?? rest.shift()!);
+  }
+
+  private requireGame(gameId: number): GameRow {
     const game = this.games.get(gameId);
     if (!game) throw new Error(`Unknown game: ${gameId}`);
     return game;
   }
 
+  /** Every line read against the current players, duplicates folded away. */
+  private rows(game: GameRow, lines: readonly CandidateLine[]): ReadLine[] {
+    const matcher = this.lines.matcher();
+    const names = this.lines.names();
+    const seen = new Set<string>();
+    const out: ReadLine[] = [];
+    for (const { text: raw, links, introduced } of lines) {
+      const position = out.length + 1;
+      const text = this.parser.texts(raw)[0];
+      if (text === undefined) continue;
+      const line = this.parser.parse(text, position);
+      const outcome = this.resolveLine(line, matcher, names, links);
+      const key =
+        'entry' in outcome
+          ? `text:${text.toLocaleLowerCase('es')}`
+          : outcome.line.line.kind === 'plusOne'
+            ? null
+            : `player:${outcome.line.playerId}`;
+      if (key !== null) {
+        if (seen.has(key)) continue;
+        seen.add(key);
+      }
+      if ('entry' in outcome) {
+        out.push({
+          row: {
+            position,
+            text,
+            links,
+            introduced,
+            status: 'unresolved',
+            entry: outcome.entry,
+          },
+        });
+        continue;
+      }
+      const guest = this.guestRow(outcome.line, introduced);
+      out.push({
+        resolved: outcome.line,
+        guest: guest ?? undefined,
+        row: {
+          position,
+          text,
+          links,
+          introduced,
+          status: 'matched',
+          candidate: this.describe(game, outcome.line, names, guest),
+        },
+      });
+    }
+    return out;
+  }
+
   private resolveLine(
     line: ParsedLine,
     matcher: NameMatcher,
-    names: Map<number, string>
+    names: Map<number, string>,
+    links?: CandidateLinks
   ): { line: ResolvedLine } | { entry: UnresolvedEntry } {
+    const read = (spelled: string, chosen?: number): NameMatch =>
+      chosen !== undefined && names.has(chosen)
+        ? { outcome: 'matched', playerId: chosen }
+        : matcher.match(spelled);
     let playerId: number | null = null;
     if (line.kind !== 'plusOne') {
-      const name = matcher.match(line.name);
+      const name = read(line.name, links?.name);
       if (name.outcome !== 'matched') {
         return { entry: this.lines.unresolved(line, 'name', name, names) };
       }
@@ -172,106 +316,51 @@ export class CandidateResolutionService {
     }
     let hostPlayerId: number | null = null;
     if (line.kind !== 'plain') {
-      const host = matcher.match(line.hostName);
+      const host = read(line.hostName, links?.host);
       if (host.outcome !== 'matched') {
         return { entry: this.lines.unresolved(line, 'host', host, names) };
       }
       hostPlayerId = host.playerId;
     }
-    // A name that matched is already a known player, so a host annotation
-    // changes nothing; only a plus-one makes a guest here.
-    return {
-      line:
-        line.kind === 'plusOne'
-          ? { line, playerId: null, hostPlayerId, registered: false }
-          : { line, playerId, hostPlayerId: null, registered: false },
-    };
+    return { line: { line, playerId, hostPlayerId } };
   }
 
-  /** With one field settled, match the other and build the line to store. */
-  private completeLine(
-    line: ParsedLine,
-    field: LineField,
-    settledId: number,
-    registered: boolean,
-    action: ResolveAction,
-    matcher: NameMatcher,
-    names: Map<number, string>
-  ): { line: ResolvedLine } | { entry: UnresolvedEntry } {
-    if (line.kind === 'plain') {
-      return {
-        line: { line, playerId: settledId, hostPlayerId: null, registered },
-      };
-    }
-    if (line.kind === 'plusOne') {
-      return {
-        line: { line, playerId: null, hostPlayerId: settledId, registered },
-      };
-    }
-    if (field === 'name') {
-      // The host's own settled value, if the organiser gave one for a new
-      // player, otherwise whoever the pasted host name matches.
-      const given =
-        action.type === 'register' ? action.introducedBy : undefined;
-      let hostPlayerId = given ?? null;
-      if (hostPlayerId === null) {
-        const host = matcher.match(line.hostName);
-        if (host.outcome !== 'matched') {
-          return { entry: this.lines.unresolved(line, 'host', host, names) };
-        }
-        hostPlayerId = host.playerId;
-      }
-      return { line: { line, playerId: settledId, hostPlayerId, registered } };
-    }
-    // The host was settled; now the guest's own name still has to match.
-    const name = matcher.match(line.name);
-    if (name.outcome !== 'matched') {
-      return { entry: this.lines.unresolved(line, 'name', name, names) };
-    }
-    return {
-      line: {
-        line,
-        playerId: name.playerId,
-        hostPlayerId: settledId,
-        registered: false,
-      },
-    };
-  }
-
-  private signUp(gameId: number, r: ResolvedLine): void {
-    const signedUp = r.playerId ?? r.hostPlayerId;
-    this.participations.set(gameId, signedUp!, { signed_up: true });
-  }
-
-  /** A guest row for an anonymous plus-one, or for a player this paste registered as someone's guest. */
-  private guestRow(r: ResolvedLine): {
-    position: number;
-    player_id: number | null;
-    host_player_id: number;
-  } | null {
+  /**
+   * A guest row for an anonymous plus-one, or for a name this very line
+   * registered as its host's guest; a known player written with a host is a
+   * regular like any other.
+   */
+  private guestRow(r: ResolvedLine, introduced?: true): GuestRow | null {
     if (r.line.kind === 'plusOne') {
-      return {
-        position: r.line.position,
-        player_id: null,
-        host_player_id: r.hostPlayerId!,
-      };
+      return { player_id: null, host_player_id: r.hostPlayerId! };
     }
-    if (r.line.kind === 'hostAnnotated' && r.registered) {
-      return {
-        position: r.line.position,
-        player_id: r.playerId,
-        host_player_id: r.hostPlayerId!,
-      };
+    if (r.line.kind === 'hostAnnotated' && introduced) {
+      return { player_id: r.playerId, host_player_id: r.hostPlayerId! };
     }
     return null;
   }
 
-  private describe(
-    r: ResolvedLine,
-    names: Map<number, string>
-  ): MatchedCandidate {
-    const row = this.guestRow(r);
+  /** Asks for seniority the first time a player appears in the game's season. */
+  private seniorityPrompt(
+    game: GameRow,
+    playerId: number | null
+  ): Pick<MatchedCandidate, 'seniorityPrompt' | 'suggested'> {
+    if (playerId === null) return {};
+    if (this.players.hasAppeared(game.season_id, playerId)) return {};
     return {
+      seniorityPrompt: true,
+      suggested: this.players.suggestSeniority(game.season_id, playerId),
+    };
+  }
+
+  private describe(
+    game: GameRow,
+    r: ResolvedLine,
+    names: Map<number, string>,
+    row: GuestRow | null
+  ): MatchedCandidate {
+    return {
+      ...this.seniorityPrompt(game, r.playerId),
       position: r.line.position,
       playerId: r.playerId,
       name: r.playerId === null ? null : (names.get(r.playerId) ?? null),

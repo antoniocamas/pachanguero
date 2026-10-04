@@ -115,6 +115,40 @@ describe('API', () => {
     });
   });
 
+  describe('known players and game removal', () => {
+    it('GET /players lists players of every season, enrolled or not', async () => {
+      const old = seasons.create({ name: '1980/1981' });
+      await fetch(`${base}/seasons/${old.id}/players`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ name: 'Veterano', seasons: 3 }),
+      });
+      const next = seasons.create({ name: '1981/1982' });
+      expect(
+        (await (
+          await fetch(`${base}/seasons/${next.id}/players`)
+        ).json()) as unknown[]
+      ).toEqual([]);
+      const known = (await (await fetch(`${base}/players`)).json()) as {
+        name: string;
+      }[];
+      expect(known.map(p => p.name)).toContain('Veterano');
+    });
+
+    it('DELETE /games/:id removes the game and what was recorded on it', async () => {
+      const season = seasons.create({ name: '1982/1983' });
+      const game = games.create(season.id, '1982-10-08');
+      await fetch(`${base}/games/${game.id}/candidates`, {
+        method: 'PUT',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ lines: [{ text: 'Fantasma' }] }),
+      });
+      const res = await fetch(`${base}/games/${game.id}`, { method: 'DELETE' });
+      expect(res.status).toBe(200);
+      expect((await fetch(`${base}/games/${game.id}`)).status).toBe(404);
+    });
+  });
+
   describe('POST /players/:playerId/aliases', () => {
     const post = (path: string, body: unknown) =>
       fetch(`${base}${path}`, {
@@ -246,44 +280,163 @@ describe('API', () => {
     });
   });
 
-  describe('candidate paste', () => {
-    const post = (path: string, body: unknown) =>
+  describe('candidate list', () => {
+    type Rows = {
+      rows: {
+        position: number;
+        text: string;
+        status: string;
+        candidate?: { name: string };
+        links?: { name?: number; host?: number };
+        entry?: { line: unknown; field: string };
+      }[];
+    };
+    const send = (method: string, path: string, body?: unknown) =>
       fetch(`${base}${path}`, {
-        method: 'POST',
+        method,
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(body),
+        body: body === undefined ? undefined : JSON.stringify(body),
       });
+    const post = (path: string, body: unknown) => send('POST', path, body);
 
-    it('pastes, then settles an unresolved name', async () => {
+    it('previews a paste added to the list without storing anything', async () => {
       const season = seasons.create({ name: '2003/2004' });
       const game = games.create(season.id, '2003-10-06');
       await post(`/seasons/${season.id}/players`, { name: 'Ana', seasons: 1 });
 
-      const pasted = await post('/games/candidates:paste', {
-        text: '1 Ana ⚽\n2 Nueva',
-        gameId: game.id,
+      const res = await post(`/games/${game.id}/candidates/preview`, {
+        lines: [],
+        paste: '1 Ana ⚽\n2 Nueva',
       });
-      expect(pasted.status).toBe(200);
-      const body = (await pasted.json()) as {
-        matched: { name: string }[];
-        unresolved: { line: unknown; field: string }[];
-      };
-      expect(body.matched.map(m => m.name)).toEqual(['Ana']);
-      expect(body.unresolved).toHaveLength(1);
+      expect(res.status).toBe(200);
+      const { rows } = (await res.json()) as Rows;
+      expect(rows.map(r => [r.text, r.status])).toEqual([
+        ['Ana', 'matched'],
+        ['Nueva', 'unresolved'],
+      ]);
+      const saved = (await (
+        await fetch(`${base}/games/${game.id}/candidates`)
+      ).json()) as Rows;
+      expect(saved.rows).toEqual([]);
+    });
+
+    it('ignores team headings and separator lines in the paste', async () => {
+      const season = seasons.create({ name: '2002/2003' });
+      const game = games.create(season.id, '2002-10-07');
+      await post(`/seasons/${season.id}/players`, {
+        name: 'Berta',
+        seasons: 1,
+      });
+
+      const res = await post(`/games/${game.id}/candidates/preview`, {
+        paste: 'Claros\n------------\nBerta\n\nOscuros\n---------\nDesconocido',
+      });
+      const { rows } = (await res.json()) as Rows;
+      expect(rows.map(r => r.text)).toEqual(['Berta', 'Desconocido']);
+    });
+
+    it('saves the list, which is there again on the next load', async () => {
+      const season = seasons.create({ name: '2004/2005' });
+      const game = games.create(season.id, '2004-10-06');
+      await post(`/seasons/${season.id}/players`, { name: 'Gema', seasons: 1 });
+      const url = `/games/${game.id}/candidates`;
+
+      const put = await send('PUT', url, {
+        lines: [{ text: 'Gema' }, { text: 'Desconocido' }],
+      });
+      expect(put.status).toBe(200);
+
+      const { rows } = (await (await fetch(`${base}${url}`)).json()) as Rows;
+      expect(rows.map(r => [r.position, r.text, r.status])).toEqual([
+        [1, 'Gema', 'matched'],
+        [2, 'Desconocido', 'unresolved'],
+      ]);
+      const detail = (await (
+        await fetch(`${base}/games/${game.id}`)
+      ).json()) as { participations: { name: string; signed_up: number }[] };
+      expect(
+        detail.participations.filter(p => p.signed_up).map(p => p.name)
+      ).toEqual(['Gema']);
+    });
+
+    it('settles an unresolved name, which then reads as matched', async () => {
+      const season = seasons.create({ name: '1971/1972' });
+      const game = games.create(season.id, '1971-10-08');
+      const { rows } = (await (
+        await post(`/games/${game.id}/candidates/preview`, { paste: 'Nueva' })
+      ).json()) as Rows;
 
       const resolved = await post(`/games/${game.id}/candidates/resolve`, {
-        ...body.unresolved[0],
+        ...rows[0].entry,
         action: { type: 'register', name: 'Nueva' },
       });
       expect(resolved.status).toBe(200);
-      expect(await resolved.json()).toMatchObject({
-        outcome: 'resolved',
-        candidate: { name: 'Nueva' },
+      expect(await resolved.json()).toEqual({ outcome: 'resolved' });
+
+      const again = (await (
+        await post(`/games/${game.id}/candidates/preview`, {
+          lines: [{ text: 'Nueva' }],
+        })
+      ).json()) as Rows;
+      expect(again.rows[0]).toMatchObject({ status: 'matched' });
+    });
+
+    it("keeps the organiser's choice for an ambiguous name through a save and a reload", async () => {
+      const season = seasons.create({ name: '1973/1974' });
+      const game = games.create(season.id, '1973-10-08');
+      const juanito = await (
+        await post(`/seasons/${season.id}/players`, {
+          name: 'Juanito',
+          seasons: 1,
+        })
+      ).json();
+      const juan = await (
+        await post(`/seasons/${season.id}/players`, {
+          name: 'Juan',
+          seasons: 1,
+        })
+      ).json();
+      await post(`/players/${juan.id}/aliases`, { alias: 'Juanito' });
+
+      const open = (await (
+        await post(`/games/${game.id}/candidates/preview`, { paste: 'Juanito' })
+      ).json()) as Rows;
+      expect(open.rows[0].status).toBe('unresolved');
+
+      await send('PUT', `/games/${game.id}/candidates`, {
+        lines: [{ text: 'Juanito', links: { name: juanito.id } }],
+      });
+      const { rows } = (await (
+        await fetch(`${base}/games/${game.id}/candidates`)
+      ).json()) as Rows;
+      expect(rows[0]).toMatchObject({
+        status: 'matched',
+        links: { name: juanito.id },
+        candidate: { name: 'Juanito' },
       });
     });
 
-    it('rejects a paste without text and a resolve for an unknown game', async () => {
-      expect((await post('/games/candidates:paste', {})).status).toBe(400);
+    it('rejects malformed lines and an unknown game', async () => {
+      const season = seasons.create({ name: '1972/1973' });
+      const game = games.create(season.id, '1972-10-09');
+      expect(
+        (await send('PUT', `/games/${game.id}/candidates`, { lines: 'Ana' }))
+          .status
+      ).toBe(400);
+      expect(
+        (await post(`/games/${game.id}/candidates/preview`, { lines: [1] }))
+          .status
+      ).toBe(400);
+      expect(
+        (
+          await post(`/games/${game.id}/candidates/preview`, {
+            lines: [{ text: 'Ana', links: { name: 'x' } }],
+          })
+        ).status
+      ).toBe(400);
+      expect(
+        (await send('PUT', '/games/99999/candidates', { lines: [] })).status
+      ).toBe(400);
       const res = await post('/games/99999/candidates/resolve', {
         line: { position: 1, kind: 'plain', name: 'X' },
         action: { type: 'register', name: 'X' },

@@ -18,31 +18,30 @@ aparece en un partido de ella; en ese momento se le pregunta cuántas temporadas
 lleva (la sugerencia es la última que tenía registrada más una, o 0 si es
 nuevo) y no se le vuelve a preguntar.
 
-## Cuándo es el partido
-
-El día y la hora del partido semanal se guardan **con versiones**: un cambio de
-día es una fila nueva con su fecha de efecto, nunca una edición, así que las
-semanas anteriores siguen resolviéndose como se resolvieron. Al pegar una lista
-de candidatos, el partido es el siguiente día de juego a partir de hoy (hoy
-mismo si hoy es día de partido); si aún no existe, se crea.
-
 ## 1. Candidatos
 
-El organizador pega la lista de WhatsApp. Se limpia (números, viñetas, emojis,
-espacios) y cada nombre se busca entre los jugadores y sus apodos, sin importar
-mayúsculas ni tildes:
+El organizador arma la lista de candidatos del partido: pega la de WhatsApp o
+escribe un nombre, y lo que añade va **detrás** de lo que ya hay. Se limpia
+(numeración, viñetas, emojis, caracteres invisibles) y cada nombre se
+busca entre los jugadores y sus apodos, sin importar mayúsculas ni tildes:
 
-- Un nombre que encaja con **uno solo** queda apuntado.
+- Un nombre que encaja con **uno solo** queda reconocido.
 - Uno que no encaja con nadie, o que encaja con **varios**, se queda «sin
   resolver» y no se apunta a nadie hasta que el organizador decide: elegir al
-  jugador, elegirlo y recordar el apodo, o registrar a uno nuevo. Nunca se
-  adivina.
+  jugador (solo para esa línea), elegirlo y recordar el apodo, o registrar a uno
+  nuevo. Nunca se adivina.
 - Lo que hay bajo un encabezado `Reservas` se descarta.
-- `Nombre (Anfitrión)` es un invitado nombrado; `Anfitrión +1`, un acompañante
-  anónimo. Al registrar a alguien nuevo se guarda quién lo presentó.
+- `Nombre (Anfitrión)` es un invitado nombrado solo en la línea que registra a
+  ese nombre como nuevo; un jugador que ya existe no cambia por el paréntesis.
+- `Anfitrión +1` es un acompañante anónimo.
 
-Pegar de nuevo la lista **sustituye** a la anterior: quien ya no aparece deja de
-estar apuntado.
+La lista conserva el orden y un jugador repetido ocupa una sola línea; se puede
+quitar un nombre o vaciarla. **Nada cuenta hasta pulsar «Guardar lista»**: al
+guardar quedan apuntados los reconocidos y la lista sustituye a la anterior (lo
+jugado y lo pagado se conservan). Las líneas sin resolver se guardan solo como
+texto y se leen de nuevo contra los jugadores de ese momento, así que un apodo
+registrado entretanto ya las reconoce. Registrar un jugador o un apodo no espera
+al guardado.
 
 ## 2. Convocatoria
 
