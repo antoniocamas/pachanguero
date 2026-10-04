@@ -9,43 +9,23 @@ están documentadas en [`docs/domain-model/`](docs/domain-model/) — empieza po
 
 ## Qué hace
 
-- **Pantalla de partido.** Una fila por jugador, dos botones: se apunta / jugó /
-  pagó. Se acabó editar celdas a mano.
-- **Convocatoria.** Simula y confirma la selección de los 14, con la mercy rule.
+- **Lista de apuntados.** Pegas la lista de WhatsApp y el sistema reconoce los
+  nombres (con apodos, emojis y numeración), distingue habituales, invitados e
+  invitados anónimos (`+1`), y te deja resolver a mano lo que no tiene claro. Nunca
+  adivina un nombre.
+- **Convocatoria.** Simula y confirma quién entra, con puntos y mercy rule
+  cuando los habituales se pasan de 14, y por orden de llegada para los
+  invitados cuando sobran plazas.
+- **Lista final.** Pegas la lista de después del partido, con los equipos Claros y
+  Oscuros: es lo que registra quién jugó y cuánto debe cada uno.
 - **Puntos y deudas.** Clasificación en vivo y quién debe cuánto.
-- **Varias temporadas**, cada una con sus propias reglas.
+- **Temporadas con sus propias reglas.** La temporada actual sale de la fecha
+  (de septiembre a agosto), y el día y la hora del partido semanal se pueden
+  cambiar sin reescribir las semanas pasadas.
+- **Partidos del pasado**, registrándolos solo con su fecha.
 
-## Puesta en marcha
-
-```bash
-npm install
-npm run seed          # importa la temporada 2024/2025 desde data/seed/
-npm run dev           # API en :8787, web en :5173
-```
-
-Sin `npm run seed` arrancas en blanco: crea una temporada desde Ajustes.
-
-```bash
-npm test              # tests del dominio
-npm run build         # compila web + server
-npm start             # producción, un solo puerto, sirve la SPA y la API
-```
-
-## Estructura
-
-```
-docs/domain-model/   Las reglas, de dónde salen y qué se verificó
-data/seed/           Rejillas de 2024/2025 recuperadas del PDF
-server/src/domain/   Lógica pura, en clases: puntos, antigüedad, convocatoria (+ tests)
-server/src/db/       Esquema SQLite
-server/src/repo/     Repositorios y servicios (casos de uso)
-web/src/             React + Vite, mobile-first
-deploy/              systemd + Caddy
-```
-
-La carpeta `domain/` no sabe nada de SQLite ni de HTTP: son clases con sus
-tests, sin dependencias externas. Es donde viven las reglas, y donde hay que
-tocar para cambiarlas.
+Cómo fluye una semana, paso a paso:
+[`ciclo-del-partido.md`](docs/domain-model/ciclo-del-partido.md).
 
 ## Configuración
 
@@ -55,9 +35,9 @@ tocar para cambiarlas.
 | `HOST`           | `0.0.0.0`             | Ponlo a `127.0.0.1` detrás de Caddy |
 | `PACHANGUERO_DB` | `data/pachanguero.db` | Ruta del fichero SQLite             |
 
-Las reglas de juego son **por temporada**, en la base de datos, editables desde
-Ajustes: plazas, mercy seats, partidos de espera, dirección de degradación, y si
-un mercy seat pone el contador a cero o le resta N.
+Las reglas de juego son **por temporada**, editables desde Ajustes: plazas,
+mercy seats, partidos de espera, dirección de degradación, y si un mercy seat
+pone el contador a cero o le resta N.
 
 ## Despliegue en la Raspberry
 
@@ -87,9 +67,9 @@ sqlite3 /var/lib/pachanguero/pachanguero.db ".backup '/ruta/backup.db'"
 
 **`*` ya no significa tres cosas a la vez.** En la hoja era «me apunto», «jugué y
 te debo» y «no puntúo todavía», y al pagar se sobrescribía con un `4` sin dejar
-rastro de que el pago llegó tarde. Aquí son tres campos: `signed_up`, `played` y
-`paid_cents` con su `paid_on`. Por eso una convocatoria pasada se puede auditar
-aunque los pagos sigan llegando cuando quieran.
+rastro de que el pago llegó tarde. Aquí son tres datos distintos: apuntado,
+jugó y pagó (con la fecha en que llegó el dinero). Por eso una convocatoria
+pasada se puede auditar aunque los pagos sigan llegando cuando quieran.
 
 **Las convocatorias se congelan.** Cada ejecución guarda las posiciones, los
 puntos que vio y las reglas que aplicó.
@@ -100,5 +80,9 @@ temporadas.
 
 Los defectos del script original están catalogados en
 [`legacy-script-review.md`](docs/domain-model/legacy-script-review.md). El
-comportamiento por defecto **reproduce el script**, incluido el del contador; el
-flag `mercy_resets_counter` lo cambia a la regla tal y como está contada.
+comportamiento por defecto **reproduce el script**, incluido el del contador; la
+opción de temporada «el mercy seat pone el contador a cero» lo cambia a la regla
+tal y como está contada.
+
+Para desarrollar en el proyecto (instalar, tests, estructura del código), mira
+[`AGENTS.md`](AGENTS.md).

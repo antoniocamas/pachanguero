@@ -11,7 +11,7 @@ each has its own home, runner, and speed budget.
         │   real browser + real server + real DB
         │
         │   Integration (Vitest, server workspace)
-        │   route handlers + repo.ts against a real SQLite file
+        │   route handlers + the repository/service layer against a real SQLite file
         │
         │   Unit (Vitest, server/src/domain + web component tests)
         │   pure functions, isolated components
@@ -30,7 +30,7 @@ convocatoria selection. On the web side, this is a component's render logic or a
 transitions.
 
 **Do not use for:** anything that depends on how a route wires the domain layer to the DB, or on
-what a user actually sees end-to-end. A domain test that mocks `repo.ts` to test a route is
+what a user actually sees end-to-end. A domain test that mocks a repository to test a route is
 testing the mock, not the route.
 
 **Run:** `npm test` (root) or `npx vitest run` from `server/`. Gates every commit via the
@@ -42,7 +42,7 @@ pre-commit hook.
 in-memory) SQLite database created from `schema.sql`. No mocking the DB — a mocked DB only proves
 the mock's shape matches the handler's assumptions, not that the SQL is correct.
 
-**Use when:** the requirement spans repo.ts + a route — e.g. "POST /api/matches/:id/results
+**Use when:** the requirement spans the repository layer + a route — e.g. "POST /api/matches/:id/results
 updates standings" — but doesn't need a browser to observe. Most Given/When/Then scenarios in a
 work package's REQUIREMENTS.md land here: they describe API-observable behavior, not pixels.
 
@@ -59,7 +59,11 @@ they run alongside the domain suite.)
 server, which proxies `/api` to the real Express server, which reads/writes a real SQLite file.
 Nothing is mocked — that is what makes it E2E rather than a frontend smoke test. See
 `e2e/playwright.config.ts`: it boots both the server (pointed at an isolated `e2e/.tmp/e2e.db`
-via `PACHANGUERO_DB`) and the web dev server before running.
+via `PACHANGUERO_DB`) and the web dev server before running. That database is **shared by every
+spec in the run and never reset between them**, so a spec must either build the data it needs
+through the API or not depend on a clean slate — and a spec that needs an empty database (the
+first-season journey) has to run before any that create data, which today means it is the first
+test of the file that holds the others.
 
 **Use when:** the requirement is a critical path that only exists as a sequence across
 screens/requests, and where the wiring between frontend and backend is itself what's being

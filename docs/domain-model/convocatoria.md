@@ -1,7 +1,11 @@
 # El algoritmo de convocatoria
 
-Se ejecuta cuando se apuntan **más de 14** jugadores a un partido. Con 14 o menos
-juegan todos y no hay nada que decidir.
+Se ejecuta sobre los candidatos de un partido (la lista pegada de WhatsApp, ver
+[`ciclo-del-partido.md`](ciclo-del-partido.md)). Si los **habituales** son 14 o
+menos, juegan todos y no hay nada que decidir: los invitados ocupan las plazas
+que sobren por orden de llegada. El algoritmo de abajo (puntos, mercy rule)
+solo entra cuando los habituales por sí solos son **más de 14**; entonces
+compiten todos, invitados incluidos.
 
 ## Parámetros
 

@@ -48,6 +48,11 @@ Cuenta los `1` (fuera por puntos) y los `2` (degradado por la mercy rule). Las
 `D` no cuentan: son texto, y además si te tocó el mercy seat jugaste, así que tu
 punto sale de `Pagos`.
 
+> **El punto sigue a lo que pasó de verdad.** Si la convocatoria te dejó fuera
+> pero la lista final dice que jugaste, ese punto se retira; si una corrección
+> posterior de la lista final vuelve a dejarte fuera, vuelve. Ver
+> [`ciclo-del-partido.md`](ciclo-del-partido.md).
+
 Que ambos motivos valgan lo mismo es deliberado: da igual por qué te quedaste
 fuera, el sistema te compensa igual.
 
