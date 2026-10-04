@@ -69,19 +69,19 @@ Testability Assessment: F8 = Yes, fully automatable.
 
 ## Definition of Done
 
-- [ ] `ConvocatoriaService.commit`/`preview` branch correctly on `regularsCount` vs `rules.slots`,
+- [x] `ConvocatoriaService.commit`/`preview` branch correctly on `regularsCount` vs `rules.slots`,
       per every fixture above.
-- [ ] The exhaustive-grep check finds zero `participations…set(…, played)` call sites.
-- [ ] The seniority precondition throws exactly when specified.
-- [ ] **Graduation:** F8 realises UC-001-05-S1..S4 — graduation value is the modified
+- [x] The exhaustive-grep check finds zero `participations…set(…, played)` call sites.
+- [x] The seniority precondition throws exactly when specified.
+- [x] **Graduation:** F8 realises UC-001-05-S1..S4 — graduation value is the modified
       `convocatoria-service.test.ts`.
-- [ ] **Documentation:** `docs/domain-model/convocatoria.md` — add a pointer near `## Pasos` step 1
+- [x] **Documentation:** `docs/domain-model/convocatoria.md` — add a pointer near `## Pasos` step 1
       ("Reunir a los apuntados") noting that "apuntados" now means the resolved candidate pool
       (regulars + named/ephemeral guests) from task 08, not a raw `signed_up` read, and that this
       document describes selection only, not what actually happened on the pitch (task 10's own
       record). `docs/domain-model/points.md` — add one paragraph after `## 1. Asistencia` stating
       explicitly that a paid game requires a resolved final list (task 10), not merely a Convocatoria
       commit — checked in full during this task per the design's own note.
-- [ ] **Tests:** `npm test --workspace=server` passes.
-- [ ] **Regression:** deferred to task 12.
-- [ ] **Code checks:** `npm run lint` and `npm run format:check` pass on every touched file.
+- [x] **Tests:** `npm test --workspace=server` passes.
+- [x] **Regression:** deferred to task 12.
+- [x] **Code checks:** `npm run lint` and `npm run format:check` pass on every touched file.

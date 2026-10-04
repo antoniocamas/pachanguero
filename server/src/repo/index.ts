@@ -11,6 +11,7 @@ import { FinalListTargetResolver } from './final-list-target-resolver.js';
 import { GuestCandidateRepository } from './guest-candidate-repository.js';
 import { CandidateResolutionService } from './candidate-resolution-service.js';
 import { CandidateLineParser } from '../domain/candidate-line-parser.js';
+import { GuestSlotAllocator } from '../domain/guest-slot-allocator.js';
 import { NameStripper } from '../domain/name-stripper.js';
 import { GameDayResolutionService } from './game-day-resolution-service.js';
 import { ParticipationRepository } from './participation-repository.js';
@@ -64,6 +65,9 @@ export const convocatoriaService = new ConvocatoriaService(
   standingsService,
   new ConvocatoriaBuilder(),
   seasons,
+  guestCandidates,
+  players,
+  new GuestSlotAllocator(),
   db()
 );
 

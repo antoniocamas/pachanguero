@@ -5,12 +5,12 @@ juegan todos y no hay nada que decidir.
 
 ## Parámetros
 
-| Parámetro | Valor actual | Qué controla |
-|---|---:|---|
-| `SEATS` (`NUMBER_OF_MERCY_SEATS`) | 1 | Cuántas plazas se reservan a la mercy rule |
-| `GAMES_OUT_FOR_MERCY` (`GAMES_OUT_4_MERCY`) | 2 | Partidos fuera necesarios para ser candidato |
-| `DEMOTION_DIRECTION` | `bottom-up` | Si se degrada empezando por el 14º o por el 1º |
-| `D_RESETS_COUNTER` | `false` | Si una `D` pone el contador a 0 o le resta `GAMES_OUT_FOR_MERCY` |
+| Parámetro                                   | Valor actual | Qué controla                                                     |
+| ------------------------------------------- | -----------: | ---------------------------------------------------------------- |
+| `SEATS` (`NUMBER_OF_MERCY_SEATS`)           |            1 | Cuántas plazas se reservan a la mercy rule                       |
+| `GAMES_OUT_FOR_MERCY` (`GAMES_OUT_4_MERCY`) |            2 | Partidos fuera necesarios para ser candidato                     |
+| `DEMOTION_DIRECTION`                        |  `bottom-up` | Si se degrada empezando por el 14º o por el 1º                   |
+| `D_RESETS_COUNTER`                          |      `false` | Si una `D` pone el contador a 0 o le resta `GAMES_OUT_FOR_MERCY` |
 
 Los dos primeros existen en el Apps Script. Los dos últimos **no**: la dirección
 está hardcodeada a `bottom-up` y el reseteo está hardcodeado a «restar 2», aunque
@@ -23,6 +23,15 @@ la regla contada es «poner a cero». Ver
 
 En la hoja, los apuntados son quienes tienen `*` en la **última columna con
 datos** de `Pagos`. En el sistema nuevo es una tabla de inscripciones explícita.
+
+> **Qué son hoy los «apuntados».** Ya no es una lectura directa de `signed_up`:
+> es el conjunto de candidatos resuelto al pegar la lista de WhatsApp — los
+> habituales más los invitados (nombrados y anónimos). Mientras los habituales
+> quepan en las plazas, todos entran y los invitados ocupan el resto por orden
+> de llegada; si los habituales solos desbordan las plazas, todos compiten por
+> puntos (un invitado anónimo entra con 0 puntos y nunca se guarda). Este
+> documento describe solo la **selección**, no lo que pasó en el campo: quién
+> jugó y quién pagó lo fija la lista final del partido, no la convocatoria.
 
 ### 2. Ordenar por puntos, descendente
 
@@ -78,11 +87,11 @@ Se cogen los `SEATS` primeros.
 
 Promotee y demotee se intercambian de posición en la lista. Después:
 
-| Jugador | Marca en `FueraDeConvocatoria` |
-|---|---|
-| Promotee | `D` |
-| Demotee | `2` |
-| Resto de los que quedan fuera | `1` |
+| Jugador                       | Marca en `FueraDeConvocatoria` |
+| ----------------------------- | ------------------------------ |
+| Promotee                      | `D`                            |
+| Demotee                       | `2`                            |
+| Resto de los que quedan fuera | `1`                            |
 
 ## Verificación contra 2024/2025
 

@@ -294,8 +294,7 @@ export function GameDay({
               className="btn primary"
               disabled={busy || !signedCount}
               onClick={async () => {
-                if (!confirm('Guardar la convocatoria y marcar quién juega?'))
-                  return;
+                if (!confirm('Guardar la convocatoria?')) return;
                 try {
                   setPreview(await api.commit(gameId));
                   await load();
