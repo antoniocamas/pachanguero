@@ -34,6 +34,10 @@ describe('NameMatcher', () => {
       ['12) Pablo', 'Pablo'],
       ['3.  Álvaro    R', 'Álvaro R'],
       ['- Facu', 'Facu'],
+      // WhatsApp inserts invisible format characters (word joiner, zero-width space, marks)
+      ['5. \u2060Álvaro R', 'Álvaro R'],
+      ['\u200BFacu\u200E ', 'Facu'],
+      ['\uFEFF- Pablo', 'Pablo'],
     ])('%j -> %j', (raw, expected) => {
       expect(matcher.strip(raw)).toBe(expected);
     });
