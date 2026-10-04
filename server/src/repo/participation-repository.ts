@@ -79,6 +79,13 @@ export class ParticipationRepository {
       .run(values);
   }
 
+  /** Un-sign every player of a game, keeping their attendance and payment. */
+  clearSignups(gameId: number): void {
+    this.conn
+      .prepare('UPDATE participations SET signed_up = 0 WHERE game_id = ?')
+      .run(gameId);
+  }
+
   remove(gameId: number, playerId: number): void {
     this.conn
       .prepare('DELETE FROM participations WHERE game_id = ? AND player_id = ?')

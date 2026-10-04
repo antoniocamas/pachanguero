@@ -8,6 +8,10 @@ import { PlayerRegistrar } from './player-registrar.js';
 import { GameRepository } from './game-repository.js';
 import { ScheduleRepository } from './schedule-repository.js';
 import { FinalListTargetResolver } from './final-list-target-resolver.js';
+import { GuestCandidateRepository } from './guest-candidate-repository.js';
+import { CandidateResolutionService } from './candidate-resolution-service.js';
+import { CandidateLineParser } from '../domain/candidate-line-parser.js';
+import { NameStripper } from '../domain/name-stripper.js';
 import { GameDayResolutionService } from './game-day-resolution-service.js';
 import { ParticipationRepository } from './participation-repository.js';
 import { ExclusionRepository } from './exclusion-repository.js';
@@ -38,6 +42,20 @@ export const gameDayResolution = new GameDayResolutionService(
 );
 
 export const finalListTarget = new FinalListTargetResolver(games, schedule);
+
+export const guestCandidates = new GuestCandidateRepository(db());
+
+export const candidateResolution = new CandidateResolutionService(
+  games,
+  gameDayResolution,
+  players,
+  aliases,
+  participations,
+  guestCandidates,
+  new CandidateLineParser(new NameStripper()),
+  playerRegistrar,
+  db()
+);
 
 export const convocatoriaService = new ConvocatoriaService(
   games,

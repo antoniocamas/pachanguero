@@ -11,6 +11,7 @@ import {
   games,
   schedule,
   finalListTarget,
+  candidateResolution,
   participations,
   standingsService,
   convocatoriaService,
@@ -172,6 +173,36 @@ api.put(
 );
 
 /* ------------------------------------------------------------------ games */
+
+api.post(
+  '/games/candidates\\:paste',
+  route((req, res) => {
+    const text = req.body?.text;
+    if (typeof text !== 'string') throw new Error('text is required');
+    const gameId = req.body?.gameId;
+    res.json(
+      candidateResolution.paste(
+        text,
+        gameId === undefined ? undefined : id(gameId)
+      )
+    );
+  })
+);
+
+api.post(
+  '/games/:gameId/candidates/resolve',
+  route((req, res) => {
+    const { line, field, action } = req.body ?? {};
+    if (!line || !action) throw new Error('line and action are required');
+    res.json(
+      candidateResolution.resolve(
+        id(req.params.gameId),
+        { line, field: field ?? (line.kind === 'plusOne' ? 'host' : 'name') },
+        action
+      )
+    );
+  })
+);
 
 api.get(
   '/games/final-list-target',

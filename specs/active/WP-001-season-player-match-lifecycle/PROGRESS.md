@@ -28,7 +28,7 @@
 | 05  | Weekly schedule + game-day auto-resolution       | 1    | done    | 2026-10-04 |
 | 06  | Final-list target auto-resolution                | 1    | done    | 2026-10-04 |
 | 07  | Inline new-player registration                   | 1    | done    | 2026-10-04 |
-| 08  | Candidate list paste & resolution                | 1    | pending | —          |
+| 08  | Candidate list paste & resolution                | 1    | done    | 2026-10-04 |
 | 09  | Convocatoria commit decoupled, guest-aware       | 1    | pending | —          |
 | 10  | Final list paste & resolution                    | 1    | pending | —          |
 | 11  | Historical backfill                              | 1    | pending | —          |

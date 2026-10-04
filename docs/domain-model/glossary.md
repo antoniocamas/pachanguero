@@ -30,16 +30,45 @@ Para que entre uno, sale otro.
 - **Promotee** — el que entra por la mercy rule.
 - **Demotee** — el que sale para hacerle sitio.
 
+## Candidato
+
+Quien se ha apuntado a un partido, tal y como sale de la lista pegada de
+WhatsApp, antes de la convocatoria. Se guarda como `signed_up` y no implica que
+vaya a jugar. Cada pegado de la lista **sustituye** al anterior para ese
+partido: quien ya no aparece deja de estar apuntado (lo jugado y lo pagado se
+conservan).
+
+## Reserva
+
+No es un concepto del modelo. Si la lista pegada tiene un encabezado
+`Reservas`, ese encabezado y todo lo que viene debajo se descarta: no son
+candidatos ni nombres pendientes de resolver.
+
+## Invitado nombrado (invitado ocasional)
+
+Jugador nuevo que alguien trae a un partido, escrito como `Adri (David)`: el
+nombre y, entre paréntesis, quien lo trae. Se registra como jugador normal, con
+el vínculo a quien lo presentó, y en ese partido cuenta como invitado: no
+compite por puntos sino por orden de llegada. No hay una marca permanente de
+"ocasional"; es por partido. Si el nombre ya era un jugador conocido, la
+anotación no cambia nada y entra como cualquier otro.
+
+## Invitado anónimo
+
+Acompañante sin nombre, escrito como `Álvaro +1`. No es un jugador registrado:
+solo existe como plaza ligada a quien lo trae (quien sí queda apuntado). Compite
+por orden de llegada igual que un invitado nombrado.
+
 ## Marcas de la hoja `Pagos`
 
 Una celda por jugador y por semana:
 
-| Marca | Significado |
-|---|---|
-| `4` | Jugó y pagó sus 4 € — **vale 1 punto de asistencia** |
-| `8`, `12`, `16` | Pagó por sí mismo y por invitados (múltiplos de 4 €) |
-| `*` | Apuntado a este partido / jugó pero **no ha pagado** — deuda, 0 puntos |
-| vacío | No se apuntó |
+| Marca           | Significado                                                            |
+| --------------- | ---------------------------------------------------------------------- |
+| `4`             | Jugó y pagó sus 4 € — **vale 1 punto de asistencia**                   |
+| `8`, `12`, `16` | Pagó por sí mismo y por invitados (múltiplos de 4 €)                   |
+| `*`             | Apuntado a este partido / jugó pero **no ha pagado** — deuda, 0 puntos |
+| vacío           | No se apuntó                                                           |
 
 ⚠️ **El `*` está sobrecargado y es el problema de diseño más profundo del sistema
 original.** Significa a la vez «me apunto a este partido» (es lo que lee el
@@ -51,13 +80,13 @@ El precio de la pista es **56 €** repartido entre 14 = **4 € por cabeza**.
 
 ## Marcas de la hoja `FueraDeConvocatoria`
 
-| Marca | Significado | ¿Puntúa? |
-|---|---|---|
-| `1` | Te apuntaste y no entraste **por puntos** | Sí, +1 |
-| `2` | Te apuntaste, ibas dentro de los 14, y te **degradó la mercy rule** | Sí, +1 |
-| `D` | Te tocó el **mercy seat**: entraste | No — jugaste, así que puntúas vía `Pagos` |
+| Marca | Significado                                                         | ¿Puntúa?                                  |
+| ----- | ------------------------------------------------------------------- | ----------------------------------------- |
+| `1`   | Te apuntaste y no entraste **por puntos**                           | Sí, +1                                    |
+| `2`   | Te apuntaste, ibas dentro de los 14, y te **degradó la mercy rule** | Sí, +1                                    |
+| `D`   | Te tocó el **mercy seat**: entraste                                 | No — jugaste, así que puntúas vía `Pagos` |
 
-`1` y `2` son *códigos de motivo*, no un contador. El contador de partidos fuera
+`1` y `2` son _códigos de motivo_, no un contador. El contador de partidos fuera
 es implícito: se deriva contando marcas desde tu última `D`.
 
 Verificado contra la temporada 2024/2025: la secuencia de Pablo es

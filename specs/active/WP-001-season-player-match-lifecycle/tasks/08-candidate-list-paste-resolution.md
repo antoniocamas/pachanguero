@@ -115,20 +115,20 @@ introducedBy: David })` → `participations` row for Adri **and** a `guest_candi
 
 ## Definition of Done
 
-- [ ] `guest_candidates` table exists with the discriminator rule above.
-- [ ] `CandidateLineParser.parse` and `GuestSlotAllocator.allocate` pass every fixture above,
+- [x] `guest_candidates` table exists with the discriminator rule above.
+- [x] `CandidateLineParser.parse` and `GuestSlotAllocator.allocate` pass every fixture above,
       including the author's exact worked example.
-- [ ] `CandidateResolutionService.paste`/`resolve` pass every fixture above, including re-paste
+- [x] `CandidateResolutionService.paste`/`resolve` pass every fixture above, including re-paste
       replace semantics.
-- [ ] `GameDay.tsx` renders the paste flow per the Manual Test Plan.
-- [ ] **Graduation:** F6 realises UC-001-03-S1..S6,S9 — graduation value is
+- [x] `GameDay.tsx` renders the paste flow per the Manual Test Plan.
+- [x] **Graduation:** F6 realises UC-001-03-S1..S6,S9 — graduation value is
       `candidate-line-parser.test.ts` + `guest-slot-allocator.test.ts` +
       `candidate-resolution-service.test.ts` + the new E2E spec + the Manual Test Plan above.
-- [ ] **Documentation:** `docs/domain-model/glossary.md` — add entries for the new terms this task
+- [x] **Documentation:** `docs/domain-model/glossary.md` — add entries for the new terms this task
       introduces: candidate, reserva (explicitly not modeled as a distinct concept — a name past the
       "Reservas" trailer is simply dropped), invitado ocasional/nombrado (named guest) vs. invitado
       anónimo (ephemeral guest), each in the same style as the existing `## Mercy seat` entry.
-- [ ] **Tests:** `npm test --workspace=server` passes; `npm run test:e2e` passes for the new spec.
-- [ ] **Regression:** deferred to task 12.
-- [ ] **Code checks:** `npm run lint` and `npm run format:check` pass on every touched file,
+- [x] **Tests:** `npm test --workspace=server` passes; `npm run test:e2e` passes for the new spec.
+- [x] **Regression:** deferred to task 12.
+- [x] **Code checks:** `npm run lint` and `npm run format:check` pass on every touched file,
       including `web/src/pages/GameDay.tsx` per `.agents/rules/frontend-coding-standard.md`.

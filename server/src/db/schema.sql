@@ -86,6 +86,17 @@ CREATE TABLE IF NOT EXISTS participations (
 );
 CREATE INDEX IF NOT EXISTS idx_participations_player ON participations(player_id);
 
+-- Guests among a game's pasted candidates. A candidate with a row here is a
+-- guest (ranked by arrival, not points); one without is a regular. A NULL
+-- player_id is an anonymous '+1' who is not a registered player.
+CREATE TABLE IF NOT EXISTS guest_candidates (
+  game_id        INTEGER NOT NULL REFERENCES games(id)   ON DELETE CASCADE,
+  position       INTEGER NOT NULL,   -- 1-based place in the pasted list
+  player_id      INTEGER REFERENCES players(id) ON DELETE CASCADE,
+  host_player_id INTEGER NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  PRIMARY KEY (game_id, position)
+);
+
 -- One row per player left out of (or mercy-seated into) a game. The legacy
 -- FueraDeConvocatoria grid, normalised.
 CREATE TABLE IF NOT EXISTS exclusions (

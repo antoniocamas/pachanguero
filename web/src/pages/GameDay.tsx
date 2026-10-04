@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { CandidatePaste } from '../components/CandidatePaste';
 import {
   api,
   type ConvocatoriaResult,
@@ -186,6 +187,15 @@ export function GameDay({
           </div>
         </div>
       </div>
+
+      {gameId && (
+        <CandidatePaste
+          key={gameId}
+          gameId={gameId}
+          players={players}
+          onChanged={load}
+        />
+      )}
 
       {gameId && (
         <div className="card">

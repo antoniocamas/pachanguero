@@ -18,6 +18,13 @@
   are neither type-checked nor tested, so the break stayed silent until task 02 ran the import.
   Cost: task 02 had to fix a leftover from task 01, and the committed task 01 shipped a broken
   seed script.
+- R-003: 2026-10-04: [testing] Task 01 deleted `POST /seasons/:id/activate` and task 02 the
+  `is_active` flag, but `web/src/App.tsx` and `pages/Manage.tsx` still called
+  `api.activateSeason`, so creating a season failed with a 404 in the browser, and the existing
+  E2E spec had been failing since task 01. Neither task's checks run the browser; it surfaced in
+  task 08, whose E2E run was the first to exercise the UI after the removal. Same cause as R-002
+  (callers outside `server/src` not searched), recurring in a different task. Cost: task 08 had to
+  repair the season selector in the web app before its own E2E spec could pass.
 
 ## Action Items Summary
 

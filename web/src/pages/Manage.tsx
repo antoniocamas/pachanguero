@@ -7,11 +7,13 @@ export function Manage({
   seasons,
   players,
   onChanged,
+  onSelectSeason,
 }: {
   season: Season;
   seasons: Season[];
   players: Player[];
   onChanged: () => void;
+  onSelectSeason: (season: Season) => void;
 }) {
   const [name, setName] = useState('');
   const [seniority, setSeniority] = useState(1);
@@ -35,13 +37,20 @@ export function Manage({
         <h2>Temporada</h2>
         <div style={{ padding: '12px 14px' }}>
           <label className="field">
-            <span>Activa</span>
+            <span>Temporada</span>
             <select
               value={season.id}
-              onChange={(e) => guard(() => api.activateSeason(Number(e.target.value)))}
+              onChange={e => {
+                const chosen = seasons.find(
+                  s => s.id === Number(e.target.value)
+                );
+                if (chosen) onSelectSeason(chosen);
+              }}
             >
-              {seasons.map((s) => (
-                <option key={s.id} value={s.id}>{s.name}</option>
+              {seasons.map(s => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
               ))}
             </select>
           </label>
@@ -50,10 +59,10 @@ export function Manage({
             className="btn wide"
             onClick={() => {
               const n = prompt('Nombre de la temporada', '2025/2026');
-              if (n) guard(async () => {
-                const created = await api.createSeason({ name: n });
-                await api.activateSeason(created.id);
-              });
+              if (n)
+                guard(async () => {
+                  onSelectSeason(await api.createSeason({ name: n }));
+                });
             }}
           >
             + Nueva temporada
@@ -69,7 +78,11 @@ export function Manage({
             <input
               type="number"
               defaultValue={season.slots}
-              onBlur={(e) => guard(() => api.updateSeason(season.id, { slots: Number(e.target.value) }))}
+              onBlur={e =>
+                guard(() =>
+                  api.updateSeason(season.id, { slots: Number(e.target.value) })
+                )
+              }
             />
           </label>
           <label className="field">
@@ -77,7 +90,13 @@ export function Manage({
             <input
               type="number"
               defaultValue={season.mercy_seats}
-              onBlur={(e) => guard(() => api.updateSeason(season.id, { mercy_seats: Number(e.target.value) }))}
+              onBlur={e =>
+                guard(() =>
+                  api.updateSeason(season.id, {
+                    mercy_seats: Number(e.target.value),
+                  })
+                )
+              }
             />
           </label>
           <label className="field">
@@ -85,8 +104,12 @@ export function Manage({
             <input
               type="number"
               defaultValue={season.games_out_for_mercy}
-              onBlur={(e) =>
-                guard(() => api.updateSeason(season.id, { games_out_for_mercy: Number(e.target.value) }))
+              onBlur={e =>
+                guard(() =>
+                  api.updateSeason(season.id, {
+                    games_out_for_mercy: Number(e.target.value),
+                  })
+                )
               }
             />
           </label>
@@ -95,18 +118,25 @@ export function Manage({
             <input
               type="number"
               defaultValue={season.price_cents}
-              onBlur={(e) => guard(() => api.updateSeason(season.id, { price_cents: Number(e.target.value) }))}
+              onBlur={e =>
+                guard(() =>
+                  api.updateSeason(season.id, {
+                    price_cents: Number(e.target.value),
+                  })
+                )
+              }
             />
           </label>
           <label className="field">
             <span>Degradar empezando por</span>
             <select
               defaultValue={season.demotion_direction}
-              onChange={(e) =>
+              onChange={e =>
                 guard(() =>
                   api.updateSeason(season.id, {
-                    demotion_direction: e.target.value as Season['demotion_direction'],
-                  }),
+                    demotion_direction: e.target
+                      .value as Season['demotion_direction'],
+                  })
                 )
               }
             >
@@ -118,9 +148,11 @@ export function Manage({
             <span>Al recibir mercy seat, el contador…</span>
             <select
               defaultValue={season.mercy_resets_counter ? '1' : '0'}
-              onChange={(e) =>
+              onChange={e =>
                 guard(() =>
-                  api.updateSeason(season.id, { mercy_resets_counter: Number(e.target.value) }),
+                  api.updateSeason(season.id, {
+                    mercy_resets_counter: Number(e.target.value),
+                  })
                 )
               }
             >
@@ -140,8 +172,8 @@ export function Manage({
           <input
             placeholder="Nombre"
             value={name}
-            onChange={(e) => setName(e.target.value)}
-            onKeyDown={(e) => {
+            onChange={e => setName(e.target.value)}
+            onKeyDown={e => {
               if (e.key === 'Enter' && name.trim()) {
                 guard(() => api.addPlayer(season.id, name.trim(), seniority));
                 setName('');
@@ -154,7 +186,7 @@ export function Manage({
             style={{ width: 80 }}
             value={seniority}
             title="Temporadas de antigüedad"
-            onChange={(e) => setSeniority(Number(e.target.value))}
+            onChange={e => setSeniority(Number(e.target.value))}
           />
           <button
             className="btn"
@@ -167,7 +199,7 @@ export function Manage({
             +
           </button>
         </div>
-        {players.map((p) => (
+        {players.map(p => (
           <div key={p.id} className="row">
             <span className="name">{p.name}</span>
             <input
@@ -176,8 +208,12 @@ export function Manage({
               style={{ width: 72 }}
               defaultValue={p.seasons}
               title="Temporadas"
-              onBlur={(e) =>
-                guard(() => api.updatePlayer(season.id, p.id, { seasons: Number(e.target.value) }))
+              onBlur={e =>
+                guard(() =>
+                  api.updatePlayer(season.id, p.id, {
+                    seasons: Number(e.target.value),
+                  })
+                )
               }
             />
           </div>

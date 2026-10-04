@@ -16,9 +16,15 @@ export function App() {
 
   const loadSeasons = useCallback(async () => {
     try {
-      const all = await api.seasons();
+      const [all, current] = await Promise.all([
+        api.seasons(),
+        api.currentSeason(),
+      ]);
       setSeasons(all);
-      setSeason(all[0] ?? null);
+      // Keep the season being looked at; otherwise today's, else the latest.
+      setSeason(
+        prev => all.find(s => s.id === prev?.id) ?? current ?? all[0] ?? null
+      );
       setError(null);
     } catch (e) {
       setError((e as Error).message);
@@ -76,8 +82,7 @@ export function App() {
                 onClick={async () => {
                   const n = prompt('Nombre de la temporada', '2025/2026');
                   if (!n) return;
-                  const created = await api.createSeason({ name: n });
-                  await api.activateSeason(created.id);
+                  await api.createSeason({ name: n });
                   await refresh();
                 }}
               >
@@ -101,6 +106,7 @@ export function App() {
           seasons={seasons}
           players={players}
           onChanged={refresh}
+          onSelectSeason={setSeason}
         />
       )}
 

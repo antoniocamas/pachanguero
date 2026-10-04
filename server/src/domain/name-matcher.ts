@@ -1,3 +1,5 @@
+import { NameStripper } from './name-stripper.js';
+
 export interface NamedPlayer {
   id: number;
   name: string;
@@ -13,26 +15,20 @@ export type NameMatch =
   | { outcome: 'ambiguous'; playerIds: number[] }
   | { outcome: 'unresolved' };
 
-const LIST_MARKER = /^\s*(?:\d+[.)]?|[•\-*])\s*/;
-const EMOJI = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]|\uFE0F/gu;
-
 /**
  * Matches a pasted line against canonical names and aliases. Never guesses:
  * a name that fits more than one player is reported as ambiguous.
  */
 export class NameMatcher {
+  private readonly stripper = new NameStripper();
+
   constructor(
     private readonly players: readonly NamedPlayer[],
     private readonly aliases: readonly PlayerAlias[]
   ) {}
 
-  /** Drop the list marker, then emoji, then tidy whitespace — in that order. */
   strip(raw: string): string {
-    return raw
-      .replace(LIST_MARKER, '')
-      .replace(EMOJI, '')
-      .replace(/\s+/g, ' ')
-      .trim();
+    return this.stripper.strip(raw);
   }
 
   match(raw: string): NameMatch {

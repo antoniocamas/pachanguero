@@ -15,7 +15,6 @@ export interface Player {
   id: number;
   name: string;
   seasons: number;
-  active: number;
 }
 
 export interface Game {
@@ -89,6 +88,41 @@ export interface GameDetail {
   } | null;
 }
 
+export type ParsedLine =
+  | { position: number; kind: 'plain'; name: string }
+  | { position: number; kind: 'hostAnnotated'; name: string; hostName: string }
+  | { position: number; kind: 'plusOne'; hostName: string };
+
+export interface UnresolvedEntry {
+  line: ParsedLine;
+  field: 'name' | 'host';
+  reason: 'unmatched' | 'ambiguous' | 'collision';
+  candidates: { id: number; name: string }[];
+}
+
+export interface MatchedCandidate {
+  position: number;
+  playerId: number | null;
+  name: string | null;
+  hostPlayerId: number | null;
+  guest: 'named' | 'anonymous' | null;
+}
+
+export interface CandidatePasteResult {
+  game: Game;
+  matched: MatchedCandidate[];
+  unresolved: UnresolvedEntry[];
+}
+
+export type ResolveAction =
+  | { type: 'link'; playerId: number }
+  | { type: 'linkAsAlias'; playerId: number }
+  | { type: 'register'; name: string; introducedBy?: number };
+
+export type ResolveResult =
+  | { outcome: 'resolved'; candidate: MatchedCandidate }
+  | { outcome: 'unresolved'; entry: UnresolvedEntry };
+
 async function call<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`/api${path}`, {
     headers: { 'Content-Type': 'application/json' },
@@ -109,8 +143,7 @@ export const api = {
     call<Season>('/seasons', { method: 'POST', body: body(data) }),
   updateSeason: (id: number, patch: Partial<Season>) =>
     call<Season>(`/seasons/${id}`, { method: 'PATCH', body: body(patch) }),
-  activateSeason: (id: number) =>
-    call<Season>(`/seasons/${id}/activate`, { method: 'POST' }),
+  currentSeason: () => call<Season | null>('/seasons/current'),
 
   players: (seasonId: number) => call<Player[]>(`/seasons/${seasonId}/players`),
   addPlayer: (seasonId: number, name: string, seasons: number) =>
@@ -121,7 +154,7 @@ export const api = {
   updatePlayer: (
     seasonId: number,
     playerId: number,
-    patch: { seasons?: number; active?: boolean }
+    patch: { seasons?: number }
   ) =>
     call<{ ok: true }>(`/seasons/${seasonId}/players/${playerId}`, {
       method: 'PATCH',
@@ -152,6 +185,21 @@ export const api = {
     call<Participation[]>(`/games/${gameId}/players/${playerId}`, {
       method: 'PUT',
       body: body(patch),
+    }),
+
+  pasteCandidates: (text: string, gameId?: number) =>
+    call<CandidatePasteResult>('/games/candidates:paste', {
+      method: 'POST',
+      body: body({ text, gameId }),
+    }),
+  resolveCandidate: (
+    gameId: number,
+    entry: Pick<UnresolvedEntry, 'line' | 'field'>,
+    action: ResolveAction
+  ) =>
+    call<ResolveResult>(`/games/${gameId}/candidates/resolve`, {
+      method: 'POST',
+      body: body({ ...entry, action }),
     }),
 
   standings: (seasonId: number) =>

@@ -245,4 +245,50 @@ describe('API', () => {
       expect(body.game.played_on).toBe('2005-10-10');
     });
   });
+
+  describe('candidate paste', () => {
+    const post = (path: string, body: unknown) =>
+      fetch(`${base}${path}`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+    it('pastes, then settles an unresolved name', async () => {
+      const season = seasons.create({ name: '2003/2004' });
+      const game = games.create(season.id, '2003-10-06');
+      await post(`/seasons/${season.id}/players`, { name: 'Ana', seasons: 1 });
+
+      const pasted = await post('/games/candidates:paste', {
+        text: '1 Ana ⚽\n2 Nueva',
+        gameId: game.id,
+      });
+      expect(pasted.status).toBe(200);
+      const body = (await pasted.json()) as {
+        matched: { name: string }[];
+        unresolved: { line: unknown; field: string }[];
+      };
+      expect(body.matched.map(m => m.name)).toEqual(['Ana']);
+      expect(body.unresolved).toHaveLength(1);
+
+      const resolved = await post(`/games/${game.id}/candidates/resolve`, {
+        ...body.unresolved[0],
+        action: { type: 'register', name: 'Nueva' },
+      });
+      expect(resolved.status).toBe(200);
+      expect(await resolved.json()).toMatchObject({
+        outcome: 'resolved',
+        candidate: { name: 'Nueva' },
+      });
+    });
+
+    it('rejects a paste without text and a resolve for an unknown game', async () => {
+      expect((await post('/games/candidates:paste', {})).status).toBe(400);
+      const res = await post('/games/99999/candidates/resolve', {
+        line: { position: 1, kind: 'plain', name: 'X' },
+        action: { type: 'register', name: 'X' },
+      });
+      expect(res.status).toBe(400);
+    });
+  });
 });
