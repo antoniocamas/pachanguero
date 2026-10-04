@@ -40,15 +40,15 @@ database, confirming nothing any of tasks 01-11 touched regressed anything anoth
 
 ## Definition of Done
 
-- [ ] `npm run lint` passes across the whole repository.
+- [x] `npm run lint` passes across the whole repository.
 - [ ] `npm run format:check` passes across the whole repository.
-- [ ] `npm test --workspace=server` passes in full.
-- [ ] `npm run test:e2e` passes in full.
-- [ ] The manual Wednesday-cycle walkthrough (step 5 above) completes with no unexpected error and
+- [x] `npm test --workspace=server` passes in full.
+- [x] `npm run test:e2e` passes in full.
+- [x] The manual Wednesday-cycle walkthrough (step 5 above) completes with no unexpected error and
       the standings reflect the exclusion retraction correctly.
-- [ ] **Graduation:** `throwaway` — this task verifies the iteration as a whole; it realises no
+- [x] **Graduation:** `throwaway` — this task verifies the iteration as a whole; it realises no
       scenario of its own beyond re-confirming every task's own graduation still holds together.
-- [ ] **Documentation:** none — this task changes no behaviour and makes no document untrue.
-- [ ] **Tests:** `npm test --workspace=server`, `npm run test:e2e`.
-- [ ] **Regression:** this task _is_ the regression.
+- [x] **Documentation:** none — this task changes no behaviour and makes no document untrue.
+- [x] **Tests:** `npm test --workspace=server`, `npm run test:e2e`.
+- [x] **Regression:** this task _is_ the regression.
 - [ ] **Code checks:** `npm run lint`, `npm run format:check` — full repository, not `--cached`.
