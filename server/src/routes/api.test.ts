@@ -11,13 +11,14 @@ describe('API', () => {
   let base: string;
   let seasons: typeof import('../repo/index.js').seasons;
   let aliases: typeof import('../repo/index.js').aliases;
+  let games: typeof import('../repo/index.js').games;
 
   beforeAll(async () => {
     // The composition root opens the DB at import time, so point it at a
     // throwaway file first.
     dir = mkdtempSync(join(tmpdir(), 'pachanguero-api-'));
     process.env.PACHANGUERO_DB = join(dir, 'test.db');
-    ({ seasons, aliases } = await import('../repo/index.js'));
+    ({ seasons, aliases, games } = await import('../repo/index.js'));
     const { api } = await import('./api.js');
     const app = express();
     app.use(express.json());
@@ -225,6 +226,23 @@ describe('API', () => {
           })
         ).status
       ).toBe(400);
+    });
+  });
+
+  describe('GET /games/final-list-target', () => {
+    it('returns { game: null } when no game is outstanding', async () => {
+      const res = await fetch(`${base}/games/final-list-target`);
+      expect(res.status).toBe(200);
+      expect(await res.json()).toEqual({ game: null });
+    });
+
+    it('returns the latest outstanding past game', async () => {
+      const season = seasons.create({ name: '2005/2006' });
+      games.create(season.id, '2005-10-03');
+      games.create(season.id, '2005-10-10');
+      const res = await fetch(`${base}/games/final-list-target`);
+      const body = (await res.json()) as { game: { played_on: string } };
+      expect(body.game.played_on).toBe('2005-10-10');
     });
   });
 });

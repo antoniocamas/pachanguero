@@ -10,6 +10,7 @@ import {
   aliases,
   games,
   schedule,
+  finalListTarget,
   participations,
   standingsService,
   convocatoriaService,
@@ -171,6 +172,11 @@ api.put(
 );
 
 /* ------------------------------------------------------------------ games */
+
+api.get(
+  '/games/final-list-target',
+  route((_req, res) => res.json({ game: finalListTarget.resolve() ?? null }))
+);
 
 api.get(
   '/seasons/:id/games',

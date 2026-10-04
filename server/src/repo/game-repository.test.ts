@@ -35,6 +35,17 @@ describe('GameRepository', () => {
     expect(games.findOrCreate(seasonId, '2025-09-08').id).not.toBe(bis.id);
   });
 
+  it('unresolvedOnOrBefore returns open games up to the date, newest first', () => {
+    games.create(seasonId, '2025-09-08');
+    games.create(seasonId, '2025-09-15', null, 'played');
+    games.create(seasonId, '2025-09-22', null, 'cancelled');
+    games.create(seasonId, '2025-09-29');
+    games.create(seasonId, '2025-10-06');
+    expect(
+      games.unresolvedOnOrBefore('2025-09-29').map(g => g.played_on)
+    ).toEqual(['2025-09-29', '2025-09-08']);
+  });
+
   it('lists games ordered by date', () => {
     games.create(seasonId, '2025-09-15');
     games.create(seasonId, '2025-09-08');

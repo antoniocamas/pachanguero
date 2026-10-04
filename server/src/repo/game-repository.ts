@@ -49,6 +49,17 @@ export class GameRepository {
     return existing ?? this.create(seasonId, playedOn);
   }
 
+  /** Games on or before `asOf` whose final list is still outstanding, newest first. */
+  unresolvedOnOrBefore(asOf: string): GameRow[] {
+    return this.conn
+      .prepare(
+        `SELECT * FROM games
+          WHERE status NOT IN ('played', 'cancelled') AND played_on <= @asOf
+          ORDER BY played_on DESC, id DESC`
+      )
+      .all({ asOf }) as GameRow[];
+  }
+
   update(id: number, patch: Partial<GameRow>): GameRow | undefined {
     const keys = UPDATABLE_COLUMNS.filter(k => patch[k] !== undefined);
     if (keys.length) {

@@ -26,7 +26,7 @@
 | 03  | Seniority capture on first appearance            | 1    | done    | 2026-10-04 |
 | 04  | Name/alias matching with decoration stripping    | 1    | done    | 2026-10-04 |
 | 05  | Weekly schedule + game-day auto-resolution       | 1    | done    | 2026-10-04 |
-| 06  | Final-list target auto-resolution                | 1    | pending | —          |
+| 06  | Final-list target auto-resolution                | 1    | done    | 2026-10-04 |
 | 07  | Inline new-player registration                   | 1    | pending | —          |
 | 08  | Candidate list paste & resolution                | 1    | pending | —          |
 | 09  | Convocatoria commit decoupled, guest-aware       | 1    | pending | —          |

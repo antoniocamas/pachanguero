@@ -56,12 +56,12 @@ Testability Assessment: F4 = Yes, fully automatable.
 
 ## Definition of Done
 
-- [ ] `GameRepository.unresolvedOnOrBefore` exists and is tested.
-- [ ] `FinalListTargetResolver.resolve` passes all three cutoff-boundary fixtures above.
-- [ ] `GET /games/final-list-target` exists and is tested.
-- [ ] **Graduation:** F4 realises UC-001-10-S1..S3 — graduation value is
+- [x] `GameRepository.unresolvedOnOrBefore` exists and is tested.
+- [x] `FinalListTargetResolver.resolve` passes all three cutoff-boundary fixtures above.
+- [x] `GET /games/final-list-target` exists and is tested.
+- [x] **Graduation:** F4 realises UC-001-10-S1..S3 — graduation value is
       `final-list-target-resolver.test.ts` + the modified `game-repository.test.ts`/`api.test.ts`.
-- [ ] **Documentation:** none — F4 is not named in `DESIGN_PLAN.md` §2.8/§4.
-- [ ] **Tests:** `npm test --workspace=server` passes.
-- [ ] **Regression:** deferred to task 12.
-- [ ] **Code checks:** `npm run lint` and `npm run format:check` pass on every touched file.
+- [x] **Documentation:** none — F4 is not named in `DESIGN_PLAN.md` §2.8/§4.
+- [x] **Tests:** `npm test --workspace=server` passes.
+- [x] **Regression:** deferred to task 12.
+- [x] **Code checks:** `npm run lint` and `npm run format:check` pass on every touched file.

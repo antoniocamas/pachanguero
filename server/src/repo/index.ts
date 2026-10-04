@@ -6,6 +6,7 @@ import { PlayerRepository } from './player-repository.js';
 import { AliasRepository } from './alias-repository.js';
 import { GameRepository } from './game-repository.js';
 import { ScheduleRepository } from './schedule-repository.js';
+import { FinalListTargetResolver } from './final-list-target-resolver.js';
 import { GameDayResolutionService } from './game-day-resolution-service.js';
 import { ParticipationRepository } from './participation-repository.js';
 import { ExclusionRepository } from './exclusion-repository.js';
@@ -33,6 +34,8 @@ export const gameDayResolution = new GameDayResolutionService(
   schedule,
   seasons
 );
+
+export const finalListTarget = new FinalListTargetResolver(games, schedule);
 
 export const convocatoriaService = new ConvocatoriaService(
   games,
