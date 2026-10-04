@@ -67,17 +67,17 @@ Testability Assessment: F3 = Yes, fully automatable.
 
 ## Definition of Done
 
-- [ ] `weekly_schedule` table exists, `effective_from UNIQUE`.
-- [ ] `ScheduleResolver.nextOccurrenceOnOrAfter`/`cutoffFor` pass the fixtures above, including the
+- [x] `weekly_schedule` table exists, `effective_from UNIQUE`.
+- [x] `ScheduleResolver.nextOccurrenceOnOrAfter`/`cutoffFor` pass the fixtures above, including the
       mid-season non-retroactivity fixture.
-- [ ] `ScheduleRepository` exposes only `list()`/`create()`.
-- [ ] `GameRepository.findOrCreate` is idempotent (tested).
-- [ ] `GameDayResolutionService.resolveTarget` exists and is tested.
-- [ ] `GET`/`PUT /schedule` exist and are tested.
-- [ ] **Graduation:** F3 realises UC-001-08-S1..S4 — graduation value is
+- [x] `ScheduleRepository` exposes only `list()`/`create()`.
+- [x] `GameRepository.findOrCreate` is idempotent (tested).
+- [x] `GameDayResolutionService.resolveTarget` exists and is tested.
+- [x] `GET`/`PUT /schedule` exist and are tested.
+- [x] **Graduation:** F3 realises UC-001-08-S1..S4 — graduation value is
       `schedule-resolver.test.ts` + `schedule-repository.test.ts` +
       `game-day-resolution-service.test.ts` + `game-repository.test.ts` + `api.test.ts`.
-- [ ] **Documentation:** none — F3 is not named in `DESIGN_PLAN.md` §2.8/§4.
-- [ ] **Tests:** `npm test --workspace=server` passes.
-- [ ] **Regression:** deferred to task 12.
-- [ ] **Code checks:** `npm run lint` and `npm run format:check` pass on every touched file.
+- [x] **Documentation:** none — F3 is not named in `DESIGN_PLAN.md` §2.8/§4.
+- [x] **Tests:** `npm test --workspace=server` passes.
+- [x] **Regression:** deferred to task 12.
+- [x] **Code checks:** `npm run lint` and `npm run format:check` pass on every touched file.

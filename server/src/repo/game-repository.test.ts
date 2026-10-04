@@ -23,6 +23,18 @@ describe('GameRepository', () => {
     });
   });
 
+  it('findOrCreate reuses the unlabelled game for a date', () => {
+    const first = games.findOrCreate(seasonId, '2025-09-08');
+    const again = games.findOrCreate(seasonId, '2025-09-08');
+    expect(again.id).toBe(first.id);
+    expect(games.list(seasonId)).toHaveLength(1);
+  });
+
+  it('findOrCreate ignores a labelled replay of the same date', () => {
+    const bis = games.create(seasonId, '2025-09-08', 'Bis');
+    expect(games.findOrCreate(seasonId, '2025-09-08').id).not.toBe(bis.id);
+  });
+
   it('lists games ordered by date', () => {
     games.create(seasonId, '2025-09-15');
     games.create(seasonId, '2025-09-08');

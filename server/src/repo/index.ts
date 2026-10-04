@@ -5,6 +5,8 @@ import { SeasonRepository } from './season-repository.js';
 import { PlayerRepository } from './player-repository.js';
 import { AliasRepository } from './alias-repository.js';
 import { GameRepository } from './game-repository.js';
+import { ScheduleRepository } from './schedule-repository.js';
+import { GameDayResolutionService } from './game-day-resolution-service.js';
 import { ParticipationRepository } from './participation-repository.js';
 import { ExclusionRepository } from './exclusion-repository.js';
 import { StandingsService } from './standings-service.js';
@@ -14,6 +16,7 @@ export const seasons = new SeasonRepository(db());
 export const players = new PlayerRepository(db());
 export const aliases = new AliasRepository(db());
 export const games = new GameRepository(db());
+export const schedule = new ScheduleRepository(db());
 export const participations = new ParticipationRepository(db());
 export const exclusions = new ExclusionRepository(db());
 
@@ -23,6 +26,12 @@ export const standingsService = new StandingsService(
   seasons,
   new PointsCalculator(),
   db()
+);
+
+export const gameDayResolution = new GameDayResolutionService(
+  games,
+  schedule,
+  seasons
 );
 
 export const convocatoriaService = new ConvocatoriaService(

@@ -9,6 +9,7 @@ import {
   players,
   aliases,
   games,
+  schedule,
   participations,
   standingsService,
   convocatoriaService,
@@ -139,6 +140,33 @@ api.patch(
       req.body
     );
     res.json({ ok: true });
+  })
+);
+
+/* --------------------------------------------------------------- schedule */
+
+api.get(
+  '/schedule',
+  route((_req, res) => res.json(schedule.list()))
+);
+
+/** Adds a schedule version; earlier rows are never edited. */
+api.put(
+  '/schedule',
+  route((req, res) => {
+    const { weekday, kickoff_time, effective_from } = req.body ?? {};
+    if (!Number.isInteger(weekday) || weekday < 0 || weekday > 6) {
+      throw new Error('weekday must be an integer 0-6 (Sunday = 0)');
+    }
+    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(String(kickoff_time))) {
+      throw new Error('kickoff_time must be HH:MM');
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(effective_from))) {
+      throw new Error('effective_from must be YYYY-MM-DD');
+    }
+    res
+      .status(201)
+      .json(schedule.create({ weekday, kickoff_time, effective_from }));
   })
 );
 

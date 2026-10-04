@@ -154,4 +154,77 @@ describe('API', () => {
       ).toBe(400);
     });
   });
+
+  describe('/schedule', () => {
+    const put = (body: unknown) =>
+      fetch(`${base}/schedule`, {
+        method: 'PUT',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+    it('starts empty, then lists versions oldest first', async () => {
+      expect(await (await fetch(`${base}/schedule`)).json()).toEqual([]);
+
+      const wed = await put({
+        weekday: 3,
+        kickoff_time: '21:00',
+        effective_from: '2026-03-02',
+      });
+      expect(wed.status).toBe(201);
+      await put({
+        weekday: 1,
+        kickoff_time: '22:00',
+        effective_from: '2026-01-05',
+      });
+
+      const rows = (await (await fetch(`${base}/schedule`)).json()) as {
+        weekday: number;
+        effective_from: string;
+      }[];
+      expect(rows.map(r => [r.weekday, r.effective_from])).toEqual([
+        [1, '2026-01-05'],
+        [3, '2026-03-02'],
+      ]);
+    });
+
+    it('rejects a repeated effective date and malformed input', async () => {
+      expect(
+        (
+          await put({
+            weekday: 2,
+            kickoff_time: '20:00',
+            effective_from: '2026-01-05',
+          })
+        ).status
+      ).toBe(400);
+      expect(
+        (
+          await put({
+            weekday: 7,
+            kickoff_time: '20:00',
+            effective_from: '2026-05-01',
+          })
+        ).status
+      ).toBe(400);
+      expect(
+        (
+          await put({
+            weekday: 2,
+            kickoff_time: '8pm',
+            effective_from: '2026-05-01',
+          })
+        ).status
+      ).toBe(400);
+      expect(
+        (
+          await put({
+            weekday: 2,
+            kickoff_time: '20:00',
+            effective_from: 'mañana',
+          })
+        ).status
+      ).toBe(400);
+    });
+  });
 });

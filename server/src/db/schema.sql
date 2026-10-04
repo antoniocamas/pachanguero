@@ -40,6 +40,16 @@ CREATE TABLE IF NOT EXISTS player_aliases (
   PRIMARY KEY (player_id, alias)
 );
 
+-- The weekly game day, versioned: a change is a new row with a later
+-- effective_from, never an edit, so earlier weeks keep resolving as they did.
+CREATE TABLE IF NOT EXISTS weekly_schedule (
+  id             INTEGER PRIMARY KEY,
+  weekday        INTEGER NOT NULL CHECK (weekday BETWEEN 0 AND 6),  -- Sunday = 0
+  kickoff_time   TEXT    NOT NULL,                                  -- 'HH:MM'
+  effective_from TEXT    NOT NULL UNIQUE,
+  created_at     TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS games (
   id         INTEGER PRIMARY KEY,
   season_id  INTEGER NOT NULL REFERENCES seasons(id) ON DELETE CASCADE,

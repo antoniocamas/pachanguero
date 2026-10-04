@@ -39,6 +39,16 @@ export class GameRepository {
     return this.get(Number(info.lastInsertRowid))!;
   }
 
+  /** The plain (unlabelled) game on that date, created if it does not exist yet. */
+  findOrCreate(seasonId: number, playedOn: string): GameRow {
+    const existing = this.conn
+      .prepare(
+        'SELECT * FROM games WHERE season_id = ? AND played_on = ? AND label IS NULL'
+      )
+      .get(seasonId, playedOn) as GameRow | undefined;
+    return existing ?? this.create(seasonId, playedOn);
+  }
+
   update(id: number, patch: Partial<GameRow>): GameRow | undefined {
     const keys = UPDATABLE_COLUMNS.filter(k => patch[k] !== undefined);
     if (keys.length) {
