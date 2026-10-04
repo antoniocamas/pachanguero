@@ -60,6 +60,23 @@ describe('PlayerRepository', () => {
     expect(players.listAll().map(p => p.name)).toEqual(['Ana', 'Zoe']);
   });
 
+  it('registers a player without enrolling them, recording the host', () => {
+    const david = players.register('David');
+    const adri = players.register('  Adri ', david.id);
+    expect(adri).toEqual({
+      id: expect.any(Number),
+      name: 'Adri',
+      introducedBy: david.id,
+    });
+    expect(players.register('Nuevo').introducedBy).toBeNull();
+    expect(players.list(seasonId)).toEqual([]);
+    expect(
+      conn
+        .prepare('SELECT introduced_by FROM players WHERE id = ?')
+        .get(adri.id)
+    ).toEqual({ introduced_by: david.id });
+  });
+
   it('knows a player has already appeared this season', () => {
     const ana = players.add(seasonId, 'Ana', 2);
     expect(players.hasAppeared(seasonId, ana.id)).toBe(true);

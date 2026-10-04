@@ -60,14 +60,14 @@ match: { matched } }`.
 
 ## Definition of Done
 
-- [ ] `players.introduced_by` exists, nullable, self-referencing.
-- [ ] `PlayerRepository.register` creates a player row with no `season_players` row.
-- [ ] `PlayerRegistrar.register` passes all four fixtures above.
-- [ ] **Graduation:** F7 realises UC-001-04-S1..S5 (S5 — "resolving one unresolved name doesn't
+- [x] `players.introduced_by` exists, nullable, self-referencing.
+- [x] `PlayerRepository.register` creates a player row with no `season_players` row.
+- [x] `PlayerRegistrar.register` passes all four fixtures above.
+- [x] **Graduation:** F7 realises UC-001-04-S1..S5 (S5 — "resolving one unresolved name doesn't
       touch the others" — is a property of the _caller_, verified in task 08's own fixtures, not
       re-tested here in isolation) — graduation value is `player-registrar.test.ts` + the modified
       `player-repository.test.ts`.
-- [ ] **Documentation:** none — F7 is not named in `DESIGN_PLAN.md` §2.8/§4.
-- [ ] **Tests:** `npm test --workspace=server` passes.
-- [ ] **Regression:** deferred to task 12.
-- [ ] **Code checks:** `npm run lint` and `npm run format:check` pass on every touched file.
+- [x] **Documentation:** none — F7 is not named in `DESIGN_PLAN.md` §2.8/§4.
+- [x] **Tests:** `npm test --workspace=server` passes.
+- [x] **Regression:** deferred to task 12.
+- [x] **Code checks:** `npm run lint` and `npm run format:check` pass on every touched file.

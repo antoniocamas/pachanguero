@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS seasons (
 CREATE TABLE IF NOT EXISTS players (
   id         INTEGER PRIMARY KEY,
   name       TEXT    NOT NULL UNIQUE,
+  introduced_by INTEGER REFERENCES players(id),  -- the player who brought them along
   created_at TEXT    NOT NULL DEFAULT (datetime('now'))
 );
 

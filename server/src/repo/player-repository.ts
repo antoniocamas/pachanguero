@@ -7,6 +7,13 @@ export interface PlayerRow {
   seasons: number;
 }
 
+/** A player as registered, before any season enrolment. */
+export interface RegisteredPlayer {
+  id: number;
+  name: string;
+  introducedBy: number | null;
+}
+
 export class PlayerRepository {
   private readonly advisor = new SeniorityAdvisor();
 
@@ -17,6 +24,19 @@ export class PlayerRepository {
     return this.conn
       .prepare('SELECT id, name FROM players ORDER BY name COLLATE NOCASE')
       .all() as { id: number; name: string }[];
+  }
+
+  /** Create a player without enrolling them in any season. */
+  register(name: string, introducedBy?: number): RegisteredPlayer {
+    const trimmed = name.trim();
+    const info = this.conn
+      .prepare('INSERT INTO players (name, introduced_by) VALUES (?, ?)')
+      .run(trimmed, introducedBy ?? null);
+    return {
+      id: Number(info.lastInsertRowid),
+      name: trimmed,
+      introducedBy: introducedBy ?? null,
+    };
   }
 
   nameOf(playerId: number): string | undefined {
