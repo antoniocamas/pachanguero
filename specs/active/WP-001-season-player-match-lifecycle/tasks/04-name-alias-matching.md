@@ -63,13 +63,13 @@ Testability Assessment: F5 = Yes, fully automatable.
 
 ## Definition of Done
 
-- [ ] `player_aliases` table exists, no global unique on `alias`.
-- [ ] `NameMatcher.strip`/`match` pass every fixture above, including the author's WhatsApp paste.
-- [ ] `PlayerRepository.listAll()` and `AliasRepository` (`listAll`, `add`) exist and are tested.
-- [ ] `POST /players/:playerId/aliases` exists and is tested.
-- [ ] **Graduation:** F5 realises UC-001-03-S7/S8 and UC-001-09-S1..S3 — graduation value is
+- [x] `player_aliases` table exists, no global unique on `alias`.
+- [x] `NameMatcher.strip`/`match` pass every fixture above, including the author's WhatsApp paste.
+- [x] `PlayerRepository.listAll()` and `AliasRepository` (`listAll`, `add`) exist and are tested.
+- [x] `POST /players/:playerId/aliases` exists and is tested.
+- [x] **Graduation:** F5 realises UC-001-03-S7/S8 and UC-001-09-S1..S3 — graduation value is
       `name-matcher.test.ts` + `alias-repository.test.ts` + the modified repo/route test files.
-- [ ] **Documentation:** none — F5 is not named in `DESIGN_PLAN.md` §2.8/§4.
-- [ ] **Tests:** `npm test --workspace=server` passes.
-- [ ] **Regression:** deferred to task 12.
-- [ ] **Code checks:** `npm run lint` and `npm run format:check` pass on every touched file.
+- [x] **Documentation:** none — F5 is not named in `DESIGN_PLAN.md` §2.8/§4.
+- [x] **Tests:** `npm test --workspace=server` passes.
+- [x] **Regression:** deferred to task 12.
+- [x] **Code checks:** `npm run lint` and `npm run format:check` pass on every touched file.

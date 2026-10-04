@@ -7,6 +7,7 @@ import {
 import {
   seasons,
   players,
+  aliases,
   games,
   participations,
   standingsService,
@@ -113,6 +114,19 @@ api.post(
     res
       .status(201)
       .json(players.add(id(req.params.id), name, seasonsOf(req.body?.seasons)));
+  })
+);
+
+api.post(
+  '/players/:playerId/aliases',
+  route((req, res) => {
+    const playerId = id(req.params.playerId);
+    if (!players.nameOf(playerId))
+      throw new Error(`Unknown player: ${playerId}`);
+    const alias = String(req.body?.alias ?? '').trim();
+    if (!alias) throw new Error('alias is required');
+    aliases.add(playerId, alias);
+    res.status(201).json({ playerId, alias });
   })
 );
 

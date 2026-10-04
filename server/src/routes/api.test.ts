@@ -10,13 +10,14 @@ describe('API', () => {
   let server: Server;
   let base: string;
   let seasons: typeof import('../repo/index.js').seasons;
+  let aliases: typeof import('../repo/index.js').aliases;
 
   beforeAll(async () => {
     // The composition root opens the DB at import time, so point it at a
     // throwaway file first.
     dir = mkdtempSync(join(tmpdir(), 'pachanguero-api-'));
     process.env.PACHANGUERO_DB = join(dir, 'test.db');
-    ({ seasons } = await import('../repo/index.js'));
+    ({ seasons, aliases } = await import('../repo/index.js'));
     const { api } = await import('./api.js');
     const app = express();
     app.use(express.json());
@@ -110,6 +111,47 @@ describe('API', () => {
       const season = seasons.create({ name: '2014/2015' });
       const res = await post(`/seasons/${season.id}/players`, { name: 'Cris' });
       expect(res.status).toBe(400);
+    });
+  });
+
+  describe('POST /players/:playerId/aliases', () => {
+    const post = (path: string, body: unknown) =>
+      fetch(`${base}${path}`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+    it('saves an alias, and saving it again is harmless', async () => {
+      const season = seasons.create({ name: '2012/2013' });
+      const added = await post(`/seasons/${season.id}/players`, {
+        name: 'Jorge Gutiérrez',
+        seasons: 1,
+      });
+      const { id } = (await added.json()) as { id: number };
+
+      const first = await post(`/players/${id}/aliases`, { alias: ' Guti ' });
+      expect(first.status).toBe(201);
+      expect(await first.json()).toEqual({ playerId: id, alias: 'Guti' });
+      expect(
+        (await post(`/players/${id}/aliases`, { alias: 'Guti' })).status
+      ).toBe(201);
+      expect(aliases.listAll().filter(a => a.playerId === id)).toHaveLength(1);
+    });
+
+    it('rejects an unknown player and a blank alias', async () => {
+      expect(
+        (await post('/players/99999/aliases', { alias: 'X' })).status
+      ).toBe(400);
+      const season = seasons.create({ name: '2011/2012' });
+      const added = await post(`/seasons/${season.id}/players`, {
+        name: 'Nora',
+        seasons: 1,
+      });
+      const { id } = (await added.json()) as { id: number };
+      expect(
+        (await post(`/players/${id}/aliases`, { alias: '  ' })).status
+      ).toBe(400);
     });
   });
 });

@@ -12,6 +12,13 @@ export class PlayerRepository {
 
   constructor(private readonly conn: Database.Database) {}
 
+  /** Every known player, whether or not enrolled in any season. */
+  listAll(): { id: number; name: string }[] {
+    return this.conn
+      .prepare('SELECT id, name FROM players ORDER BY name COLLATE NOCASE')
+      .all() as { id: number; name: string }[];
+  }
+
   nameOf(playerId: number): string | undefined {
     const row = this.conn
       .prepare('SELECT name FROM players WHERE id = ?')

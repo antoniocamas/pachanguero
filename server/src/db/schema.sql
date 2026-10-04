@@ -32,6 +32,14 @@ CREATE TABLE IF NOT EXISTS season_players (
   PRIMARY KEY (season_id, player_id)
 );
 
+-- Nicknames a pasted name may use instead of the canonical one. No global
+-- UNIQUE(alias): two players may share one, which matching reports as ambiguous.
+CREATE TABLE IF NOT EXISTS player_aliases (
+  player_id INTEGER NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  alias     TEXT    NOT NULL,
+  PRIMARY KEY (player_id, alias)
+);
+
 CREATE TABLE IF NOT EXISTS games (
   id         INTEGER PRIMARY KEY,
   season_id  INTEGER NOT NULL REFERENCES seasons(id) ON DELETE CASCADE,

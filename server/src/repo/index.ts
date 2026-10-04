@@ -3,6 +3,7 @@ import { PointsCalculator } from '../domain/points.js';
 import { ConvocatoriaBuilder } from '../domain/convocatoria.js';
 import { SeasonRepository } from './season-repository.js';
 import { PlayerRepository } from './player-repository.js';
+import { AliasRepository } from './alias-repository.js';
 import { GameRepository } from './game-repository.js';
 import { ParticipationRepository } from './participation-repository.js';
 import { ExclusionRepository } from './exclusion-repository.js';
@@ -11,6 +12,7 @@ import { ConvocatoriaService } from './convocatoria-service.js';
 
 export const seasons = new SeasonRepository(db());
 export const players = new PlayerRepository(db());
+export const aliases = new AliasRepository(db());
 export const games = new GameRepository(db());
 export const participations = new ParticipationRepository(db());
 export const exclusions = new ExclusionRepository(db());

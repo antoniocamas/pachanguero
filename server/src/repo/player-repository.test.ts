@@ -52,6 +52,14 @@ describe('PlayerRepository', () => {
     expect(players.suggestSeniority(seasonId, Number(lastInsertRowid))).toBe(0);
   });
 
+  it('lists every player, including one not enrolled in the season', () => {
+    const other = new SeasonRepository(conn).create({ name: '2019/2020' });
+    players.add(other.id, 'Zoe', 2);
+    players.add(seasonId, 'Ana', 1);
+    expect(players.list(seasonId).map(p => p.name)).toEqual(['Ana']);
+    expect(players.listAll().map(p => p.name)).toEqual(['Ana', 'Zoe']);
+  });
+
   it('knows a player has already appeared this season', () => {
     const ana = players.add(seasonId, 'Ana', 2);
     expect(players.hasAppeared(seasonId, ana.id)).toBe(true);
