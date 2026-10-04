@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import express from 'express';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-describe('GET /api/seasons/current', () => {
+describe('API', () => {
   let dir: string;
   let server: Server;
   let base: string;
@@ -33,13 +33,13 @@ describe('GET /api/seasons/current', () => {
     rmSync(dir, { recursive: true, force: true });
   });
 
-  it('returns null while no season covers today', async () => {
+  it('GET /seasons/current returns null while no season covers today', async () => {
     const res = await fetch(`${base}/seasons/current`);
     expect(res.status).toBe(200);
     expect(await res.json()).toBeNull();
   });
 
-  it("returns the season whose Sept-Aug range contains today's date", async () => {
+  it("GET /seasons/current returns the season whose Sept-Aug range contains today's date", async () => {
     const year = new Date().getFullYear();
     const month = new Date().getMonth() + 1;
     const startYear = month >= 9 ? year : year - 1;
@@ -50,5 +50,66 @@ describe('GET /api/seasons/current', () => {
     const body = (await res.json()) as { name: string; starts_on: string };
     expect(body.name).toBe(`${startYear}/${startYear + 1}`);
     expect(body.starts_on).toBe(`${startYear}-09-01`);
+  });
+
+  describe('seniority capture', () => {
+    const post = (path: string, body: unknown) =>
+      fetch(`${base}${path}`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+    it('suggests a value for a first appearance, then reports hasAppeared', async () => {
+      const old = seasons.create({ name: '2018/2019' });
+      const now = seasons.create({ name: '2019/2020' });
+      const added = await post(`/seasons/${old.id}/players`, {
+        name: 'Ana',
+        seasons: 3,
+      });
+      const ana = (await added.json()) as { id: number };
+
+      const first = await fetch(
+        `${base}/seasons/${now.id}/players/${ana.id}/seniority-suggestion`
+      );
+      expect(await first.json()).toEqual({ hasAppeared: false, suggested: 4 });
+
+      const confirmed = await post(
+        `/seasons/${now.id}/players/${ana.id}/seniority`,
+        {
+          seasons: 4,
+        }
+      );
+      expect(confirmed.status).toBe(201);
+      expect(await confirmed.json()).toMatchObject({ id: ana.id, seasons: 4 });
+
+      const again = await fetch(
+        `${base}/seasons/${now.id}/players/${ana.id}/seniority-suggestion`
+      );
+      expect(await again.json()).toEqual({ hasAppeared: true });
+    });
+
+    it('keeps the first seniority when confirmed twice', async () => {
+      const season = seasons.create({ name: '2016/2017' });
+      const added = await post(`/seasons/${season.id}/players`, {
+        name: 'Beto',
+        seasons: 0,
+      });
+      const beto = (await added.json()) as { id: number };
+      await post(`/seasons/${season.id}/players/${beto.id}/seniority`, {
+        seasons: 2,
+      });
+      const second = await post(
+        `/seasons/${season.id}/players/${beto.id}/seniority`,
+        { seasons: 9 }
+      );
+      expect(await second.json()).toMatchObject({ seasons: 0 });
+    });
+
+    it('rejects a missing seniority value', async () => {
+      const season = seasons.create({ name: '2014/2015' });
+      const res = await post(`/seasons/${season.id}/players`, { name: 'Cris' });
+      expect(res.status).toBe(400);
+    });
   });
 });

@@ -23,7 +23,7 @@
 | --- | ------------------------------------------------ | ---- | ------- | ---------- |
 | 01  | Drop `seasons.is_active`/`season_players.active` | 1    | done    | 2026-10-04 |
 | 02  | Current season derived from the calendar         | 1    | done    | 2026-10-04 |
-| 03  | Seniority capture on first appearance            | 1    | pending | —          |
+| 03  | Seniority capture on first appearance            | 1    | done    | 2026-10-04 |
 | 04  | Name/alias matching with decoration stripping    | 1    | pending | —          |
 | 05  | Weekly schedule + game-day auto-resolution       | 1    | pending | —          |
 | 06  | Final-list target auto-resolution                | 1    | pending | —          |

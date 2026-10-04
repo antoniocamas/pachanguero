@@ -61,14 +61,14 @@ Testability Assessment: F2 = Yes, fully automatable.
 
 ## Definition of Done
 
-- [ ] `SeniorityAdvisor.suggest` exists and is unit-tested for brand-new/gap-carry/consecutive cases.
-- [ ] `PlayerRepository.hasAppeared`/`suggestSeniority` exist and are integration-tested per the
+- [x] `SeniorityAdvisor.suggest` exists and is unit-tested for brand-new/gap-carry/consecutive cases.
+- [x] `PlayerRepository.hasAppeared`/`suggestSeniority` exist and are integration-tested per the
       fixtures above.
-- [ ] `add()`'s conflict clause is `DO NOTHING`; its `seasons` parameter has no default.
-- [ ] The two new routes exist and are integration-tested.
-- [ ] **Graduation:** F2 realises UC-001-02-S1..S5 — graduation value is
+- [x] `add()`'s conflict clause is `DO NOTHING`; its `seasons` parameter has no default.
+- [x] The two new routes exist and are integration-tested.
+- [x] **Graduation:** F2 realises UC-001-02-S1..S5 — graduation value is
       `seniority-advisor.test.ts` + `player-repository.test.ts`'s four fixtures + `api.test.ts`.
-- [ ] **Documentation:** none — F2 is not named in `DESIGN_PLAN.md` §2.8/§4.
-- [ ] **Tests:** `npm test --workspace=server` passes.
-- [ ] **Regression:** deferred to task 11.
-- [ ] **Code checks:** `npm run lint` and `npm run format:check` pass on every touched file.
+- [x] **Documentation:** none — F2 is not named in `DESIGN_PLAN.md` §2.8/§4.
+- [x] **Tests:** `npm test --workspace=server` passes.
+- [x] **Regression:** deferred to task 11.
+- [x] **Code checks:** `npm run lint` and `npm run format:check` pass on every touched file.

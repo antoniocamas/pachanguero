@@ -17,7 +17,7 @@ describe('ParticipationRepository', () => {
     const seasonId = new SeasonRepository(conn).create({
       name: '2025/2026',
     }).id;
-    playerId = new PlayerRepository(conn).add(seasonId, 'Ana').id;
+    playerId = new PlayerRepository(conn).add(seasonId, 'Ana', 1).id;
     gameId = new GameRepository(conn).create(seasonId, '2025-09-08').id;
     participations = new ParticipationRepository(conn);
   });

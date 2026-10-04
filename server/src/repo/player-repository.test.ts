@@ -21,16 +21,45 @@ describe('PlayerRepository', () => {
     expect(p.seasons).toBe(3);
   });
 
-  it('is idempotent on the players row (INSERT OR IGNORE)', () => {
+  it('is a no-op on a second enrolment: the first seniority stands', () => {
     const first = players.add(seasonId, 'Ana', 1);
     const second = players.add(seasonId, 'Ana', 5);
     expect(second.id).toBe(first.id);
-    expect(second.seasons).toBe(5);
+    expect(second.seasons).toBe(1);
+  });
+
+  it('suggests last recorded + 1 for a returning player, across a gap', () => {
+    const seasons = new SeasonRepository(conn);
+    const old = seasons.create({ name: '2022/2023' }); // 2023/24 skipped
+    const ana = players.add(old.id, 'Ana', 3);
+    expect(players.hasAppeared(seasonId, ana.id)).toBe(false);
+    expect(players.suggestSeniority(seasonId, ana.id)).toBe(4);
+  });
+
+  it('suggests the most recent season by calendar, not by insertion', () => {
+    const seasons = new SeasonRepository(conn);
+    const recent = seasons.create({ name: '2024/2025' });
+    const older = seasons.create({ name: '2021/2022' });
+    const ana = players.add(recent.id, 'Ana', 6);
+    players.add(older.id, 'Ana', 2);
+    expect(players.suggestSeniority(seasonId, ana.id)).toBe(7);
+  });
+
+  it('suggests 0 for a brand-new player', () => {
+    const { lastInsertRowid } = conn
+      .prepare("INSERT INTO players (name) VALUES ('Ana')")
+      .run();
+    expect(players.suggestSeniority(seasonId, Number(lastInsertRowid))).toBe(0);
+  });
+
+  it('knows a player has already appeared this season', () => {
+    const ana = players.add(seasonId, 'Ana', 2);
+    expect(players.hasAppeared(seasonId, ana.id)).toBe(true);
   });
 
   it('lists enrolled players ordered by name', () => {
-    players.add(seasonId, 'Zoe');
-    players.add(seasonId, 'Ana');
+    players.add(seasonId, 'Zoe', 1);
+    players.add(seasonId, 'Ana', 1);
     expect(players.list(seasonId).map(p => p.name)).toEqual(['Ana', 'Zoe']);
   });
 

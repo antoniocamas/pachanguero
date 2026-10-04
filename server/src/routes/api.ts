@@ -32,6 +32,14 @@ const id = (v: unknown): number => {
   return n;
 };
 
+const seasonsOf = (v: unknown): number => {
+  const n = Number(v);
+  if (v === undefined || v === null || !Number.isInteger(n) || n < 0) {
+    throw new Error('seasons must be a non-negative integer');
+  }
+  return n;
+};
+
 /* ---------------------------------------------------------------- seasons */
 
 api.get(
@@ -76,9 +84,35 @@ api.post(
     if (!name) throw new Error('name is required');
     res
       .status(201)
-      .json(
-        players.add(id(req.params.id), name, Number(req.body?.seasons ?? 1))
-      );
+      .json(players.add(id(req.params.id), name, seasonsOf(req.body?.seasons)));
+  })
+);
+
+api.get(
+  '/seasons/:id/players/:playerId/seniority-suggestion',
+  route((req, res) => {
+    const seasonId = id(req.params.id);
+    const playerId = id(req.params.playerId);
+    if (players.hasAppeared(seasonId, playerId)) {
+      res.json({ hasAppeared: true });
+    } else {
+      res.json({
+        hasAppeared: false,
+        suggested: players.suggestSeniority(seasonId, playerId),
+      });
+    }
+  })
+);
+
+api.post(
+  '/seasons/:id/players/:playerId/seniority',
+  route((req, res) => {
+    const playerId = id(req.params.playerId);
+    const name = players.nameOf(playerId);
+    if (!name) throw new Error(`Unknown player: ${playerId}`);
+    res
+      .status(201)
+      .json(players.add(id(req.params.id), name, seasonsOf(req.body?.seasons)));
   })
 );
 
