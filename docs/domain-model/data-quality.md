@@ -44,7 +44,7 @@ una columna `Bis` extra tras el 12/03 (un partido repetido). Recorrer las dos po
 La rejilla de `Pagos` reconstruida desde el PDF cuadra con la hoja por dos vías
 independientes: el recuento por jugador coincide con `Asistencia` en las 36
 filas, y cada columna semanal suma su `Total`. Cero discrepancias. Los datos de
-pagos son fiables; lo que no es fiable es *cuándo* se registró cada uno.
+pagos son fiables; lo que no es fiable es _cuándo_ se registró cada uno.
 
 ## Consecuencia para el sistema nuevo
 

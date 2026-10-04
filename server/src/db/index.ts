@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 const here = dirname(fileURLToPath(import.meta.url));
 
 export const DB_PATH = resolve(
-  process.env.PACHANGUERO_DB ?? join(here, '../../../data/pachanguero.db'),
+  process.env.PACHANGUERO_DB ?? join(here, '../../../data/pachanguero.db')
 );
 
 let instance: Database.Database | null = null;

@@ -6,14 +6,14 @@ Script, que es de donde viene todo esto.
 
 ## Índice
 
-| Documento | Contenido |
-|---|---|
-| [`glossary.md`](glossary.md) | Vocabulario: jugón, convocatoria, mercy seat, `*`, `1`/`2`/`D` |
-| [`points.md`](points.md) | Cómo se calculan los puntos (asistencia, fuera de convocatoria, antigüedad) |
-| [`convocatoria.md`](convocatoria.md) | El algoritmo de selección: los 14, la mercy rule, promoción y degradación |
-| [`legacy-spreadsheet.md`](legacy-spreadsheet.md) | Estructura de las pestañas originales y sus trampas |
-| [`legacy-script-review.md`](legacy-script-review.md) | Revisión del Apps Script: bugs encontrados y su impacto |
-| [`data-quality.md`](data-quality.md) | Anomalías en los datos de 2024/2025 y qué se hizo con ellas |
+| Documento                                            | Contenido                                                                   |
+| ---------------------------------------------------- | --------------------------------------------------------------------------- |
+| [`glossary.md`](glossary.md)                         | Vocabulario: jugón, convocatoria, mercy seat, `*`, `1`/`2`/`D`              |
+| [`points.md`](points.md)                             | Cómo se calculan los puntos (asistencia, fuera de convocatoria, antigüedad) |
+| [`convocatoria.md`](convocatoria.md)                 | El algoritmo de selección: los 14, la mercy rule, promoción y degradación   |
+| [`legacy-spreadsheet.md`](legacy-spreadsheet.md)     | Estructura de las pestañas originales y sus trampas                         |
+| [`legacy-script-review.md`](legacy-script-review.md) | Revisión del Apps Script: bugs encontrados y su impacto                     |
+| [`data-quality.md`](data-quality.md)                 | Anomalías en los datos de 2024/2025 y qué se hizo con ellas                 |
 
 ## Resumen en una página
 
@@ -47,8 +47,8 @@ temporada.
 Escrita a partir de tres fuentes, en este orden de autoridad:
 
 1. **El Apps Script** (`createAndSortConvocatoria` y compañía) — la verdad sobre
-   lo que el sistema *hace*.
-2. **Lo que cuenta el organizador** — la verdad sobre lo que el sistema *debería*
+   lo que el sistema _hace_.
+2. **Lo que cuenta el organizador** — la verdad sobre lo que el sistema _debería_
    hacer. Donde las dos discrepan está documentado en
    [`legacy-script-review.md`](legacy-script-review.md).
 3. **Los datos de la temporada 2024/2025**, reconstruidos desde el PDF de la hoja

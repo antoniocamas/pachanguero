@@ -25,10 +25,10 @@ siguiente ronda.
 
 Contra los datos de 2024/2025:
 
-| Jugador | Script (`D` = −2) | Regla (`D` = reset) | ¿Elegible? |
-|---|---:|---:|---|
-| Pablo Silvage | 2 | 0 | **SÍ** / no |
-| Alex | 1 | 0 | no / no |
+| Jugador       | Script (`D` = −2) | Regla (`D` = reset) | ¿Elegible?  |
+| ------------- | ----------------: | ------------------: | ----------- |
+| Pablo Silvage |                 2 |                   0 | **SÍ** / no |
+| Alex          |                 1 |                   0 | no / no     |
 
 La secuencia de Pablo Silvage es `1,1,1,D,1,1,1,D`. Cada tanda de tres
 exclusiones sólo ve canceladas dos, así que arrastra `+1` dos veces y acaba en
@@ -48,11 +48,14 @@ un flag. Pendiente de decisión del organizador.
 **Severidad: alta. Puede descolocar la convocatoria entera.**
 
 ```js
-return namesWithAsterisk.map(name => [name, puntosMap.get(name) || "Not Found"]);
+return namesWithAsterisk.map(name => [
+  name,
+  puntosMap.get(name) || 'Not Found',
+]);
 ```
 
 `0` es falsy, así que un jugador con exactamente 0 puntos se trata como
-inexistente. En 2024/2025 **Tave** y **España** tienen 0 puntos *y* un `*` en
+inexistente. En 2024/2025 **Tave** y **España** tienen 0 puntos _y_ un `*` en
 `Pagos`.
 
 El daño real viene después. Ese string entra en el comparador:
@@ -168,7 +171,7 @@ bajo y un jugador que no entra cuando le tocaba.
 - La pestaña `FueraDeConvocatoria` tiene 47 columnas de fecha y `Pagos` 48
   (`Pagos` tiene una columna extra `Bis` tras el 12/03). El script se salva
   porque aplana los valores no vacíos e ignora las fechas — pero por eso mismo
-  no puede saber *cuándo* pasó nada, y cualquier código que recorra ambas hojas
+  no puede saber _cuándo_ pasó nada, y cualquier código que recorra ambas hojas
   por índice de columna se desalinea a partir del 19/03.
 
 ---

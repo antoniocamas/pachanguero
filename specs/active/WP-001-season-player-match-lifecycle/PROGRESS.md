@@ -19,17 +19,17 @@
 
 ## Tasks
 
-| #   | Task                                             | Iter | Status  | Completed  |
-| --- | ------------------------------------------------ | ---- | ------- | ---------- |
-| 01  | Drop `seasons.is_active`/`season_players.active` | 1    | done    | 2026-10-04 |
-| 02  | Current season derived from the calendar         | 1    | done    | 2026-10-04 |
-| 03  | Seniority capture on first appearance            | 1    | done    | 2026-10-04 |
-| 04  | Name/alias matching with decoration stripping    | 1    | done    | 2026-10-04 |
-| 05  | Weekly schedule + game-day auto-resolution       | 1    | done    | 2026-10-04 |
-| 06  | Final-list target auto-resolution                | 1    | done    | 2026-10-04 |
-| 07  | Inline new-player registration                   | 1    | done    | 2026-10-04 |
-| 08  | Candidate list paste & resolution                | 1    | done    | 2026-10-04 |
-| 09  | Convocatoria commit decoupled, guest-aware       | 1    | done    | 2026-10-04 |
-| 10  | Final list paste & resolution                    | 1    | done    | 2026-10-04 |
-| 11  | Historical backfill                              | 1    | done    | 2026-10-04 |
-| 12  | Closing regression                               | 1    | ongoing | —          |
+| #   | Task                                             | Iter | Status | Completed  |
+| --- | ------------------------------------------------ | ---- | ------ | ---------- |
+| 01  | Drop `seasons.is_active`/`season_players.active` | 1    | done   | 2026-10-04 |
+| 02  | Current season derived from the calendar         | 1    | done   | 2026-10-04 |
+| 03  | Seniority capture on first appearance            | 1    | done   | 2026-10-04 |
+| 04  | Name/alias matching with decoration stripping    | 1    | done   | 2026-10-04 |
+| 05  | Weekly schedule + game-day auto-resolution       | 1    | done   | 2026-10-04 |
+| 06  | Final-list target auto-resolution                | 1    | done   | 2026-10-04 |
+| 07  | Inline new-player registration                   | 1    | done   | 2026-10-04 |
+| 08  | Candidate list paste & resolution                | 1    | done   | 2026-10-04 |
+| 09  | Convocatoria commit decoupled, guest-aware       | 1    | done   | 2026-10-04 |
+| 10  | Final list paste & resolution                    | 1    | done   | 2026-10-04 |
+| 11  | Historical backfill                              | 1    | done   | 2026-10-04 |
+| 12  | Closing regression                               | 1    | done   | 2026-10-04 |

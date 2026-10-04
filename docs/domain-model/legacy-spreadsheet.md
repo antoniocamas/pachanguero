@@ -6,16 +6,16 @@ aparta de esta estructura en los puntos que se apartan.
 
 ## Pestañas
 
-| # | Pestaña | Contenido |
-|---|---|---|
-| 1 | `Pagos` | Rejilla jugador × semana. La fuente de la verdad sobre pagos y apuntados |
-| 2 | `Puntos` | Puntuación derivada, una fila por jugador |
-| 3 | `FueraDeConvocatoria` | Rejilla jugador × semana con las marcas `1`/`2`/`D` |
-| 4 | `Cara…` | Vacía en el PDF |
-| 5 | `Aux` | La tabla de la curva de antigüedad |
-| 6 | `Hoja 4` | Pruebas. Descartable |
-| 7 | `Hoja 7` | Restos de una ejecución rota, `#N/A Not Found` |
-| 8 | `Convocatoria` | Salida del algoritmo: quién juega el próximo partido |
+| #   | Pestaña               | Contenido                                                                |
+| --- | --------------------- | ------------------------------------------------------------------------ |
+| 1   | `Pagos`               | Rejilla jugador × semana. La fuente de la verdad sobre pagos y apuntados |
+| 2   | `Puntos`              | Puntuación derivada, una fila por jugador                                |
+| 3   | `FueraDeConvocatoria` | Rejilla jugador × semana con las marcas `1`/`2`/`D`                      |
+| 4   | `Cara…`               | Vacía en el PDF                                                          |
+| 5   | `Aux`                 | La tabla de la curva de antigüedad                                       |
+| 6   | `Hoja 4`              | Pruebas. Descartable                                                     |
+| 7   | `Hoja 7`              | Restos de una ejecución rota, `#N/A Not Found`                           |
+| 8   | `Convocatoria`        | Salida del algoritmo: quién juega el próximo partido                     |
 
 ## `Pagos`
 

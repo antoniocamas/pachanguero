@@ -41,7 +41,7 @@ database, confirming nothing any of tasks 01-11 touched regressed anything anoth
 ## Definition of Done
 
 - [x] `npm run lint` passes across the whole repository.
-- [ ] `npm run format:check` passes across the whole repository.
+- [x] `npm run format:check` passes across the whole repository.
 - [x] `npm test --workspace=server` passes in full.
 - [x] `npm run test:e2e` passes in full.
 - [x] The manual Wednesday-cycle walkthrough (step 5 above) completes with no unexpected error and
@@ -51,4 +51,4 @@ database, confirming nothing any of tasks 01-11 touched regressed anything anoth
 - [x] **Documentation:** none — this task changes no behaviour and makes no document untrue.
 - [x] **Tests:** `npm test --workspace=server`, `npm run test:e2e`.
 - [x] **Regression:** this task _is_ the regression.
-- [ ] **Code checks:** `npm run lint`, `npm run format:check` — full repository, not `--cached`.
+- [x] **Code checks:** `npm run lint`, `npm run format:check` — full repository, not `--cached`.

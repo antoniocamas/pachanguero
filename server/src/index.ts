@@ -16,7 +16,9 @@ app.use('/api', api);
 const webDist = join(here, '../../web/dist');
 if (existsSync(webDist)) {
   app.use(express.static(webDist));
-  app.get(/^(?!\/api\/).*/, (_req, res) => res.sendFile(join(webDist, 'index.html')));
+  app.get(/^(?!\/api\/).*/, (_req, res) =>
+    res.sendFile(join(webDist, 'index.html'))
+  );
 }
 
 const port = Number(process.env.PORT ?? 8787);

@@ -8,10 +8,13 @@ export function Standings({ season }: { season: Season }) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    api.standings(season.id).then(setRows).catch((e) => setError(e.message));
+    api
+      .standings(season.id)
+      .then(setRows)
+      .catch(e => setError(e.message));
   }, [season.id]);
 
-  const debtors = rows.filter((r) => r.debtCents > 0);
+  const debtors = rows.filter(r => r.debtCents > 0);
   const totalDebt = debtors.reduce((s, r) => s + r.debtCents, 0);
 
   return (
@@ -22,9 +25,11 @@ export function Standings({ season }: { season: Season }) {
         <div className="card">
           <h2>
             Quién debe
-            <span className="right" style={{ color: 'var(--danger)' }}>{euros(totalDebt)} €</span>
+            <span className="right" style={{ color: 'var(--danger)' }}>
+              {euros(totalDebt)} €
+            </span>
           </h2>
-          {debtors.map((r) => (
+          {debtors.map(r => (
             <div key={r.playerId} className="row">
               <span className="name">{r.name}</span>
               <span className="tag debt">{euros(r.debtCents)} €</span>
@@ -54,10 +59,14 @@ export function Standings({ season }: { season: Season }) {
               {rows.map((r, i) => (
                 <tr key={r.playerId}>
                   <td>
-                    <span className="muted" style={{ marginRight: 8 }}>{i + 1}</span>
+                    <span className="muted" style={{ marginRight: 8 }}>
+                      {i + 1}
+                    </span>
                     {r.name}
                   </td>
-                  <td><b>{r.points.toFixed(2)}</b></td>
+                  <td>
+                    <b>{r.points.toFixed(2)}</b>
+                  </td>
                   <td>{r.paidGames}</td>
                   <td>{r.exclusions}</td>
                   <td>{r.seniority.toFixed(2)}</td>
