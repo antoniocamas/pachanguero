@@ -17,7 +17,6 @@ describe('SeasonRepository', () => {
     expect(season.name).toBe('2025/2026');
     expect(season.price_cents).toBe(5600);
     expect(season.slots).toBe(14);
-    expect(season.is_active).toBe(0);
   });
 
   it('gets and lists by name descending', () => {
@@ -31,16 +30,6 @@ describe('SeasonRepository', () => {
     const season = repo.create({ name: '2025/2026' });
     const updated = repo.update(season.id, { slots: 16, not_a_column: 'x' });
     expect(updated?.slots).toBe(16);
-  });
-
-  it('activates a season, deactivating every other one', () => {
-    const a = repo.create({ name: 'A' });
-    const b = repo.create({ name: 'B' });
-    repo.activate(a.id);
-    repo.activate(b.id);
-    expect(repo.get(a.id)?.is_active).toBe(0);
-    expect(repo.get(b.id)?.is_active).toBe(1);
-    expect(repo.active()?.id).toBe(b.id);
   });
 
   it('maps a season row to SeasonRules', () => {

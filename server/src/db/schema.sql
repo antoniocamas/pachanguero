@@ -8,7 +8,6 @@ CREATE TABLE IF NOT EXISTS seasons (
   name                 TEXT    NOT NULL UNIQUE,   -- '2024/2025'
   starts_on            TEXT,
   ends_on              TEXT,
-  is_active            INTEGER NOT NULL DEFAULT 0,
   price_cents          INTEGER NOT NULL DEFAULT 5600,  -- pitch cost per game
   slots                INTEGER NOT NULL DEFAULT 14,
   mercy_seats          INTEGER NOT NULL DEFAULT 1,
@@ -30,7 +29,6 @@ CREATE TABLE IF NOT EXISTS season_players (
   season_id INTEGER NOT NULL REFERENCES seasons(id)  ON DELETE CASCADE,
   player_id INTEGER NOT NULL REFERENCES players(id)  ON DELETE CASCADE,
   seasons   INTEGER NOT NULL DEFAULT 1,
-  active    INTEGER NOT NULL DEFAULT 1,
   PRIMARY KEY (season_id, player_id)
 );
 

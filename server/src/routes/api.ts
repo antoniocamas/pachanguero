@@ -39,11 +39,6 @@ api.get(
   route((_req, res) => res.json(seasons.list()))
 );
 
-api.get(
-  '/seasons/active',
-  route((_req, res) => res.json(seasons.active() ?? null))
-);
-
 api.post(
   '/seasons',
   route((req, res) => {
@@ -55,14 +50,6 @@ api.post(
 api.patch(
   '/seasons/:id',
   route((req, res) => res.json(seasons.update(id(req.params.id), req.body)))
-);
-
-api.post(
-  '/seasons/:id/activate',
-  route((req, res) => {
-    seasons.activate(id(req.params.id));
-    res.json(seasons.get(id(req.params.id)));
-  })
 );
 
 api.get(

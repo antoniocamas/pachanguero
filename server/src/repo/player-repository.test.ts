@@ -34,11 +34,10 @@ describe('PlayerRepository', () => {
     expect(players.list(seasonId).map(p => p.name)).toEqual(['Ana', 'Zoe']);
   });
 
-  it("updates a season player's seasons/active fields", () => {
+  it("updates a season player's seasons field", () => {
     const p = players.add(seasonId, 'Ana', 1);
-    players.updateSeasonPlayer(seasonId, p.id, { seasons: 4, active: false });
+    players.updateSeasonPlayer(seasonId, p.id, { seasons: 4 });
     const [row] = players.list(seasonId);
     expect(row.seasons).toBe(4);
-    expect(row.active).toBe(0);
   });
 });

@@ -4,7 +4,6 @@ export interface PlayerRow {
   id: number;
   name: string;
   seasons: number;
-  active: number;
 }
 
 export class PlayerRepository {
@@ -13,7 +12,7 @@ export class PlayerRepository {
   list(seasonId: number): PlayerRow[] {
     return this.conn
       .prepare(
-        `SELECT p.id, p.name, sp.seasons, sp.active
+        `SELECT p.id, p.name, sp.seasons
            FROM season_players sp JOIN players p ON p.id = sp.player_id
           WHERE sp.season_id = ?
           ORDER BY p.name COLLATE NOCASE`
@@ -35,12 +34,12 @@ export class PlayerRepository {
       this.conn
         .prepare(
           `INSERT INTO season_players (season_id, player_id, seasons) VALUES (?, ?, ?)
-           ON CONFLICT (season_id, player_id) DO UPDATE SET seasons = excluded.seasons, active = 1`
+           ON CONFLICT (season_id, player_id) DO UPDATE SET seasons = excluded.seasons`
         )
         .run(seasonId, id, seasons);
       return this.conn
         .prepare(
-          `SELECT p.id, p.name, sp.seasons, sp.active
+          `SELECT p.id, p.name, sp.seasons
              FROM season_players sp JOIN players p ON p.id = sp.player_id
             WHERE sp.season_id = ? AND p.id = ?`
         )
@@ -51,7 +50,7 @@ export class PlayerRepository {
   updateSeasonPlayer(
     seasonId: number,
     playerId: number,
-    patch: { seasons?: number; active?: boolean }
+    patch: { seasons?: number }
   ): void {
     if (patch.seasons !== undefined) {
       this.conn
@@ -59,13 +58,6 @@ export class PlayerRepository {
           'UPDATE season_players SET seasons = ? WHERE season_id = ? AND player_id = ?'
         )
         .run(patch.seasons, seasonId, playerId);
-    }
-    if (patch.active !== undefined) {
-      this.conn
-        .prepare(
-          'UPDATE season_players SET active = ? WHERE season_id = ? AND player_id = ?'
-        )
-        .run(patch.active ? 1 : 0, seasonId, playerId);
     }
   }
 }

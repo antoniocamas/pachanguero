@@ -6,7 +6,6 @@ export interface SeasonRow {
   name: string;
   starts_on: string | null;
   ends_on: string | null;
-  is_active: number;
   price_cents: number;
   slots: number;
   mercy_seats: number;
@@ -53,12 +52,6 @@ export class SeasonRepository {
       SeasonRow | undefined;
   }
 
-  active(): SeasonRow | undefined {
-    return this.conn
-      .prepare('SELECT * FROM seasons WHERE is_active = 1 ORDER BY id DESC')
-      .get() as SeasonRow | undefined;
-  }
-
   create(input: NewSeasonInput): SeasonRow {
     const info = this.conn
       .prepare(
@@ -95,15 +88,6 @@ export class SeasonRepository {
       this.conn.prepare(`UPDATE seasons SET ${set} WHERE id = @id`).run(values);
     }
     return this.get(id);
-  }
-
-  activate(id: number): void {
-    this.conn.transaction(() => {
-      this.conn.prepare('UPDATE seasons SET is_active = 0').run();
-      this.conn
-        .prepare('UPDATE seasons SET is_active = 1 WHERE id = ?')
-        .run(id);
-    })();
   }
 
   rulesOf(season: SeasonRow): SeasonRules {

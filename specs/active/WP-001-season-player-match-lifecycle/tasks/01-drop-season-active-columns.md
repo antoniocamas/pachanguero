@@ -51,19 +51,19 @@ Yes, no manual verification needed (design Testability Assessment, R1).
 
 ## Definition of Done
 
-- [ ] `seasons.is_active` and `season_players.active` no longer appear in `schema.sql`.
-- [ ] `SeasonRepository.activate`/`.active()` are deleted; `SeasonRow` no longer carries `is_active`.
-- [ ] `PlayerRepository.updateSeasonPlayer`'s `active` patch branch and `PlayerRow.active` are gone;
+- [x] `seasons.is_active` and `season_players.active` no longer appear in `schema.sql`.
+- [x] `SeasonRepository.activate`/`.active()` are deleted; `SeasonRow` no longer carries `is_active`.
+- [x] `PlayerRepository.updateSeasonPlayer`'s `active` patch branch and `PlayerRow.active` are gone;
       `add()`'s upsert no longer sets `active`.
-- [ ] `GET /seasons/active` and `POST /seasons/:id/activate` are deleted from `routes/api.ts`.
-- [ ] `season-repository.test.ts` and `player-repository.test.ts` carry no assertion on either
+- [x] `GET /seasons/active` and `POST /seasons/:id/activate` are deleted from `routes/api.ts`.
+- [x] `season-repository.test.ts` and `player-repository.test.ts` carry no assertion on either
       removed column.
-- [ ] **Graduation:** R1 realises UC-001-01-S1/S2/S3 — graduation value is the two repo test files
+- [x] **Graduation:** R1 realises UC-001-01-S1/S2/S3 — graduation value is the two repo test files
       above (existing tests, edited), not a new test file.
-- [ ] **Documentation:** none — R1 is not one of `DESIGN_PLAN.md` §2.8/§4's documented-impact rows.
-- [ ] **Tests:** `npm test --workspace=server` passes.
-- [ ] **Regression:** left to task 11 (the iteration's closing regression task) — this task's own
+- [x] **Documentation:** none — R1 is not one of `DESIGN_PLAN.md` §2.8/§4's documented-impact rows.
+- [x] **Tests:** `npm test --workspace=server` passes.
+- [x] **Regression:** left to task 11 (the iteration's closing regression task) — this task's own
       definition of done does not require a full-suite run beyond the server unit/integration tests
       above, since nothing executable outside `server/src/repo` and `server/src/routes` is touched.
-- [ ] **Code checks:** `npm run lint` and `npm run format:check` pass on every file this task
+- [x] **Code checks:** `npm run lint` and `npm run format:check` pass on every file this task
       touches, per `AGENTS.md` and `.agents/rules/coding-standard.md`.
