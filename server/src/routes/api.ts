@@ -39,6 +39,11 @@ api.get(
   route((_req, res) => res.json(seasons.list()))
 );
 
+api.get(
+  '/seasons/current',
+  route((_req, res) => res.json(seasons.current() ?? null))
+);
+
 api.post(
   '/seasons',
   route((req, res) => {

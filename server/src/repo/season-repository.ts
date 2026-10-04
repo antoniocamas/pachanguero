@@ -1,11 +1,12 @@
 import type Database from 'better-sqlite3';
 import type { SeasonRules } from '../domain/types.js';
+import { SeasonCalendar } from '../domain/season-calendar.js';
 
 export interface SeasonRow {
   id: number;
   name: string;
-  starts_on: string | null;
-  ends_on: string | null;
+  starts_on: string;
+  ends_on: string;
   price_cents: number;
   slots: number;
   mercy_seats: number;
@@ -16,8 +17,6 @@ export interface SeasonRow {
 
 export interface NewSeasonInput {
   name: string;
-  starts_on?: string;
-  ends_on?: string;
   price_cents?: number;
   slots?: number;
   mercy_seats?: number;
@@ -28,8 +27,6 @@ export interface NewSeasonInput {
 
 const UPDATABLE_COLUMNS = [
   'name',
-  'starts_on',
-  'ends_on',
   'price_cents',
   'slots',
   'mercy_seats',
@@ -39,7 +36,30 @@ const UPDATABLE_COLUMNS = [
 ] as const;
 
 export class SeasonRepository {
+  private readonly calendar = new SeasonCalendar();
+
   constructor(private readonly conn: Database.Database) {}
+
+  /** The season whose Sept-Aug range contains `asOf` (default today), if any. */
+  current(
+    asOf: string = new Date().toISOString().slice(0, 10)
+  ): SeasonRow | undefined {
+    return this.conn
+      .prepare(
+        `SELECT * FROM seasons WHERE starts_on <= @on AND ends_on >= @on
+          ORDER BY starts_on DESC LIMIT 1`
+      )
+      .get({ on: asOf }) as SeasonRow | undefined;
+  }
+
+  /** Bounds follow from the name's leading year ('2024/2025' starts in 2024). */
+  private boundsFromName(name: string): { startsOn: string; endsOn: string } {
+    const prefix = name.slice(0, 4);
+    if (!/^\d{4}$/.test(prefix)) {
+      throw new Error(`Season name must start with a 4-digit year: ${name}`);
+    }
+    return this.calendar.boundsFor(Number(prefix));
+  }
 
   list(): SeasonRow[] {
     return this.conn
@@ -53,6 +73,7 @@ export class SeasonRepository {
   }
 
   create(input: NewSeasonInput): SeasonRow {
+    const { startsOn, endsOn } = this.boundsFromName(input.name);
     const info = this.conn
       .prepare(
         `INSERT INTO seasons (name, starts_on, ends_on, price_cents, slots, mercy_seats,
@@ -62,8 +83,8 @@ export class SeasonRepository {
       )
       .run({
         name: input.name,
-        starts_on: input.starts_on ?? null,
-        ends_on: input.ends_on ?? null,
+        starts_on: startsOn,
+        ends_on: endsOn,
         price_cents: input.price_cents ?? 5600,
         slots: input.slots ?? 14,
         mercy_seats: input.mercy_seats ?? 1,
@@ -79,12 +100,19 @@ export class SeasonRepository {
       (UPDATABLE_COLUMNS as readonly string[]).includes(k)
     );
     if (keys.length) {
-      const set = keys.map(k => `${k} = @${k}`).join(', ');
       const values: Record<string, unknown> = { id };
       for (const k of keys) {
         values[k] =
           k === 'mercy_resets_counter' ? (patch[k] ? 1 : 0) : patch[k];
       }
+      const columns: string[] = [...keys];
+      if (typeof patch.name === 'string') {
+        const { startsOn, endsOn } = this.boundsFromName(patch.name);
+        values.starts_on = startsOn;
+        values.ends_on = endsOn;
+        columns.push('starts_on', 'ends_on');
+      }
+      const set = columns.map(k => `${k} = @${k}`).join(', ');
       this.conn.prepare(`UPDATE seasons SET ${set} WHERE id = @id`).run(values);
     }
     return this.get(id);

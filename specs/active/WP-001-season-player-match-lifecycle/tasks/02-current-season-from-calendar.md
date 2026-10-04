@@ -62,17 +62,17 @@ Testability Assessment: F1 = Yes, fully automatable.
 
 ## Definition of Done
 
-- [ ] `SeasonCalendar.boundsFor` exists and is unit-tested against the 2024→2025 fixture above.
-- [ ] `seasons.starts_on`/`ends_on` are `NOT NULL`, `starts_on` is `UNIQUE`.
-- [ ] `SeasonRepository.current(asOf?)` exists, replacing `.active()`; `create()`/`update()` derive/
+- [x] `SeasonCalendar.boundsFor` exists and is unit-tested against the 2024→2025 fixture above.
+- [x] `seasons.starts_on`/`ends_on` are `NOT NULL`, `starts_on` is `UNIQUE`.
+- [x] `SeasonRepository.current(asOf?)` exists, replacing `.active()`; `create()`/`update()` derive/
       recompute bounds via `SeasonCalendar`; `NewSeasonInput` no longer accepts `starts_on`/`ends_on`.
-- [ ] `import-season.ts` no longer passes `starts_on`/`ends_on` to `seasons.create()`.
-- [ ] `GET /seasons/current` exists and replaces `GET /seasons/active` in every caller.
-- [ ] Gap fixture (a date in a year with no season row) proven to return `undefined`, not throw or
+- [x] `import-season.ts` no longer passes `starts_on`/`ends_on` to `seasons.create()`.
+- [x] `GET /seasons/current` exists and replaces `GET /seasons/active` in every caller.
+- [x] Gap fixture (a date in a year with no season row) proven to return `undefined`, not throw or
       guess.
-- [ ] **Graduation:** F1 realises UC-001-01-S5 — graduation value is
+- [x] **Graduation:** F1 realises UC-001-01-S5 — graduation value is
       `season-calendar.test.ts` + `season-repository.test.ts`'s `current()` fixtures + `api.test.ts`.
-- [ ] **Documentation:** none of `DESIGN_PLAN.md` §2.8/§4's rows name F1 directly — no doc change.
-- [ ] **Tests:** `npm test --workspace=server` passes.
-- [ ] **Regression:** deferred to task 11.
-- [ ] **Code checks:** `npm run lint` and `npm run format:check` pass on every touched file.
+- [x] **Documentation:** none of `DESIGN_PLAN.md` §2.8/§4's rows name F1 directly — no doc change.
+- [x] **Tests:** `npm test --workspace=server` passes.
+- [x] **Regression:** deferred to task 11.
+- [x] **Code checks:** `npm run lint` and `npm run format:check` pass on every touched file.

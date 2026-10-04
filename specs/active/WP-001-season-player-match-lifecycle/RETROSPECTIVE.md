@@ -13,6 +13,11 @@
   agenda.md"), which only apply once every increment has already cleared its own gate. Cost: the
   author had to stop and question the ordering after the fact, and the agenda-tracking file had to
   be reasoned about as recoverable (via git) rather than never having been prematurely removed.
+- R-002: 2026-10-04: [testing] Task 01 removed `SeasonRepository.activate()` after a grep of
+  `server/src`, `web/src` and `e2e`, but `server/scripts/import-season.ts` still called it. Scripts
+  are neither type-checked nor tested, so the break stayed silent until task 02 ran the import.
+  Cost: task 02 had to fix a leftover from task 01, and the committed task 01 shipped a broken
+  seed script.
 
 ## Action Items Summary
 

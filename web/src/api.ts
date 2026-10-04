@@ -1,9 +1,8 @@
 export interface Season {
   id: number;
   name: string;
-  starts_on: string | null;
-  ends_on: string | null;
-  is_active: number;
+  starts_on: string;
+  ends_on: string;
   price_cents: number;
   slots: number;
   mercy_seats: number;
@@ -106,16 +105,24 @@ const body = (data: unknown) => JSON.stringify(data);
 
 export const api = {
   seasons: () => call<Season[]>('/seasons'),
-  createSeason: (data: { name: string; starts_on?: string }) =>
+  createSeason: (data: { name: string }) =>
     call<Season>('/seasons', { method: 'POST', body: body(data) }),
   updateSeason: (id: number, patch: Partial<Season>) =>
     call<Season>(`/seasons/${id}`, { method: 'PATCH', body: body(patch) }),
-  activateSeason: (id: number) => call<Season>(`/seasons/${id}/activate`, { method: 'POST' }),
+  activateSeason: (id: number) =>
+    call<Season>(`/seasons/${id}/activate`, { method: 'POST' }),
 
   players: (seasonId: number) => call<Player[]>(`/seasons/${seasonId}/players`),
   addPlayer: (seasonId: number, name: string, seasons: number) =>
-    call<Player>(`/seasons/${seasonId}/players`, { method: 'POST', body: body({ name, seasons }) }),
-  updatePlayer: (seasonId: number, playerId: number, patch: { seasons?: number; active?: boolean }) =>
+    call<Player>(`/seasons/${seasonId}/players`, {
+      method: 'POST',
+      body: body({ name, seasons }),
+    }),
+  updatePlayer: (
+    seasonId: number,
+    playerId: number,
+    patch: { seasons?: number; active?: boolean }
+  ) =>
     call<{ ok: true }>(`/seasons/${seasonId}/players/${playerId}`, {
       method: 'PATCH',
       body: body(patch),
@@ -123,7 +130,10 @@ export const api = {
 
   games: (seasonId: number) => call<Game[]>(`/seasons/${seasonId}/games`),
   createGame: (seasonId: number, played_on: string, label?: string) =>
-    call<Game>(`/seasons/${seasonId}/games`, { method: 'POST', body: body({ played_on, label }) }),
+    call<Game>(`/seasons/${seasonId}/games`, {
+      method: 'POST',
+      body: body({ played_on, label }),
+    }),
   game: (gameId: number) => call<GameDetail>(`/games/${gameId}`),
   updateGame: (gameId: number, patch: Partial<Game>) =>
     call<Game>(`/games/${gameId}`, { method: 'PATCH', body: body(patch) }),
@@ -137,10 +147,19 @@ export const api = {
       paid_cents: number;
       paid_on: string | null;
       guests: number;
-    }>,
-  ) => call<Participation[]>(`/games/${gameId}/players/${playerId}`, { method: 'PUT', body: body(patch) }),
+    }>
+  ) =>
+    call<Participation[]>(`/games/${gameId}/players/${playerId}`, {
+      method: 'PUT',
+      body: body(patch),
+    }),
 
-  standings: (seasonId: number) => call<Standing[]>(`/seasons/${seasonId}/standings`),
-  preview: (gameId: number) => call<ConvocatoriaResult>(`/games/${gameId}/convocatoria/preview`),
-  commit: (gameId: number) => call<ConvocatoriaResult>(`/games/${gameId}/convocatoria`, { method: 'POST' }),
+  standings: (seasonId: number) =>
+    call<Standing[]>(`/seasons/${seasonId}/standings`),
+  preview: (gameId: number) =>
+    call<ConvocatoriaResult>(`/games/${gameId}/convocatoria/preview`),
+  commit: (gameId: number) =>
+    call<ConvocatoriaResult>(`/games/${gameId}/convocatoria`, {
+      method: 'POST',
+    }),
 };

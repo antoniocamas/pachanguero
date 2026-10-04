@@ -102,11 +102,7 @@ function main() {
     return;
   }
 
-  season = seasons.create({
-    name: SEASON,
-    starts_on: toIsoDate(pagos[0][1], startYear),
-    ends_on: toIsoDate(pagos[0][pagos[0].length - 1], startYear),
-  });
+  season = seasons.create({ name: SEASON });
 
   // Seniority: the '# Temporadas' column of the Puntos tab. Not in the grid
   // CSVs, so it is transcribed here. Caro's sheet value was hand-edited to
@@ -235,8 +231,6 @@ function main() {
       }
     }
   });
-
-  seasons.activate(season.id);
 
   const table = standingsService.standings(season.id);
   console.log(`\nImported ${SEASON} (season id ${season.id})`);

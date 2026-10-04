@@ -18,7 +18,7 @@ export function App() {
     try {
       const all = await api.seasons();
       setSeasons(all);
-      setSeason(all.find(s => s.is_active) ?? all[0] ?? null);
+      setSeason(all[0] ?? null);
       setError(null);
     } catch (e) {
       setError((e as Error).message);

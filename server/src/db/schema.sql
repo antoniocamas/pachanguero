@@ -6,8 +6,8 @@ PRAGMA foreign_keys = ON;
 CREATE TABLE IF NOT EXISTS seasons (
   id                   INTEGER PRIMARY KEY,
   name                 TEXT    NOT NULL UNIQUE,   -- '2024/2025'
-  starts_on            TEXT,
-  ends_on              TEXT,
+  starts_on            TEXT    NOT NULL UNIQUE,  -- 'YYYY-09-01'
+  ends_on              TEXT    NOT NULL,         -- 'YYYY+1-08-31'
   price_cents          INTEGER NOT NULL DEFAULT 5600,  -- pitch cost per game
   slots                INTEGER NOT NULL DEFAULT 14,
   mercy_seats          INTEGER NOT NULL DEFAULT 1,
