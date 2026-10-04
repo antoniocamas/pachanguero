@@ -81,6 +81,7 @@ CREATE TABLE IF NOT EXISTS participations (
   paid_cents INTEGER NOT NULL DEFAULT 0,
   paid_on    TEXT,
   guests     INTEGER NOT NULL DEFAULT 0,   -- extra people they paid for
+  team       TEXT    CHECK (team IN ('claros','oscuros')),  -- from the final list
   note       TEXT,
   PRIMARY KEY (game_id, player_id)
 );

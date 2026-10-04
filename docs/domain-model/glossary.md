@@ -14,8 +14,26 @@ verano).
 
 ## Convocatoria
 
-La lista de quién juega esta semana. Se genera ordenando por puntos a los que se
-han apuntado, cogiendo los 14 primeros y luego aplicando la mercy rule.
+La lista de quién **debería** jugar esta semana. Se genera a partir de los
+candidatos: si los habituales caben en las plazas entran todos y los invitados
+ocupan el resto por orden de llegada; si no caben, se ordena por puntos,
+cogiendo los 14 primeros y luego aplicando la mercy rule. Es una predicción: no
+dice quién jugó de verdad (eso es la [convocatoria final](#convocatoria-final)).
+
+## Convocatoria final
+
+Lo que ocurrió de verdad en el partido: la lista pegada después del partido, con
+los dos equipos. Es la única fuente de quién jugó, quién pagó y cuánto. Puede
+diferir de la convocatoria (alguien no vino, entró un suplente). Si un excluido
+por puntos aparece jugando, su punto de exclusión se retira; si una corrección
+posterior lo vuelve a dejar fuera, vuelve. La convocatoria guardada no se
+reescribe nunca.
+
+## Claros y Oscuros
+
+Los dos equipos del partido, tal como encabezan la lista final (`Claros` y
+`Oscuros`, en cualquier orden). Solo se guardan para mostrarlos: no influyen en
+puntos, selección ni pagos.
 
 ## Los 14
 

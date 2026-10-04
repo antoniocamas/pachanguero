@@ -17,6 +17,8 @@ export interface Player {
   seasons: number;
 }
 
+export type Team = 'claros' | 'oscuros';
+
 export interface Game {
   id: number;
   season_id: number;
@@ -35,6 +37,7 @@ export interface Participation {
   paid_cents: number;
   paid_on: string | null;
   guests: number;
+  team: Team | null;
   note: string | null;
 }
 
@@ -123,6 +126,31 @@ export type ResolveResult =
   | { outcome: 'resolved'; candidate: MatchedCandidate }
   | { outcome: 'unresolved'; entry: UnresolvedEntry };
 
+export interface FinalUnresolved extends UnresolvedEntry {
+  team: Team;
+}
+
+export interface FinalParticipant {
+  position: number;
+  team: Team;
+  playerId: number;
+  name: string;
+  companions: number;
+  paidCents: number;
+  seniorityPrompt?: true;
+  suggested?: number;
+}
+
+export interface FinalPasteResult {
+  game: Game;
+  matched: FinalParticipant[];
+  unresolved: FinalUnresolved[];
+}
+
+export type FinalResolveResult =
+  | { outcome: 'resolved'; participant: FinalParticipant }
+  | { outcome: 'unresolved'; entry: FinalUnresolved };
+
 async function call<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`/api${path}`, {
     headers: { 'Content-Type': 'application/json' },
@@ -200,6 +228,26 @@ export const api = {
     call<ResolveResult>(`/games/${gameId}/candidates/resolve`, {
       method: 'POST',
       body: body({ ...entry, action }),
+    }),
+
+  pasteFinalList: (text: string, gameId?: number) =>
+    call<FinalPasteResult>('/games/final:paste', {
+      method: 'POST',
+      body: body({ text, gameId }),
+    }),
+  resolveFinalLine: (
+    gameId: number,
+    entry: Pick<FinalUnresolved, 'line' | 'field' | 'team'>,
+    action: ResolveAction
+  ) =>
+    call<FinalResolveResult>(`/games/${gameId}/final/resolve`, {
+      method: 'POST',
+      body: body({ ...entry, action }),
+    }),
+  confirmSeniority: (seasonId: number, playerId: number, seasons: number) =>
+    call<Player>(`/seasons/${seasonId}/players/${playerId}/seniority`, {
+      method: 'POST',
+      body: body({ seasons }),
     }),
 
   standings: (seasonId: number) =>

@@ -8,6 +8,9 @@ import { PlayerRegistrar } from './player-registrar.js';
 import { GameRepository } from './game-repository.js';
 import { ScheduleRepository } from './schedule-repository.js';
 import { FinalListTargetResolver } from './final-list-target-resolver.js';
+import { FinalListResolutionService } from './final-list-resolution-service.js';
+import { LineResolver } from './line-resolver.js';
+import { FinalListParser } from '../domain/final-list-parser.js';
 import { GuestCandidateRepository } from './guest-candidate-repository.js';
 import { CandidateResolutionService } from './candidate-resolution-service.js';
 import { CandidateLineParser } from '../domain/candidate-line-parser.js';
@@ -55,6 +58,19 @@ export const candidateResolution = new CandidateResolutionService(
   guestCandidates,
   new CandidateLineParser(new NameStripper()),
   playerRegistrar,
+  db()
+);
+
+export const finalListResolution = new FinalListResolutionService(
+  games,
+  finalListTarget,
+  players,
+  participations,
+  exclusions,
+  seasons,
+  new LineResolver(players, aliases, playerRegistrar),
+  new FinalListParser(new NameStripper()),
+  new CandidateLineParser(new NameStripper()),
   db()
 );
 

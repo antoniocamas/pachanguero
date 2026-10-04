@@ -1,8 +1,6 @@
 import type Database from 'better-sqlite3';
 import { LocalCalendar } from '../domain/local-calendar.js';
-import { NameMatcher } from '../domain/name-matcher.js';
-import type { NameMatch } from '../domain/name-matcher.js';
-import { NameStripper } from '../domain/name-stripper.js';
+import type { NameMatcher } from '../domain/name-matcher.js';
 import type {
   CandidateLineParser,
   ParsedLine,
@@ -14,18 +12,14 @@ import type { GuestCandidateRepository } from './guest-candidate-repository.js';
 import type { ParticipationRepository } from './participation-repository.js';
 import type { PlayerRegistrar } from './player-registrar.js';
 import type { PlayerRepository } from './player-repository.js';
+import {
+  LineResolver,
+  type LineField,
+  type ResolveAction,
+  type UnresolvedEntry,
+} from './line-resolver.js';
 
-/** The part of a line that could not be matched: the candidate's name or its host's. */
-export type LineField = 'name' | 'host';
-
-export interface UnresolvedEntry {
-  line: ParsedLine;
-  field: LineField;
-  /** 'collision' is a new name that turned out to belong to an existing player. */
-  reason: 'unmatched' | 'ambiguous' | 'collision';
-  /** Players the name could be; empty when nothing matched. */
-  candidates: { id: number; name: string }[];
-}
+export type { LineField, ResolveAction, UnresolvedEntry };
 
 export interface MatchedCandidate {
   position: number;
@@ -42,11 +36,6 @@ export interface PasteResult {
   unresolved: UnresolvedEntry[];
 }
 
-export type ResolveAction =
-  | { type: 'link'; playerId: number }
-  | { type: 'linkAsAlias'; playerId: number }
-  | { type: 'register'; name: string; introducedBy?: number };
-
 export type ResolveResult =
   | { outcome: 'resolved'; candidate: MatchedCandidate }
   | { outcome: 'unresolved'; entry: UnresolvedEntry };
@@ -60,18 +49,14 @@ interface ResolvedLine {
   registered: boolean;
 }
 
-type Settled =
-  | { settled: true; playerId: number }
-  | { settled: false; entry: UnresolvedEntry };
-
 /**
  * Turns a pasted candidate list into sign-ups and guest rows. A name that
  * cannot be matched is never guessed: it comes back unresolved and nothing is
  * stored for it until the organiser settles it with `resolve`.
  */
 export class CandidateResolutionService {
-  private readonly stripper = new NameStripper();
   private readonly calendar = new LocalCalendar();
+  private readonly lines: LineResolver;
 
   constructor(
     private readonly games: GameRepository,
@@ -83,7 +68,9 @@ export class CandidateResolutionService {
     private readonly parser: CandidateLineParser,
     private readonly registrar: PlayerRegistrar,
     private readonly conn: Database.Database
-  ) {}
+  ) {
+    this.lines = new LineResolver(players, aliases, registrar);
+  }
 
   /**
    * Replaces the game's candidates with this paste. Without a `gameId` the
@@ -91,8 +78,8 @@ export class CandidateResolutionService {
    */
   paste(text: string, gameId?: number, now: Date = new Date()): PasteResult {
     const game = this.targetGame(gameId, now);
-    const matcher = this.matcher();
-    const names = this.nameLookup();
+    const matcher = this.lines.matcher();
+    const names = this.lines.names();
 
     const resolved: ResolvedLine[] = [];
     const unresolved: UnresolvedEntry[] = [];
@@ -130,12 +117,12 @@ export class CandidateResolutionService {
     const game = this.games.get(gameId);
     if (!game) throw new Error(`Unknown game: ${gameId}`);
 
-    const typed = this.applyAction(entry, action);
+    const typed = this.lines.settle(entry, action);
     if (!typed.settled) return { outcome: 'unresolved', entry: typed.entry };
 
     // Read after `applyAction`, which may have registered a player or alias.
-    const matcher = this.matcher();
-    const names = this.nameLookup();
+    const matcher = this.lines.matcher();
+    const names = this.lines.names();
     const registered = action.type === 'register';
     const resolved = this.completeLine(
       entry.line,
@@ -170,14 +157,6 @@ export class CandidateResolutionService {
     return game;
   }
 
-  private matcher(): NameMatcher {
-    return new NameMatcher(this.players.listAll(), this.aliases.listAll());
-  }
-
-  private nameLookup(): Map<number, string> {
-    return new Map(this.players.listAll().map(p => [p.id, p.name]));
-  }
-
   private resolveLine(
     line: ParsedLine,
     matcher: NameMatcher,
@@ -187,7 +166,7 @@ export class CandidateResolutionService {
     if (line.kind !== 'plusOne') {
       const name = matcher.match(line.name);
       if (name.outcome !== 'matched') {
-        return { entry: this.unresolvedEntry(line, 'name', name, names) };
+        return { entry: this.lines.unresolved(line, 'name', name, names) };
       }
       playerId = name.playerId;
     }
@@ -195,7 +174,7 @@ export class CandidateResolutionService {
     if (line.kind !== 'plain') {
       const host = matcher.match(line.hostName);
       if (host.outcome !== 'matched') {
-        return { entry: this.unresolvedEntry(line, 'host', host, names) };
+        return { entry: this.lines.unresolved(line, 'host', host, names) };
       }
       hostPlayerId = host.playerId;
     }
@@ -207,36 +186,6 @@ export class CandidateResolutionService {
           ? { line, playerId: null, hostPlayerId, registered: false }
           : { line, playerId, hostPlayerId: null, registered: false },
     };
-  }
-
-  /** Applies the organiser's choice to the field that failed to match. */
-  private applyAction(
-    entry: Pick<UnresolvedEntry, 'line' | 'field'>,
-    action: ResolveAction
-  ): Settled {
-    const spelled = this.spelling(entry.line, entry.field);
-    if (action.type === 'register') {
-      const result = this.registrar.register(action.name, action.introducedBy);
-      if (result.outcome === 'collision') {
-        return {
-          settled: false,
-          entry: this.unresolvedEntry(
-            entry.line,
-            entry.field,
-            result.match,
-            this.nameLookup()
-          ),
-        };
-      }
-      return { settled: true, playerId: result.player.id };
-    }
-    if (!this.players.nameOf(action.playerId)) {
-      throw new Error(`Unknown player: ${action.playerId}`);
-    }
-    if (action.type === 'linkAsAlias') {
-      this.aliases.add(action.playerId, this.stripper.strip(spelled));
-    }
-    return { settled: true, playerId: action.playerId };
   }
 
   /** With one field settled, match the other and build the line to store. */
@@ -268,7 +217,7 @@ export class CandidateResolutionService {
       if (hostPlayerId === null) {
         const host = matcher.match(line.hostName);
         if (host.outcome !== 'matched') {
-          return { entry: this.unresolvedEntry(line, 'host', host, names) };
+          return { entry: this.lines.unresolved(line, 'host', host, names) };
         }
         hostPlayerId = host.playerId;
       }
@@ -277,7 +226,7 @@ export class CandidateResolutionService {
     // The host was settled; now the guest's own name still has to match.
     const name = matcher.match(line.name);
     if (name.outcome !== 'matched') {
-      return { entry: this.unresolvedEntry(line, 'name', name, names) };
+      return { entry: this.lines.unresolved(line, 'name', name, names) };
     }
     return {
       line: {
@@ -328,38 +277,6 @@ export class CandidateResolutionService {
       name: r.playerId === null ? null : (names.get(r.playerId) ?? null),
       hostPlayerId: row ? row.host_player_id : null,
       guest: row ? (row.player_id === null ? 'anonymous' : 'named') : null,
-    };
-  }
-
-  private spelling(line: ParsedLine, field: LineField): string {
-    if (field === 'host') {
-      return line.kind === 'plain' ? line.name : line.hostName;
-    }
-    return line.kind === 'plusOne' ? line.hostName : line.name;
-  }
-
-  private unresolvedEntry(
-    line: ParsedLine,
-    field: LineField,
-    match: NameMatch,
-    names: Map<number, string>
-  ): UnresolvedEntry {
-    const ids =
-      match.outcome === 'matched'
-        ? [match.playerId]
-        : match.outcome === 'ambiguous'
-          ? match.playerIds
-          : [];
-    return {
-      line,
-      field,
-      reason:
-        match.outcome === 'unresolved'
-          ? 'unmatched'
-          : match.outcome === 'ambiguous'
-            ? 'ambiguous'
-            : 'collision',
-      candidates: ids.map(id => ({ id, name: names.get(id) ?? '' })),
     };
   }
 }

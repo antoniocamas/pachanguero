@@ -30,6 +30,6 @@
 | 07  | Inline new-player registration                   | 1    | done    | 2026-10-04 |
 | 08  | Candidate list paste & resolution                | 1    | done    | 2026-10-04 |
 | 09  | Convocatoria commit decoupled, guest-aware       | 1    | done    | 2026-10-04 |
-| 10  | Final list paste & resolution                    | 1    | pending | —          |
+| 10  | Final list paste & resolution                    | 1    | done    | 2026-10-04 |
 | 11  | Historical backfill                              | 1    | pending | —          |
 | 12  | Closing regression                               | 1    | pending | —          |

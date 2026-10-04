@@ -99,3 +99,65 @@ test('pastes a candidate list and settles an ambiguous name', async ({
   await expect(page.getByTestId('unresolved-line')).toHaveCount(0);
   await expect(page.getByTestId('matched-line')).toHaveCount(3);
 });
+
+test('a final list retracts the exclusion of a player who did play', async ({
+  page,
+  request,
+}) => {
+  const send = async (
+    method: 'post' | 'put' | 'patch',
+    path: string,
+    data?: unknown
+  ) => {
+    const res = await request[method](`/api${path}`, { data });
+    expect(res.ok()).toBeTruthy();
+    return res.json();
+  };
+
+  const season = await (await request.get('/api/seasons/current')).json();
+  const startYear = Number(season.name.slice(0, 4));
+  // Two slots, three players: one of them is cut by the selection.
+  await send('patch', `/seasons/${season.id}`, { slots: 2 });
+  const game = await send('post', `/seasons/${season.id}/games`, {
+    played_on: `${startYear}-11-17`,
+  });
+  const ids: Record<string, number> = {};
+  for (const name of ['Ga', 'Gb', 'Gc']) {
+    const p = await send('post', `/seasons/${season.id}/players`, {
+      name,
+      seasons: 1,
+    });
+    ids[name] = p.id;
+    await send('put', `/games/${game.id}/players/${p.id}`, { signed_up: true });
+  }
+  await send('post', `/games/${game.id}/convocatoria`);
+
+  const exclusionsOf = async (name: string) => {
+    const table = await (
+      await request.get(`/api/seasons/${season.id}/standings`)
+    ).json();
+    return table.find((r: { name: string }) => r.name === name).exclusions;
+  };
+  expect(await exclusionsOf('Gc')).toBe(1);
+
+  await page.goto('/');
+  await page.getByLabel('Elegir partido').selectOption(String(game.id));
+  // Oscuros first this time; the cut player turned up and played for them.
+  await page
+    .getByLabel('Lista final pegada')
+    .fill('Oscuros\n-------\nGc\n\nClaros\n=======\nGa\nGb');
+  await page.getByRole('button', { name: 'Registrar lista final' }).click();
+
+  const teams = page.locator('[data-testid^="team-"]');
+  await expect(teams).toHaveCount(2);
+  await expect(teams.first()).toHaveAttribute('data-testid', 'team-oscuros');
+  await expect(teams.first()).toContainText('Gc');
+  await expect(teams.last()).toContainText('Ga');
+  await expect(teams.last()).toContainText('Gb');
+
+  // Their exclusion point is gone from the standings.
+  expect(await exclusionsOf('Gc')).toBe(0);
+  await page.getByRole('button', { name: 'Puntos' }).click();
+  const row = page.getByRole('row').filter({ hasText: 'Gc' });
+  await expect(row.getByRole('cell').nth(3)).toHaveText('0');
+});

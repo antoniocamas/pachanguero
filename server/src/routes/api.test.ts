@@ -291,4 +291,59 @@ describe('API', () => {
       expect(res.status).toBe(400);
     });
   });
+
+  describe('final list paste', () => {
+    const post = (path: string, body: unknown) =>
+      fetch(`${base}${path}`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+    it('pastes a final list, then settles an unknown name', async () => {
+      const season = seasons.create({ name: '2001/2002' });
+      const game = games.create(season.id, '2001-10-01');
+      await post(`/seasons/${season.id}/players`, { name: 'Ana', seasons: 1 });
+
+      const pasted = await post('/games/final:paste', {
+        text: 'Claros\n-----\nAna\nOscuros\n-----\nNuevo',
+        gameId: game.id,
+      });
+      expect(pasted.status).toBe(200);
+      const body = (await pasted.json()) as {
+        matched: { name: string; team: string; paidCents: number }[];
+        unresolved: { team: string }[];
+      };
+      expect(body.matched).toMatchObject([
+        { name: 'Ana', team: 'claros', paidCents: 400 },
+      ]);
+      expect(body.unresolved).toMatchObject([{ team: 'oscuros' }]);
+
+      const resolved = await post(`/games/${game.id}/final/resolve`, {
+        ...body.unresolved[0],
+        action: { type: 'register', name: 'Nuevo' },
+      });
+      expect(resolved.status).toBe(200);
+      expect(await resolved.json()).toMatchObject({
+        outcome: 'resolved',
+        participant: { name: 'Nuevo', team: 'oscuros' },
+      });
+      expect(games.get(game.id)?.status).toBe('played');
+    });
+
+    it('rejects a malformed paste and a resolve without a team', async () => {
+      const season = seasons.create({ name: '2000/2001' });
+      const game = games.create(season.id, '2000-10-02');
+      const bad = await post('/games/final:paste', {
+        text: 'Ana\nClaros',
+        gameId: game.id,
+      });
+      expect(bad.status).toBe(400);
+      const res = await post(`/games/${game.id}/final/resolve`, {
+        line: { position: 1, kind: 'plain', name: 'X' },
+        action: { type: 'register', name: 'X' },
+      });
+      expect(res.status).toBe(400);
+    });
+  });
 });

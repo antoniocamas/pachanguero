@@ -126,20 +126,20 @@ Testability Assessment: F9 = Yes (Playwright E2E covers the UI half).
 
 ## Definition of Done
 
-- [ ] `participations.team` exists, nullable, `CHECK (team IN ('claros','oscuros'))`.
-- [ ] `FinalListParser.splitByTeam` passes the author's worked example exactly.
-- [ ] `FinalListResolutionService.paste`/`resolve` pass every fixture above, including the
+- [x] `participations.team` exists, nullable, `CHECK (team IN ('claros','oscuros'))`.
+- [x] `FinalListParser.splitByTeam` passes the author's worked example exactly.
+- [x] `FinalListResolutionService.paste`/`resolve` pass every fixture above, including the
       all-or-nothing malformed-paste case and the bidirectional exclusion-reconciliation case.
-- [ ] `games.status` is set to `'played'` on successful resolution (closes task 06's deferred write).
-- [ ] `GameDay.tsx` renders the final-list flow per the Manual Test Plan.
-- [ ] **Graduation:** F9 realises UC-001-06-S1..S9 — graduation value is
+- [x] `games.status` is set to `'played'` on successful resolution (closes task 06's deferred write).
+- [x] `GameDay.tsx` renders the final-list flow per the Manual Test Plan.
+- [x] **Graduation:** F9 realises UC-001-06-S1..S9 — graduation value is
       `final-list-parser.test.ts` + `final-list-resolution-service.test.ts` + the new E2E spec + the
       Manual Test Plan above.
-- [ ] **Documentation:** `docs/domain-model/glossary.md` — add entries for Claros/Oscuros (the team
+- [x] **Documentation:** `docs/domain-model/glossary.md` — add entries for Claros/Oscuros (the team
       split) and "final convocatoria" (the post-game outcome, distinct from the algorithmic
       Convocatoria task 09 already pointed at); correct the `## Convocatoria` entry to close the
       candidate-vs-final distinction task 09 started.
-- [ ] **Tests:** `npm test --workspace=server` passes; `npm run test:e2e` passes for the new spec.
-- [ ] **Regression:** deferred to task 12.
-- [ ] **Code checks:** `npm run lint` and `npm run format:check` pass on every touched file,
+- [x] **Tests:** `npm test --workspace=server` passes; `npm run test:e2e` passes for the new spec.
+- [x] **Regression:** deferred to task 12.
+- [x] **Code checks:** `npm run lint` and `npm run format:check` pass on every touched file,
       including `web/src/pages/GameDay.tsx` per `.agents/rules/frontend-coding-standard.md`.

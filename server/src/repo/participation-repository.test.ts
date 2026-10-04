@@ -57,4 +57,32 @@ describe('ParticipationRepository', () => {
     participations.remove(gameId, playerId);
     expect(participations.list(gameId)).toEqual([]);
   });
+
+  it('clears what a final list recorded but keeps the sign-up', () => {
+    participations.set(gameId, playerId, {
+      signed_up: true,
+      played: true,
+      team: 'claros',
+      paid_cents: 800,
+      guests: 1,
+    });
+    participations.clearFinalOutcome(gameId);
+    expect(participations.list(gameId)[0]).toMatchObject({
+      signed_up: 1,
+      played: 0,
+      team: null,
+      paid_cents: 0,
+      paid_on: null,
+      guests: 0,
+    });
+  });
+
+  it('only accepts claros or oscuros as a team', () => {
+    expect(() =>
+      participations.set(gameId, playerId, {
+        // @ts-expect-error not a team
+        team: 'rojos',
+      })
+    ).toThrow();
+  });
 });

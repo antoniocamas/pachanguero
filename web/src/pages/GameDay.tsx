@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { CandidatePaste } from '../components/CandidatePaste';
+import { FinalListPaste } from '../components/FinalListPaste';
 import {
   api,
   type ConvocatoriaResult,
@@ -192,6 +193,16 @@ export function GameDay({
         <CandidatePaste
           key={gameId}
           gameId={gameId}
+          players={players}
+          onChanged={load}
+        />
+      )}
+
+      {gameId && (
+        <FinalListPaste
+          key={`final-${gameId}`}
+          gameId={gameId}
+          seasonId={season.id}
           players={players}
           onChanged={load}
         />
