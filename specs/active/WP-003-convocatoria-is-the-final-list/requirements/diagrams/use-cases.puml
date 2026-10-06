@@ -1,0 +1,30 @@
+@startuml use-cases
+left to right direction
+
+actor Organiser
+
+rectangle Pachanguero {
+  usecase "UC-003-01\nSee the game's state and\nthe next action" as UC01
+  usecase "UC-003-03\nCreate and confirm\nthe convocatoria" as UC03
+  usecase "UC-003-04\nCorrect the convocatoria\nby hand" as UC04
+  usecase "UC-003-05\nDerive who played and\nthe exclusion point" as UC05
+  usecase "UC-003-06\nRecord payments\nafter the game" as UC06
+  usecase "UC-003-07\nRecord the teams" as UC07
+  usecase "UC-003-09\nGive past games\na convocatoria" as UC09
+  usecase "UC-003-10\nUse the game screen\nby lifecycle phase" as UC10
+}
+
+Organiser --> UC01
+Organiser --> UC03
+Organiser --> UC04
+Organiser --> UC06
+Organiser --> UC07
+Organiser --> UC09
+Organiser --> UC10
+
+UC01 ..> UC05 : <<include>> (marking as played)
+UC10 ..> UC01 : <<include>>
+UC10 ..> UC04 : <<include>> (drag rows)
+UC10 ..> UC06 : <<include>>
+UC10 ..> UC07 : <<include>>
+@enduml

@@ -1,0 +1,39 @@
+@startuml components
+skinparam componentStyle rectangle
+package "Web (React)" {
+  [Game screen] as WEB
+}
+package "Routes" {
+  [Game API] as API
+}
+package "Lifecycle (domain)" {
+  [Game lifecycle] as LC
+}
+package "Game services (repo)" {
+  [Convocatoria] as CONV
+  [Played derivation] as DER
+  [Payments (share_debts)] as PAY
+  [Teams] as TEAMS
+  [Standings] as STAND
+}
+package "Persistence" {
+  [Schema] as SCH
+}
+package "History conversion" {
+  [Converter] as HIST
+}
+WEB --> API
+API --> LC
+API --> CONV
+API --> PAY
+API --> TEAMS
+LC --> DER : apply / retract on entering / leaving Jugado
+LC --> CONV : needs confirmed convocatoria
+DER --> CONV : reads members
+DER --> STAND : exclusions feed points
+PAY --> STAND : own share paid = paid game
+HIST --> CONV : create + stamp confirmed
+CONV --> SCH
+PAY --> SCH
+DER --> SCH
+@enduml

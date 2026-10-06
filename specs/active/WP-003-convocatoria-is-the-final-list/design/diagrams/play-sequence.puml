@@ -1,0 +1,17 @@
+@startuml play-sequence
+actor Organiser
+participant "Game API" as API
+participant "GameLifecycleService" as LS
+participant "GameLifecycle" as SM
+participant "PlayedDerivation" as DER
+database SQLite
+Organiser -> API : POST /games/:id/state {action: play}
+API -> LS : transition(gameId, play)
+LS -> SM : next(stateOf(game), play)
+SM --> LS : Jugado | refusal (message)
+LS -> DER : apply(game)
+DER -> SQLite : played = signed_up AND in convocatoria\nexclusions from algorithm outcome vs membership
+LS -> SQLite : bill shares not yet billed (share_debts)
+LS -> SQLite : games.status = 'played'  (one transaction)
+LS --> API : GameView (state, next action, counters)
+@enduml

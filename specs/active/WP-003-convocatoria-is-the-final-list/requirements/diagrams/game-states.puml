@@ -1,0 +1,15 @@
+@startuml game-states
+[*] --> Abierto
+Abierto --> ConvocatoriaCreada : crear convocatoria
+ConvocatoriaCreada --> ConvocatoriaConfirmada : confirmar
+ConvocatoriaCreada --> ConvocatoriaCreada : corregir a mano
+ConvocatoriaConfirmada --> ConvocatoriaConfirmada : corregir a mano
+ConvocatoriaConfirmada --> ConvocatoriaCreada : crear de nuevo
+ConvocatoriaConfirmada --> Jugado : marcar como jugado
+Jugado --> ConvocatoriaConfirmada : reabrir
+Abierto --> Cancelado : cancelar
+ConvocatoriaCreada --> Cancelado : cancelar
+ConvocatoriaConfirmada --> Cancelado : cancelar
+Jugado --> Cancelado : cancelar
+Cancelado --> [*] : deshacer cancelación vuelve al estado anterior
+@enduml

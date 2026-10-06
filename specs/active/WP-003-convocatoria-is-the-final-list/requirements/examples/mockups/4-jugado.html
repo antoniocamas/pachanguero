@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>4 · Jugado</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="note">
+      Maqueta visual, no funcional · <a href="index.html">todas las vistas</a> ·
+      4 · Jugado
+    </div>
+    <div class="app">
+      <input class="tabr" type="radio" name="t" id="t1" checked /><input
+        class="tabr"
+        type="radio"
+        name="t"
+        id="t2"
+      />
+      <div class="bar">
+        <div class="row1">
+          <select class="sel">
+            <option>Mié 7 oct 2026</option></select
+          ><button class="btn">+ Nuevo</button><span class="sp"></span>
+          <div class="counters">
+            <span><b>18</b> apuntados</span><span><b>14</b> plazas</span
+            ><span><b>3</b> pagados</span><span><b>48 €</b> deuda</span>
+          </div>
+          <button class="btn link">Cancelar partido</button>
+        </div>
+        <div class="steps">
+          <span class="step done">Apuntados</span
+          ><span class="step done">Convocatoria creada</span
+          ><span class="step done">Convocatoria confirmada</span
+          ><span class="step now">Jugado</span>
+        </div>
+        <div class="next">
+          <span class="txt"
+            ><b>Siguiente:</b> registra los pagos; los equipos son
+            opcionales</span
+          ><button class="btn">Reabrir partido</button>
+        </div>
+      </div>
+      <div class="tabs">
+        <label for="t1">Jugadores</label><label for="t2">Equipos</label>
+      </div>
+      <div class="grid">
+        <div class="card p1">
+          <h2>
+            Jugadores · primero los que deben, luego alfabético<small
+              >18 jugadores</small
+            >
+          </h2>
+          <div class="scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th class="n">Orden ↕</th>
+                  <th class="n">Llegada ↕</th>
+                  <th class="">Jugador ↕</th>
+                  <th class="n">Puntos ↕</th>
+                  <th class="">Jugó ↕</th>
+                  <th class="hide-sm">Equipo ↕</th>
+                  <th class="">Pago ▲</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="rank n">4</td>
+                  <td class="n">2</td>
+                  <td>Dani</td>
+                  <td class="n">8,1</td>
+                  <td>Sí</td>
+                  <td class="hide-sm">
+                    <span class="chip claros">Claros</span>
+                  </td>
+                  <td>
+                    <span class="chip owes">debe 4 €</span>
+                    <button class="btn">Marcar pagado</button>
+                  </td>
+                </tr>
+                <tr class="sub">
+                  <td></td>
+                  <td></td>
+                  <td colspan="2">↳ Invitado de Dani</td>
+                  <td></td>
+                  <td class="hide-sm"></td>
+                  <td>
+                    <span class="chip owes">debe 4 €</span>
+                    <button class="btn">Marcar pagado</button>
+                    <button class="btn">Otro importe…</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="rank n">5</td>
+                  <td class="n">9</td>
+                  <td>Elena</td>
+                  <td class="n">7,9</td>
+                  <td>Sí</td>
+                  <td class="hide-sm">
+                    <span class="chip oscuros">Oscuros</span>
+                  </td>
+                  <td>
+                    <span class="chip owes">debe 4 €</span>
+                    <button class="btn">Marcar pagado</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="rank n">6</td>
+                  <td class="n">4</td>
+                  <td>Fran</td>
+                  <td class="n">7,6</td>
+                  <td>Sí</td>
+                  <td class="hide-sm">
+                    <span class="chip claros">Claros</span>
+                  </td>
+                  <td>
+                    <span class="chip owes">debe 4 €</span>
+                    <button class="btn">Marcar pagado</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="rank n">8</td>
+                  <td class="n">11</td>
+                  <td>Hugo</td>
+                  <td class="n">6,9</td>
+                  <td>Sí</td>
+                  <td class="hide-sm">
+                    <span class="chip oscuros">Oscuros</span>
+                  </td>
+                  <td>
+                    <span class="chip owes">debe 4 €</span>
+                    <button class="btn">Marcar pagado</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="rank n">9</td>
+                  <td class="n">6</td>
+                  <td>Iván</td>
+                  <td class="n">6,5</td>
+                  <td>Sí</td>
+                  <td class="hide-sm">
+                    <span class="chip claros">Claros</span>
+                  </td>
+                  <td>
+                    <span class="chip owes">debe 4 €</span>
+                    <button class="btn">Marcar pagado</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="rank n">10</td>
+                  <td class="n">8</td>
+                  <td>Jorge</td>
+                  <td class="n">6,1</td>
+                  <td>Sí</td>
+                  <td class="hide-sm">
+                    <span class="chip oscuros">Oscuros</span>
+                  </td>
+                  <td>
+                    <span class="chip owes">debe 4 €</span>
+                    <button class="btn">Marcar pagado</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="rank n">11</td>
+                  <td class="n">12</td>
+                  <td>Karla</td>
+                  <td class="n">5,8</td>
+                  <td>Sí</td>
+                  <td class="hide-sm">
+                    <span class="chip claros">Claros</span>
+                  </td>
+                  <td>
+                    <span class="chip owes">debe 4 €</span>
+                    <button class="btn">Marcar pagado</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="rank n">13</td>
+                  <td class="n">13</td>
+                  <td>Manu</td>
+                  <td class="n">5,2</td>
+                  <td>Sí</td>
+                  <td class="hide-sm">
+                    <span class="chip claros">Claros</span>
+                  </td>
+                  <td>
+                    <span class="chip owes">debe 4 €</span>
+                    <button class="btn">Marcar pagado</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="rank n">15</td>
+                  <td class="n">15</td>
+                  <td>Marta</td>
+                  <td class="n">4,1</td>
+                  <td>Sí</td>
+                  <td class="hide-sm">
+                    <span class="chip oscuros">Oscuros</span>
+                  </td>
+                  <td>
+                    <span class="chip owes">debe 4 €</span>
+                    <button class="btn">Marcar pagado</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="rank n">14</td>
+                  <td class="n">14</td>
+                  <td>Nico</td>
+                  <td class="n">4,8</td>
+                  <td>Sí</td>
+                  <td class="hide-sm">
+                    <span class="chip claros">Claros</span>
+                  </td>
+                  <td>
+                    <span class="chip owes">debe 4 €</span>
+                    <button class="btn">Marcar pagado</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="rank n">16</td>
+                  <td class="n">16</td>
+                  <td>Raúl</td>
+                  <td class="n">3,9</td>
+                  <td>Sí</td>
+                  <td class="hide-sm">
+                    <span class="chip oscuros">Oscuros</span>
+                  </td>
+                  <td>
+                    <span class="chip owes">debe 4 €</span>
+                    <button class="btn">Marcar pagado</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="rank n">1</td>
+                  <td class="n">3</td>
+                  <td>Ana</td>
+                  <td class="n">9,2</td>
+                  <td>Sí</td>
+                  <td class="hide-sm">
+                    <span class="chip claros">Claros</span>
+                  </td>
+                  <td><span class="chip paid">pagó 4 €</span></td>
+                </tr>
+                <tr>
+                  <td class="rank n">3</td>
+                  <td class="n">5</td>
+                  <td>Carlos</td>
+                  <td class="n">8,5</td>
+                  <td>Sí</td>
+                  <td class="hide-sm">
+                    <span class="chip oscuros">Oscuros</span>
+                  </td>
+                  <td><span class="chip paid">pagó 4 €</span></td>
+                </tr>
+                <tr>
+                  <td class="rank n">2</td>
+                  <td class="n">1</td>
+                  <td>Luis</td>
+                  <td class="n">8,7</td>
+                  <td>Sí</td>
+                  <td class="hide-sm">
+                    <span class="chip oscuros">Oscuros</span>
+                  </td>
+                  <td><span class="chip paid">pagó 4 €</span></td>
+                </tr>
+                <tr class="out">
+                  <td class="rank n">7</td>
+                  <td class="n">7</td>
+                  <td>Gema</td>
+                  <td class="n">7,2</td>
+                  <td>No</td>
+                  <td class="hide-sm">–</td>
+                  <td>–</td>
+                </tr>
+                <tr class="out">
+                  <td class="rank n">12</td>
+                  <td class="n">10</td>
+                  <td>Lola</td>
+                  <td class="n">5,5</td>
+                  <td>No</td>
+                  <td class="hide-sm">–</td>
+                  <td>–</td>
+                </tr>
+                <tr class="out">
+                  <td class="rank n">17</td>
+                  <td class="n">17</td>
+                  <td>Sara</td>
+                  <td class="n">3,2</td>
+                  <td>No</td>
+                  <td class="hide-sm">–</td>
+                  <td>–</td>
+                </tr>
+                <tr class="out">
+                  <td class="rank n">18</td>
+                  <td class="n">18</td>
+                  <td>Toni</td>
+                  <td class="n">2,6</td>
+                  <td>No</td>
+                  <td class="hide-sm">–</td>
+                  <td>–</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card p2">
+          <h2>Equipos <small>opcional</small></h2>
+          <div class="side">
+            <div class="paste" style="min-height: 120px">
+              Claros<br />Ana<br />Carlos<br />Elena<br />Gema<br />Jorge<br />Lola<br />Manu<br /><br />Oscuros<br />…
+            </div>
+            <div class="unres">
+              Sin resolver: «Pepito» <button class="btn">Elegir jugador</button>
+            </div>
+            <button class="btn primary">Guardar equipos</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
