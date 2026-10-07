@@ -9,6 +9,12 @@ export interface TeamLine {
   position: number;
 }
 
+/** Words that head each team's list; `Blancos` is the other name for `Claros`. */
+const HEADINGS: Record<Team, readonly string[]> = {
+  claros: ['claros', 'blancos'],
+  oscuros: ['oscuros'],
+};
+
 const NO_LETTERS = /^[^a-zA-Zà-ÿÀ-Ÿ]*$/;
 
 /** Splits a pasted team list into its two teams' lines. */
@@ -16,7 +22,7 @@ export class TeamListParser {
   constructor(private readonly stripper: NameStripper) {}
 
   /**
-   * Headings (`Claros` / `Oscuros`, in either order) switch the team; lines
+   * Headings (`Claros` or `Blancos` / `Oscuros`, optionally ending in `:`, in either order) switch the team; lines
    * with no letters are separators and dropped; everything else is a player.
    * A player line before the first heading is an error, never a guess.
    */
@@ -39,8 +45,14 @@ export class TeamListParser {
   }
 
   private headingOf(line: string): Team | null {
+    const word = line.replace(/\s*:$/, '');
     for (const team of ['claros', 'oscuros'] as const) {
-      if (line.localeCompare(team, 'es', { sensitivity: 'base' }) === 0) {
+      if (
+        HEADINGS[team].some(
+          heading =>
+            word.localeCompare(heading, 'es', { sensitivity: 'base' }) === 0
+        )
+      ) {
         return team;
       }
     }

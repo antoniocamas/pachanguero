@@ -54,6 +54,18 @@ describe('TeamListParser', () => {
     ]);
   });
 
+  it('accepts "Blancos:" and "Oscuros:" headings with colons', () => {
+    const lines = parser.splitByTeam(
+      'Blancos:\n\nCaro\nAntonio\n\nOscuros \n\nÁlvaro C\nPache'
+    );
+    expect(lines.map(l => [l.team, l.line])).toEqual([
+      ['claros', 'Caro'],
+      ['claros', 'Antonio'],
+      ['oscuros', 'Álvaro C'],
+      ['oscuros', 'Pache'],
+    ]);
+  });
+
   it('keeps list markers out of the line', () => {
     expect(parser.splitByTeam('Claros\n1. Ana ⚽')[0].line).toBe('Ana');
   });
