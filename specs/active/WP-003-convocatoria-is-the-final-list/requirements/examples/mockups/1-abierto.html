@@ -30,7 +30,7 @@
           <button class="btn link">Cancelar partido</button>
         </div>
         <div class="steps">
-          <span class="step now">Apuntados</span
+          <span class="step now">Abierto</span
           ><span class="step">Convocatoria creada</span
           ><span class="step">Convocatoria confirmada</span
           ><span class="step">Jugado</span>
@@ -42,131 +42,71 @@
           ><button class="btn primary">Crear convocatoria</button>
         </div>
       </div>
-      <div class="tabs">
-        <label for="t1">Jugadores</label><label for="t2">Apuntados</label>
-      </div>
-      <div class="grid">
-        <div class="card p1">
-          <h2>Jugadores · por orden de llegada<small>18 jugadores</small></h2>
-          <div class="scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th class="n">Llegada</th>
-                  <th class="">Jugador</th>
-                  <th class="n">Puntos</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td class="rank n">1</td>
-                  <td>Luis</td>
-                  <td class="n">8,7</td>
-                </tr>
-                <tr>
-                  <td class="rank n">2</td>
-                  <td>Dani</td>
-                  <td class="n">8,1</td>
-                </tr>
-                <tr>
-                  <td class="rank n">3</td>
-                  <td>Ana</td>
-                  <td class="n">9,2</td>
-                </tr>
-                <tr>
-                  <td class="rank n">4</td>
-                  <td>Fran</td>
-                  <td class="n">7,6</td>
-                </tr>
-                <tr>
-                  <td class="rank n">5</td>
-                  <td>Carlos</td>
-                  <td class="n">8,5</td>
-                </tr>
-                <tr>
-                  <td class="rank n">6</td>
-                  <td>Iván</td>
-                  <td class="n">6,5</td>
-                </tr>
-                <tr>
-                  <td class="rank n">7</td>
-                  <td>Gema</td>
-                  <td class="n">7,2</td>
-                </tr>
-                <tr>
-                  <td class="rank n">8</td>
-                  <td>Jorge</td>
-                  <td class="n">6,1</td>
-                </tr>
-                <tr>
-                  <td class="rank n">9</td>
-                  <td>Elena</td>
-                  <td class="n">7,9</td>
-                </tr>
-                <tr>
-                  <td class="rank n">10</td>
-                  <td>Lola</td>
-                  <td class="n">5,5</td>
-                </tr>
-                <tr>
-                  <td class="rank n">11</td>
-                  <td>Hugo</td>
-                  <td class="n">6,9</td>
-                </tr>
-                <tr>
-                  <td class="rank n">12</td>
-                  <td>Karla</td>
-                  <td class="n">5,8</td>
-                </tr>
-                <tr>
-                  <td class="rank n">13</td>
-                  <td>Manu</td>
-                  <td class="n">5,2</td>
-                </tr>
-                <tr>
-                  <td class="rank n">14</td>
-                  <td>Nico</td>
-                  <td class="n">4,8</td>
-                </tr>
-                <tr>
-                  <td class="rank n">15</td>
-                  <td>Marta</td>
-                  <td class="n">4,1</td>
-                </tr>
-                <tr>
-                  <td class="rank n">16</td>
-                  <td>Raúl</td>
-                  <td class="n">3,9</td>
-                </tr>
-                <tr>
-                  <td class="rank n">17</td>
-                  <td>Sara</td>
-                  <td class="n">3,2</td>
-                </tr>
-                <tr>
-                  <td class="rank n">18</td>
-                  <td>Toni</td>
-                  <td class="n">2,6</td>
-                </tr>
-              </tbody>
-            </table>
+      <div class="card" style="overflow: visible">
+        <h2>
+          Apuntados
+          <small>Cambios sin guardar · 7 jugadores</small>
+        </h2>
+        <div class="side">
+          <div class="paste">
+            Pega aquí la lista de WhatsApp, o escribe un nombre
           </div>
+          <div><button class="btn">Añadir a la lista</button></div>
         </div>
-        <div class="card p2">
-          <h2>Lista de apuntados <small>borrador</small></h2>
-          <div class="side">
-            <div class="paste">
-              Luis<br />Dani<br />Ana<br />Fran<br />Carlos<br />Iván<br />Gema<br />Jorge<br />Elena<br />Lola<br />Hugo<br />Karla<br />Manu<br />Nico<br />Marta<br />Raúl<br />Sara
-              +1<br />Toni
-            </div>
-            <div class="unres">
-              Sin resolver: «Pepito» <button class="btn">Elegir jugador</button>
-            </div>
-            <div style="display: flex; gap: 8px">
-              <button class="btn primary">Guardar lista</button
-              ><button class="btn">Vaciar</button>
-            </div>
-          </div>
+        <div class="actions">
+          <span class="muted">1 sin reconocer</span>
+          <button class="btn primary">Resolver nombres</button>
+          <span class="muted"
+            >(se abre sola al pegar: un diálogo a pantalla completa en el móvil,
+            con todos los nombres sin reconocer)</span
+          >
+        </div>
+        <div class="row">
+          <span class="pos">1</span>
+          <span class="name">Luis</span>
+          <span class="muted">Llegada 1 · 18,4 pts</span>
+        </div>
+        <div class="row">
+          <span class="pos">2</span>
+          <span class="name">Dani</span>
+          <span class="muted">Llegada 2 · 17,9 pts</span>
+        </div>
+        <div class="row">
+          <span class="pos">3</span>
+          <span class="name">Ana</span>
+          <span class="muted">Llegada 3 · 15,2 pts</span>
+        </div>
+        <div class="row">
+          <span class="pos">4</span>
+          <span class="name">Fran</span>
+          <span class="muted">Llegada 4 · 14,8 pts</span>
+        </div>
+        <div class="row">
+          <span class="pos">5</span>
+          <span class="name">Marta</span>
+          <span class="muted">Llegada 5 · 9,1 pts</span>
+        </div>
+        <div class="row">
+          <span class="pos">6</span>
+          <span class="name">Toni</span>
+          <span class="muted">Llegada 6 · 2,6 pts</span>
+        </div>
+        <div class="row">
+          <span class="pos">7</span>
+          <span class="name">Pepito</span>
+          <span class="tag">sin reconocer</span>
+        </div>
+        <div
+          class="actions"
+          style="
+            position: sticky;
+            bottom: 0;
+            background: var(--surface);
+            border-top: 1px solid var(--line);
+          "
+        >
+          <button class="btn primary">Guardar lista</button
+          ><button class="btn">Vaciar lista</button>
         </div>
       </div>
     </div>

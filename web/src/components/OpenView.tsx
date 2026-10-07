@@ -1,11 +1,8 @@
 import type { Player } from '../api';
-import { columnsFor } from '../lib/columns';
 import type { GameTable } from '../lib/gameRows';
 import { CandidateList } from './CandidateList';
-import { GameLayout } from './GameLayout';
-import { PlayersTable } from './PlayersTable';
 
-/** An open game: who signed up, in the order they arrived, beside the list being edited. */
+/** An open game: one list of who signed up, edited in place and saved explicitly. */
 export function OpenView({
   table,
   gameId,
@@ -24,22 +21,15 @@ export function OpenView({
   onEnrolled: () => void;
 }) {
   return (
-    <GameLayout
-      title="Jugadores · por orden de llegada"
-      count={table.rows.length}
-      main={<PlayersTable table={table} columns={columnsFor(table.state)} />}
-      sideTab="Apuntados"
-      side={
-        <CandidateList
-          key={gameId}
-          gameId={gameId}
-          seasonId={seasonId}
-          gameLabel={gameLabel}
-          players={players}
-          onChanged={onChanged}
-          onEnrolled={onEnrolled}
-        />
-      }
+    <CandidateList
+      key={gameId}
+      gameId={gameId}
+      seasonId={seasonId}
+      gameLabel={gameLabel}
+      players={players}
+      known={table.rows}
+      onChanged={onChanged}
+      onEnrolled={onEnrolled}
     />
   );
 }

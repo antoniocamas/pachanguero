@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import type { CandidateRow, Player } from '../api';
+import { fmtPoints } from '../lib/format';
+import type { GameRow } from '../lib/gameRows';
 import { useCandidateList } from '../hooks/useCandidateList';
 import { useUnsavedWarning } from '../hooks/useUnsavedWarning';
+import { ResolveDialog } from './ResolveDialog';
 import { ResolveLine } from './ResolveLine';
 import { SeniorityPrompt } from './SeniorityPrompt';
 
@@ -20,6 +23,7 @@ export function CandidateList({
   seasonId,
   gameLabel,
   players,
+  known = [],
   onChanged,
   onEnrolled,
 }: {
@@ -29,40 +33,63 @@ export function CandidateList({
   /** The game this list belongs to, so it is never a mystery. */
   gameLabel: string;
   players: Pick<Player, 'id' | 'name'>[];
+  /** The saved sign-ups, whose arrival and points are shown beside a matched name. */
+  known?: GameRow[];
   /** Called once the list is saved, so sign-ups elsewhere refresh. */
   onChanged: () => void;
   /** Called when a first-time player is enrolled, so the season's players refresh. */
   onEnrolled: () => void;
 }) {
   const [text, setText] = useState('');
+  // The dialog opens after a paste, never just because the page was opened.
+  const [asking, setAsking] = useState(false);
   const list = useCandidateList(gameId, seasonId, onChanged, onEnrolled);
   useUnsavedWarning(list.unsaved);
 
   const add = async () => {
-    if (await list.add(text)) setText('');
+    if (await list.add(text)) {
+      setText('');
+      setAsking(true);
+    }
   };
+  const unresolved = list.rows.flatMap(row =>
+    row.status === 'matched' ? [] : [row]
+  );
   const clear = () => {
     if (window.confirm('¿Vaciar toda la lista?')) list.clear();
   };
 
+  const standing = (row: Extract<CandidateRow, { status: 'matched' }>) => {
+    const saved = known.find(
+      k => k.playerId !== null && k.playerId === row.candidate.playerId
+    );
+    return saved?.arrival != null && saved.points !== null
+      ? `Llegada ${saved.arrival} · ${fmtPoints(saved.points)} pts`
+      : null;
+  };
+
   return (
-    <div className="card">
+    <div className="card candidate-card">
       <h2>
-        Lista de apuntados
-        <span className="right muted">{gameLabel}</span>
+        Apuntados
+        <span className="right muted">
+          {list.unsaved && (
+            <>
+              <span role="status">Cambios sin guardar</span> ·{' '}
+            </>
+          )}
+          {list.rows.length} jugadores · {gameLabel}
+        </span>
       </h2>
       {list.error && <div className="err">{list.error}</div>}
-      <div style={{ padding: '12px 14px' }}>
+      <div className="paste">
         <textarea
           aria-label="Añadir jugadores"
-          rows={5}
-          style={{ width: '100%' }}
+          rows={3}
           placeholder="Pega aquí la lista de WhatsApp, o escribe un nombre"
           value={text}
           onChange={e => setText(e.target.value)}
         />
-      </div>
-      <div className="actions">
         <button
           className="btn"
           disabled={list.busy || !text.trim()}
@@ -72,13 +99,41 @@ export function CandidateList({
         </button>
       </div>
 
-      <h2>
-        En la lista
-        <span className="right muted">{list.rows.length}</span>
-      </h2>
       {list.loaded && list.rows.length === 0 && (
         <div className="empty">Todavía no hay nadie en la lista.</div>
       )}
+      {unresolved.length > 0 && (
+        <div className="actions">
+          <span className="muted">{unresolved.length} sin reconocer</span>
+          <button className="btn primary" onClick={() => setAsking(true)}>
+            Resolver nombres
+          </button>
+        </div>
+      )}
+      <ResolveDialog
+        open={unresolved.length > 0 && asking}
+        title={`Nombres sin reconocer (${unresolved.length})`}
+        onClose={() => setAsking(false)}
+      >
+        {unresolved.map(row => (
+          <div key={row.position} className="resolve-item">
+            <ResolveLine
+              entry={row.entry}
+              players={players}
+              busy={list.busy}
+              onResolve={action => list.resolve(row.entry, action)}
+            />
+            <button
+              className="btn"
+              aria-label={`Quitar ${row.text}`}
+              disabled={list.busy}
+              onClick={() => list.remove(row.position)}
+            >
+              Quitar de la lista
+            </button>
+          </div>
+        ))}
+      </ResolveDialog>
       {list.rows.map(row => {
         const asksSeniority =
           row.status === 'matched' &&
@@ -105,16 +160,15 @@ export function CandidateList({
                     {label(row)}
                   </span>
                   {row.candidate.guest && <span className="tag">invitado</span>}
+                  <span className="muted phone-line-inline">
+                    {standing(row)}
+                  </span>
                 </>
               ) : (
-                <div style={{ flex: 1 }}>
-                  <ResolveLine
-                    entry={row.entry}
-                    players={players}
-                    busy={list.busy}
-                    onResolve={action => list.resolve(row.entry, action)}
-                  />
-                </div>
+                <>
+                  <span className="name">{row.text}</span>
+                  <span className="tag">sin reconocer</span>
+                </>
               )}
               {/* A row waiting for seniority has its Quitar beside Confirmar. */}
               {!asksSeniority && remove}
@@ -134,7 +188,7 @@ export function CandidateList({
         );
       })}
 
-      <div className="actions">
+      <div className="sticky-actions">
         <button
           className="btn primary"
           disabled={list.busy || !list.unsaved}
@@ -149,11 +203,6 @@ export function CandidateList({
         >
           Vaciar lista
         </button>
-        {list.unsaved && (
-          <span className="muted" role="status">
-            Cambios sin guardar
-          </span>
-        )}
       </div>
     </div>
   );

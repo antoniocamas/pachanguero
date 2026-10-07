@@ -226,21 +226,45 @@ for (const viewport of [
   test.describe(`the game screen on a ${viewport.name}`, () => {
     test.use({ viewport: viewport.size });
 
-    test('open: arrival order, with arrival, player and points', async ({
+    test('open: one list with its actions in view, and unrecognised names in a dialog', async ({
       page,
       request,
     }) => {
-      const { gameId, names } = await new Backend(request).game(5);
+      const backend = new Backend(request);
+      const { gameId, names } = await backend.game(20, all => all);
       await openGame(page, gameId);
 
-      await expect(headers(page)).resolves.toEqual(
-        viewport.phone ? ['Jugador'] : ['Llegada', 'Jugador', 'Puntos']
+      // One list, no second panel and no tabs.
+      await expect(page.getByTestId('candidate-row')).toHaveCount(20);
+      await expect(page.getByRole('tab')).toHaveCount(0);
+      await expect(page.getByTestId('player-row')).toHaveCount(0);
+      await expect(page.getByTestId('candidate-row').first()).toContainText(
+        'Llegada 1'
       );
-      await expect(page.getByTestId('player-row')).toHaveCount(5);
-      await expect(page.getByTestId('player-row').first()).toContainText(
-        names[0]
-      );
+
+      // However long the list, saving and clearing stay on screen.
+      await page.getByTestId('candidate-row').last().scrollIntoViewIfNeeded();
+      const save = page.getByRole('button', { name: 'Guardar lista' });
+      const clear = page.getByRole('button', { name: 'Vaciar lista' });
+      for (const button of [save, clear]) {
+        await expect(button).toBeInViewport();
+      }
+
+      // A name nobody knows opens a dialog; on a phone it fills the screen.
+      await page.getByLabel('Añadir jugadores').fill('Nombre Desconocido');
+      await page.getByRole('button', { name: 'Añadir a la lista' }).click();
+      const dialog = page.getByRole('dialog');
+      await expect(dialog).toBeVisible();
+      await expect(dialog.getByTestId('unresolved-line')).toHaveCount(1);
+      const box = (await dialog.boundingBox())!;
+      if (viewport.phone) expect(box.width).toBe(viewport.size.width);
+      else expect(box.width).toBeGreaterThan(500);
+      await dialog.getByRole('button', { name: 'Cerrar' }).click();
+      await expect(dialog).toBeHidden();
+      await page.getByRole('button', { name: 'Resolver nombres' }).click();
+      await expect(dialog).toBeVisible();
       expect(await noHorizontalScroll(page)).toBe(true);
+      void names;
     });
 
     test('created: the state and next action stay in view while 18 players are scrolled', async ({

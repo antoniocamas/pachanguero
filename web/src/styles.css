@@ -765,3 +765,86 @@ td .chip.oscuros {
     overflow: visible;
   }
 }
+
+/* ------------------------------------------------------------ resolve dialog */
+
+.resolve-dialog {
+  width: min(640px, 92vw);
+  max-height: 90vh;
+  padding: 0;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.resolve-dialog::backdrop {
+  background: rgb(0 0 0 / 0.6);
+}
+.resolve-dialog header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+.resolve-dialog header h2 {
+  margin: 0;
+  font-size: 16px;
+}
+.resolve-item {
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+.resolve-item > .btn {
+  margin: 0 14px;
+}
+.resolve-dialog .resolve .actions select,
+.resolve-dialog .resolve .actions input {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+@media (max-width: 760px) {
+  .resolve-dialog {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    border: 0;
+    border-radius: 0;
+  }
+}
+
+/* ----------------------------------------------------------- candidate list */
+
+.candidate-card {
+  overflow: visible;
+}
+.candidate-card .paste {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.candidate-card .paste textarea {
+  width: 100%;
+}
+.candidate-card .phone-line-inline {
+  font-size: 12px;
+  white-space: nowrap;
+}
+.sticky-actions {
+  position: sticky;
+  bottom: calc(60px + env(safe-area-inset-bottom));
+  z-index: 5;
+  display: flex;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  border-radius: 0 0 var(--radius) var(--radius);
+}

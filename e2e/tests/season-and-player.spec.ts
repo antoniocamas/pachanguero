@@ -176,6 +176,8 @@ test('a game can be deleted, and a pasted name can be linked to a player of anot
     'Veterano Lejano',
   ]);
 
+  // The unrecognised name opened a dialog that holds the page until closed.
+  await page.getByRole('button', { name: 'Cerrar' }).click();
   page.once('dialog', dialog => dialog.accept());
   await page.getByRole('button', { name: 'Borrar este partido' }).click();
   await expect(
@@ -329,6 +331,10 @@ test('the candidate list is kept only when saved, and can be edited after a relo
     .fill('1. Rosa\n2. Sergio\n3. Nadie');
   await page.getByRole('button', { name: 'Añadir a la lista' }).click();
   await expect(rows).toHaveCount(3);
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Cerrar' })
+    .click();
   await expect(page.getByRole('status')).toHaveText('Cambios sin guardar');
   await page.getByRole('button', { name: 'Guardar lista' }).click();
   await expect(page.getByRole('status')).toHaveCount(0);
@@ -339,13 +345,17 @@ test('the candidate list is kept only when saved, and can be edited after a relo
   await expect(rows).toHaveCount(3);
   await expect(rows.nth(0)).toContainText('Rosa');
   await expect(rows.nth(1)).toContainText('Sergio');
-  await expect(page.getByTestId('unresolved-line')).toHaveCount(1);
+  await expect(page.getByText('1 sin reconocer')).toBeVisible();
 
   // More names are added to the list, not swapped for it; a repeat is folded in.
   await page.getByLabel('Añadir jugadores').fill('Tomás\nrosa');
   await page.getByRole('button', { name: 'Añadir a la lista' }).click();
   await expect(rows).toHaveCount(4);
   await expect(rows.nth(3)).toContainText('Tomás');
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Cerrar' })
+    .click();
 
   // Removing a name renumbers the list; leaving it unsaved changes nothing stored.
   await page.getByRole('button', { name: 'Quitar Sergio' }).click();
