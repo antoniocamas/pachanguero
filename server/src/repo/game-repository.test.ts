@@ -19,7 +19,7 @@ describe('GameRepository', () => {
     const g = games.create(seasonId, '2025-09-08');
     expect(games.get(g.id)).toMatchObject({
       played_on: '2025-09-08',
-      status: 'scheduled',
+      status: 'open',
     });
   });
 
@@ -35,17 +35,6 @@ describe('GameRepository', () => {
     expect(games.findOrCreate(seasonId, '2025-09-08').id).not.toBe(bis.id);
   });
 
-  it('unresolvedOnOrBefore returns open games up to the date, newest first', () => {
-    games.create(seasonId, '2025-09-08');
-    games.create(seasonId, '2025-09-15', null, 'played');
-    games.create(seasonId, '2025-09-22', null, 'cancelled');
-    games.create(seasonId, '2025-09-29');
-    games.create(seasonId, '2025-10-06');
-    expect(
-      games.unresolvedOnOrBefore('2025-09-29').map(g => g.played_on)
-    ).toEqual(['2025-09-29', '2025-09-08']);
-  });
-
   it('lists games ordered by date', () => {
     games.create(seasonId, '2025-09-15');
     games.create(seasonId, '2025-09-08');
@@ -59,11 +48,12 @@ describe('GameRepository', () => {
     const g = games.create(seasonId, '2025-09-08');
     const updated = games.update(g.id, {
       played_on: '2025-09-09',
+      // Not a column `update` takes: the state moves only through `setState`.
       status: 'played',
-    });
+    } as never);
     expect(updated).toMatchObject({
       played_on: '2025-09-09',
-      status: 'played',
+      status: 'open',
     });
   });
 
@@ -71,5 +61,19 @@ describe('GameRepository', () => {
     const g = games.create(seasonId, '2025-09-08');
     games.delete(g.id);
     expect(games.get(g.id)).toBeUndefined();
+  });
+
+  it('setState stores the state and where a cancelled game came from', () => {
+    const g = games.create(seasonId, '2025-09-08');
+    games.setState(g.id, 'cancelled', 'convocatoria_created');
+    expect(games.get(g.id)).toMatchObject({
+      status: 'cancelled',
+      cancelled_from: 'convocatoria_created',
+    });
+    games.setState(g.id, 'played');
+    expect(games.get(g.id)).toMatchObject({
+      status: 'played',
+      cancelled_from: null,
+    });
   });
 });

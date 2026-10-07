@@ -25,11 +25,14 @@ export function ResolveLine({
   entry,
   players,
   busy,
+  allowRegister = true,
   onResolve,
 }: {
   entry: UnresolvedEntry;
   players: Pick<Player, 'id' | 'name'>[];
   busy: boolean;
+  /** Whether a name can be settled by registering a new player. */
+  allowRegister?: boolean;
   onResolve: (action: ResolveAction) => void;
 }) {
   const text = spelled(entry);
@@ -83,40 +86,42 @@ export function ResolveLine({
           Es este y recordar apodo
         </button>
       </div>
-      <div className="actions">
-        <input
-          aria-label={`Nombre nuevo para ${text}`}
-          value={newName}
-          onChange={e => setNewName(e.target.value)}
-        />
-        <select
-          aria-label="Lo trae"
-          value={hostId}
-          onChange={e =>
-            setHostId(e.target.value ? Number(e.target.value) : '')
-          }
-        >
-          <option value="">Lo trae…</option>
-          {players.map(p => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
-        <button
-          className="btn primary"
-          disabled={busy || !newName.trim()}
-          onClick={() =>
-            onResolve({
-              type: 'register',
-              name: newName.trim(),
-              ...(hostId !== '' ? { introducedBy: hostId } : {}),
-            })
-          }
-        >
-          Registrar nuevo
-        </button>
-      </div>
+      {allowRegister && (
+        <div className="actions">
+          <input
+            aria-label={`Nombre nuevo para ${text}`}
+            value={newName}
+            onChange={e => setNewName(e.target.value)}
+          />
+          <select
+            aria-label="Lo trae"
+            value={hostId}
+            onChange={e =>
+              setHostId(e.target.value ? Number(e.target.value) : '')
+            }
+          >
+            <option value="">Lo trae…</option>
+            {players.map(p => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+          <button
+            className="btn primary"
+            disabled={busy || !newName.trim()}
+            onClick={() =>
+              onResolve({
+                type: 'register',
+                name: newName.trim(),
+                ...(hostId !== '' ? { introducedBy: hostId } : {}),
+              })
+            }
+          >
+            Registrar nuevo
+          </button>
+        </div>
+      )}
     </div>
   );
 }

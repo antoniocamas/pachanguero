@@ -1,5 +1,5 @@
-import type Database from 'better-sqlite3';
 import { ConvocatoriaBuilder } from '../domain/convocatoria.js';
+import { GuestOrdinals } from '../domain/guest-ordinals.js';
 import type {
   Contender,
   ConvocatoriaResult,
@@ -16,6 +16,8 @@ import type {
 } from './guest-candidate-repository.js';
 import type { PlayerRepository } from './player-repository.js';
 import type { GuestSlotAllocator } from '../domain/guest-slot-allocator.js';
+import type { ConvocatoriaRepository } from './convocatoria-repository.js';
+import type { GameLifecycleService } from './game-lifecycle-service.js';
 import { ExclusionRepository } from './exclusion-repository.js';
 import { StandingsService } from './standings-service.js';
 import { SeasonRepository } from './season-repository.js';
@@ -31,7 +33,8 @@ export class ConvocatoriaService {
     private readonly guests: GuestCandidateRepository,
     private readonly players: PlayerRepository,
     private readonly allocator: GuestSlotAllocator,
-    private readonly conn: Database.Database
+    private readonly convocatorias: ConvocatoriaRepository,
+    private readonly lifecycle: GameLifecycleService
   ) {}
 
   /**
@@ -60,66 +63,70 @@ export class ConvocatoriaService {
     return { ...result, game };
   }
 
-  /** Run selection and write the outcome: frozen entries plus exclusion marks. */
-  commit(gameId: number): ConvocatoriaResult & { game: GameRow } {
-    const preview = this.preview(gameId);
-    const game = preview.game;
+  /**
+   * Store the selection for a game, replacing any earlier one. It moves no
+   * state and writes no exclusion: points for being left out are derived when
+   * the game is played.
+   */
+  store(
+    gameId: number,
+    source: 'generated' | 'history'
+  ): ConvocatoriaResult & { game: GameRow } {
+    const result = this.preview(gameId);
+    const ordinals = new GuestOrdinals(this.guests.list(gameId));
+    this.convocatorias.replace(
+      gameId,
+      JSON.stringify(this.rulesOf(result.game)),
+      result.entries.map(e => ({
+        key: ordinals.keyOf(e.playerId),
+        position: e.position,
+        points: e.points,
+        waitCounter: e.waitCounter,
+        outcome: e.outcome,
+        playing: e.playing,
+      })),
+      source
+    );
+    return result;
+  }
 
-    this.conn.transaction(() => {
-      this.conn
-        .prepare('DELETE FROM convocatorias WHERE game_id = ?')
-        .run(gameId);
-      const info = this.conn
-        .prepare(
-          'INSERT INTO convocatorias (game_id, rules_json) VALUES (?, ?)'
-        )
-        .run(gameId, JSON.stringify(this.rulesOf(game)));
-      const cid = Number(info.lastInsertRowid);
-
-      const insert = this.conn.prepare(
-        `INSERT INTO convocatoria_entries
-           (convocatoria_id, player_id, position, points, wait_counter, outcome, playing)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`
-      );
-      this.conn.prepare('DELETE FROM exclusions WHERE game_id = ?').run(gameId);
-
-      for (const e of preview.entries) {
-        // Anonymous guests have no player to record anything against.
-        if (e.playerId < 0) continue;
-        insert.run(
-          cid,
-          e.playerId,
-          e.position,
-          e.points,
-          e.waitCounter,
-          e.outcome,
-          e.playing ? 1 : 0
-        );
-        if (e.outcome === 'mercy')
-          this.exclusions.set(gameId, e.playerId, 'mercy');
-        else if (e.outcome === 'demoted')
-          this.exclusions.set(gameId, e.playerId, 'demoted');
-        else if (e.outcome === 'excluded')
-          this.exclusions.set(gameId, e.playerId, 'points');
-        // Whether anyone actually played is the final list's to say, not this selection's.
+  /**
+   * Create (or recreate) the convocatoria and move the game to "created".
+   * Recreating throws away hand corrections, so it refuses unless told to.
+   */
+  create(
+    gameId: number,
+    options: { discardEdits?: boolean } = {}
+  ): ConvocatoriaResult & { game: GameRow } {
+    let result!: ConvocatoriaResult & { game: GameRow };
+    this.lifecycle.perform(gameId, 'create', () => {
+      const signed = this.participations
+        .list(gameId)
+        .some(p => p.signed_up === 1);
+      if (!signed) throw new Error('No hay nadie apuntado');
+      const existing = this.convocatorias.find(gameId);
+      if (
+        !options.discardEdits &&
+        existing?.entries.some(e => e.changed_by_hand)
+      ) {
+        throw new Error('Se perderán tus correcciones');
       }
-    })();
+      result = this.store(gameId, 'generated');
+    });
+    return { ...result, game: this.games.get(gameId)! };
+  }
 
-    return preview;
+  /** Stamp the convocatoria as confirmed. It never recomputes anything. */
+  confirm(gameId: number): void {
+    this.lifecycle.perform(gameId, 'confirm', () =>
+      this.convocatorias.confirm(gameId)
+    );
   }
 
   saved(gameId: number) {
-    const head = this.conn
-      .prepare('SELECT * FROM convocatorias WHERE game_id = ?')
-      .get(gameId) as
-      { id: number; rules_json: string; created_at: string } | undefined;
-    if (!head) return null;
-    const entries = this.conn
-      .prepare(
-        `SELECT ce.*, p.name FROM convocatoria_entries ce JOIN players p ON p.id = ce.player_id
-          WHERE ce.convocatoria_id = ? ORDER BY ce.position`
-      )
-      .all(head.id);
+    const stored = this.convocatorias.find(gameId);
+    if (!stored) return null;
+    const { entries, ...head } = stored;
     return { ...head, rules: JSON.parse(head.rules_json), entries };
   }
 

@@ -5,11 +5,18 @@ test('creates the first season and adds a player to the roster', async ({
 }) => {
   await page.goto('/');
 
-  // First run: no seasons exist yet, so the app asks for a name via window.prompt().
-  page.once('dialog', dialog => dialog.accept('2025/2026'));
-  await page.getByRole('button', { name: 'Crear la primera' }).click();
+  // First run: no seasons exist yet, so the landing page offers today's season.
+  const now = new Date();
+  const startYear =
+    now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1;
+  const name = `${startYear}/${startYear + 1}`;
+  await expect(page.getByTestId('new-season-prompt')).toContainText(name);
+  await page
+    .getByRole('button', { name: `Crear la temporada ${name}` })
+    .click();
 
-  await expect(page.getByText('2025/2026')).toBeVisible();
+  await expect(page.getByTestId('new-season-prompt')).toHaveCount(0);
+  await expect(page.locator('.season')).toHaveText(name);
 
   await page.getByRole('button', { name: 'Ajustes' }).click();
   await page.getByPlaceholder('Nombre').fill('Antonio');
@@ -176,7 +183,7 @@ test('a game can be deleted, and a pasted name can be linked to a player of anot
   ).toHaveCount(0);
 });
 
-test('a final list retracts the exclusion of a player who did play', async ({
+test('a hand swap decides who earns the exclusion point when the game is played', async ({
   page,
   request,
 }) => {
@@ -192,21 +199,18 @@ test('a final list retracts the exclusion of a player who did play', async ({
 
   const season = await (await request.get('/api/seasons/current')).json();
   const startYear = Number(season.name.slice(0, 4));
-  // Two slots, three players: one of them is cut by the selection.
+  // Two slots, three players: the selection cuts Gc.
   await send('patch', `/seasons/${season.id}`, { slots: 2 });
   const game = await send('post', '/games', {
     played_on: `${startYear}-11-17`,
   });
-  const ids: Record<string, number> = {};
   for (const name of ['Ga', 'Gb', 'Gc']) {
     const p = await send('post', `/seasons/${season.id}/players`, {
       name,
       seasons: 1,
     });
-    ids[name] = p.id;
     await send('put', `/games/${game.id}/players/${p.id}`, { signed_up: true });
   }
-  await send('post', `/games/${game.id}/convocatoria`);
 
   const exclusionsOf = async (name: string) => {
     const table = await (
@@ -214,28 +218,31 @@ test('a final list retracts the exclusion of a player who did play', async ({
     ).json();
     return table.find((r: { name: string }) => r.name === name).exclusions;
   };
-  expect(await exclusionsOf('Gc')).toBe(1);
 
   await page.goto('/');
   await page.getByLabel('Elegir partido').selectOption(String(game.id));
-  // Oscuros first this time; the cut player turned up and played for them.
-  await page
-    .getByLabel('Lista final pegada')
-    .fill('Oscuros\n-------\nGc\n\nClaros\n=======\nGa\nGb');
-  await page.getByRole('button', { name: 'Registrar lista final' }).click();
+  await page.getByRole('button', { name: 'Crear convocatoria' }).click();
+  await expect(page.locator('.step.now')).toHaveText('Convocatoria creada');
 
-  const teams = page.locator('[data-testid^="team-"]');
-  await expect(teams).toHaveCount(2);
-  await expect(teams.first()).toHaveAttribute('data-testid', 'team-oscuros');
-  await expect(teams.first()).toContainText('Gc');
-  await expect(teams.last()).toContainText('Ga');
-  await expect(teams.last()).toContainText('Gb');
-
-  // Their exclusion point is gone from the standings.
+  // Creating it writes no exclusion: that is decided when the game is played.
   expect(await exclusionsOf('Gc')).toBe(0);
-  await page.getByRole('button', { name: 'Puntos' }).click();
-  const row = page.getByRole('row').filter({ hasText: 'Gc' });
-  await expect(row.getByRole('cell').nth(3)).toHaveText('0');
+
+  // The organiser takes Gb out and puts the cut player in.
+  await page.getByRole('button', { name: 'Sacar a Gb' }).click();
+  await page.getByRole('button', { name: 'Meter a Gc' }).click();
+  await page.getByRole('button', { name: 'Confirmar convocatoria' }).click();
+  await page.getByRole('button', { name: 'Marcar como jugado' }).click();
+  await expect(page.locator('.step.now')).toHaveText('Jugado');
+
+  // Gc played, so no point; Gb was left out, so one.
+  expect(await exclusionsOf('Gc')).toBe(0);
+  expect(await exclusionsOf('Gb')).toBe(1);
+  await page.getByRole('button', { name: 'Puntos', exact: true }).click();
+  const row = page.getByRole('row').filter({ hasText: 'Gb' });
+  await expect(row.getByRole('cell').nth(3)).toHaveText('1');
+
+  // The other specs share this database and expect the usual 14 places.
+  await send('patch', `/seasons/${season.id}`, { slots: 14 });
 });
 
 test('records a past game in the season its date belongs to', async ({
@@ -258,29 +265,35 @@ test('records a past game in the season its date belongs to', async ({
   await page.goto('/');
   await expect(page.locator('.season')).toHaveText(current.name);
 
+  await page.getByRole('button', { name: '+ Nuevo' }).click();
   await page.getByLabel('Fecha del partido').fill(`${startYear - 1}-10-07`);
   await page.getByRole('button', { name: 'Registrar partido' }).click();
 
   // The app moves to the season the date falls in, not the current one.
   await expect(page.locator('.season')).toHaveText(pastName);
 
-  await page
-    .getByLabel('Lista final pegada')
-    .fill('Claros\n-----\nGa\nOscuros\n-----\nGb');
-  await page.getByRole('button', { name: 'Registrar lista final' }).click();
-  await expect(page.getByTestId('final-line')).toHaveCount(2);
+  // It walks the same path as any other game, only dated in the past.
+  await page.getByLabel('Añadir jugadores').fill('Ga\nGb');
+  await page.getByRole('button', { name: 'Añadir a la lista' }).click();
 
   // First time in that season, so their seniority is asked for.
   await expect(page.getByTestId('seniority-prompt')).toHaveCount(2);
   await expect(page.getByLabel('Temporadas de Ga')).toHaveValue('2');
+  for (let left = 2; left > 0; left--) {
+    await page
+      .getByTestId('seniority-prompt')
+      .first()
+      .getByRole('button', { name: 'Confirmar antigüedad' })
+      .click();
+    await expect(page.getByTestId('seniority-prompt')).toHaveCount(left - 1);
+  }
+  await page.getByRole('button', { name: 'Guardar lista' }).click();
 
-  // Nothing was ever selected for it, so there is no convocatoria to show.
-  await expect(page.getByRole('heading', { name: 'Convocatoria' })).toHaveCount(
-    0
-  );
-  await expect(
-    page.getByRole('heading', { name: 'Lista de apuntados' })
-  ).toHaveCount(0);
+  await page.getByRole('button', { name: 'Crear convocatoria' }).click();
+  await page.getByRole('button', { name: 'Confirmar convocatoria' }).click();
+  await page.getByRole('button', { name: 'Marcar como jugado' }).click();
+  await expect(page.locator('.step.now')).toHaveText('Jugado');
+  await expect(page.getByTestId('player-row')).toHaveCount(2);
 });
 
 test('the candidate list is kept only when saved, and can be edited after a reload', async ({
@@ -389,7 +402,7 @@ test('15 players new to the season: the convocatoria says what is missing, and r
 
   // Without seniority the convocatoria cannot run, and it says so right where
   // the button is, pointing at where to fix it.
-  await page.getByRole('button', { name: 'Simular' }).click();
+  await page.getByRole('button', { name: 'Crear convocatoria' }).click();
   await expect(page.getByRole('alert')).toContainText('Falta la antigüedad');
   await expect(page.getByRole('alert')).toContainText('Lista de apuntados');
 
@@ -406,13 +419,15 @@ test('15 players new to the season: the convocatoria says what is missing, and r
   }
 
   // Now the convocatoria runs and ranks all 15 for the 14 places.
-  await page.getByRole('button', { name: 'Simular' }).click();
+  await page.getByRole('button', { name: 'Crear convocatoria' }).click();
   await expect(page.getByRole('alert')).toHaveCount(0);
-  const card = page.locator('.card', {
-    has: page.getByRole('heading', { name: 'Convocatoria' }),
-  });
-  await expect(card).toContainText('Jugador1x');
-  await expect(card.getByText(/^Jugador\d+x$/)).toHaveCount(15);
+  await expect(page.locator('.step.now')).toHaveText('Convocatoria creada');
+  await expect(
+    page.getByTestId('zone-in').getByTestId('player-row')
+  ).toHaveCount(14);
+  await expect(
+    page.getByTestId('zone-out').getByTestId('player-row')
+  ).toHaveCount(1);
 });
 
 test('a mistaken name can be removed from the list while it still waits for its seniority', async ({

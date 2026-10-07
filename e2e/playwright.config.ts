@@ -12,6 +12,8 @@ const testDb = join(here, '.tmp/e2e.db');
 export default defineConfig({
   testDir: './tests',
   fullyParallel: false,
+  // The specs share one database, so they run one after the other.
+  workers: 1,
   retries: process.env.CI ? 1 : 0,
   reporter: [
     ['list'],
@@ -25,7 +27,7 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: `mkdir -p ${dirname(testDb)} && rm -f ${testDb} && npm run dev --workspace=server`,
+      command: `mkdir -p ${dirname(testDb)} && rm -f ${testDb} ${testDb}-wal ${testDb}-shm && npm run dev --workspace=server`,
       cwd: join(here, '..'),
       env: { PACHANGUERO_DB: testDb, PORT: String(apiPort) },
       url: `http://localhost:${apiPort}/api/seasons`,

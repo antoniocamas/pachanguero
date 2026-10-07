@@ -16,8 +16,14 @@ están documentadas en [`docs/domain-model/`](docs/domain-model/) — empieza po
 - **Convocatoria.** Simula y confirma quién entra, con puntos y mercy rule
   cuando los habituales se pasan de 14, y por orden de llegada para los
   invitados cuando sobran plazas.
-- **Lista final.** Pegas la lista de después del partido, con los equipos Claros y
-  Oscuros: es lo que registra quién jugó y cuánto debe cada uno.
+- **Ciclo del partido.** Un partido pasa por Abierto, Convocatoria creada,
+  Convocatoria confirmada y Jugado (o Cancelado). La convocatoria se puede
+  corregir a mano, y al marcarlo jugado se deriva quién jugó y quién suma punto
+  de exclusión.
+- **Pagos por parte.** Cada jugador, y cada `+1`, es una parte; se paga después,
+  parte a parte, y quien trae invitados responde por ellos.
+- **Equipos (opcional).** Pegas los equipos Claros y Oscuros después de jugar;
+  solo se guarda el equipo de cada uno.
 - **Puntos y deudas.** Clasificación en vivo y quién debe cuánto.
 - **Temporadas con sus propias reglas.** La temporada actual sale de la fecha
   (de septiembre a agosto), y el día y la hora del partido semanal se pueden

@@ -84,3 +84,27 @@ export interface ConvocatoriaResult {
   /** True when there were more sign-ups than slots. */
   oversubscribed: boolean;
 }
+
+/** Where a game stands between being open for sign-ups and having been played. */
+export type GameState =
+  | 'open'
+  | 'convocatoria_created'
+  | 'convocatoria_confirmed'
+  | 'played'
+  | 'cancelled';
+
+/** What moves a game from one state to another. */
+export type GameAction =
+  'create' | 'confirm' | 'play' | 'reopen' | 'cancel' | 'uncancel';
+
+/** What a game's current state allows someone to do to it. */
+export type Capability =
+  'edit_apuntados' | 'edit_convocatoria' | 'pay' | 'teams';
+
+/**
+ * Who a convocatoria entry or a share is about: a registered player, or the
+ * nth anonymous plus-one of a host (a line number would go stale when the
+ * candidate list is rewritten).
+ */
+export type MemberKey =
+  { playerId: number } | { hostPlayerId: number; ordinal: number };

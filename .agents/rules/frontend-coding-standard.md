@@ -15,10 +15,12 @@ Applies to `web/src/**`.
 
 A component or hook is a unit exactly like a class is in the backend standard: it earns its
 existence by having one job. The failure mode this standard exists to prevent already exists in
-this codebase — `web/src/pages/GameDay.tsx` (324 lines) fetches game data, computes money
-(`perHead`, `owed`, `euros`), derives a convocatoria outcome, and renders four different card
-sections, all in one component with no extraction. That is not "the hooks style being messy," it is
-the absence of this standard.
+this codebase's history — `web/src/pages/GameDay.tsx` once fetched game data, computed money,
+derives a convocatoria outcome and rendered four card sections in one component. It is now the
+worked example of the split: `hooks/useGameDetail.ts` owns the fetch, `lib/money.ts` and
+`lib/dates.ts` the pure calculations, and `GameHeader`, `PlayerList` and `ConvocatoriaPanel` the
+cards, with `GameDay` only composing them and holding the selected game. That is not "the hooks
+style being messy," it was the absence of this standard.
 
 ### 1. One responsibility per component, per hook, per function
 
@@ -68,9 +70,9 @@ the absence of this standard.
 
 ## What this changes about the existing codebase
 
-- `GameDay.tsx` is split: a `useGameDetail`/`useConvocatoria`-style data hook, a `lib/money.ts` for
-  `euros`/`perHead`/`owed`, and smaller rendering components per card (`GameHeader`, `PlayerList`,
-  `ConvocatoriaList` — the last already separated out).
+- `GameDay.tsx` is split (done): `useGameDetail` for data, `lib/money.ts` and `lib/dates.ts` for
+  pure calculation, and a rendering component per card (`GameHeader`, `PlayerList`,
+  `ConvocatoriaPanel`).
 - `App.tsx`'s inline `prompt()`-driven season-creation flow and `Manage.tsx`'s inline mutation
   callbacks stay as-is in shape (they're already reasonably single-purpose) but any new growth
   there follows §1–§5 rather than accreting into the existing functions.

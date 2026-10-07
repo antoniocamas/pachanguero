@@ -29,9 +29,9 @@ export function RecordPastGame({
   }
 
   return (
-    <div style={{ padding: '0 14px 12px' }}>
+    <div className="record-game">
       {error && <div className="err">{error}</div>}
-      <div className="actions" style={{ padding: 0 }}>
+      <div className="actions">
         <input
           type="date"
           aria-label="Fecha del partido"

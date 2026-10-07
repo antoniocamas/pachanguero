@@ -404,3 +404,364 @@ textarea {
   border-radius: 8px;
   padding: 8px 10px;
 }
+
+/* ---------------------------------------------------------------- game screen */
+
+.app.wide {
+  max-width: 1280px;
+}
+
+:root {
+  --top-h: 48px;
+  --in: color-mix(in srgb, var(--accent) 14%, transparent);
+  --out: color-mix(in srgb, var(--muted) 10%, transparent);
+  --hand: color-mix(in srgb, var(--warn) 18%, transparent);
+}
+
+.bar {
+  position: sticky;
+  top: var(--top-h);
+  z-index: 6;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  margin-bottom: 12px;
+}
+.bar .row1 {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.bar .row1 .sp {
+  flex: 1;
+}
+.bar select.sel {
+  width: auto;
+  font-size: 15px;
+  padding: 6px 10px;
+}
+.counters {
+  display: flex;
+  gap: 16px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.counters b {
+  color: var(--text);
+  font-size: 17px;
+}
+.steps {
+  display: flex;
+  gap: 6px;
+  margin: 12px 0;
+  flex-wrap: wrap;
+}
+.step {
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 13px;
+}
+.step.done {
+  background: var(--in);
+  color: var(--text);
+}
+.step.now {
+  background: var(--accent-dim);
+  color: #d4f7dc;
+  border-color: var(--accent);
+  font-weight: 600;
+}
+.step.now.cancelled {
+  background: color-mix(in srgb, var(--danger) 30%, transparent);
+  border-color: var(--danger);
+  color: #ffd9d6;
+}
+.next {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.next .txt {
+  flex: 1;
+  min-width: 200px;
+}
+button.btn.link {
+  border: 0;
+  background: none;
+  color: var(--muted);
+  text-decoration: underline;
+  padding: 8px 4px;
+  font-weight: 450;
+}
+button.btn.mini {
+  padding: 3px 9px;
+  font-size: 12px;
+  line-height: 1.2;
+}
+.delete-game {
+  margin-top: 4px;
+}
+.delete-game button.btn.link {
+  padding: 2px 0;
+  font-size: 12px;
+}
+.record-game {
+  margin-top: 10px;
+}
+.record-game .actions {
+  padding: 0;
+}
+
+.game-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 12px;
+  align-items: start;
+}
+.game-tabs {
+  display: none;
+}
+.card h2 small {
+  margin-left: auto;
+  color: var(--muted);
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.scroll {
+  overflow-x: auto;
+}
+
+.p1 table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.p1 th,
+.p1 td {
+  padding: 6px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+  font-size: 14px;
+}
+.p1 th {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+  background: var(--surface);
+}
+.p1 td.n,
+.p1 th.n {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.p1 tr.out td {
+  background: var(--out);
+  color: var(--muted);
+}
+.p1 tr.sub td {
+  background: var(--out);
+  font-size: 13px;
+  color: var(--muted);
+}
+.p1 tr.line td {
+  padding: 0;
+  border-bottom: 2px dashed var(--muted);
+}
+.p1 tbody.drop-over {
+  outline: 2px dashed var(--accent);
+  outline-offset: -2px;
+}
+.p1 td.grip,
+.p1 th.grip {
+  width: 28px;
+  padding-left: 6px;
+  padding-right: 2px;
+  color: var(--muted);
+  text-align: center;
+}
+.p1 td.grip {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.p1 td.act {
+  text-align: right;
+}
+button.th-sort {
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  padding: 0;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.drag-ghost {
+  background: var(--accent-dim);
+  border: 1px solid var(--accent);
+  color: #d4f7dc;
+  border-radius: 8px;
+  padding: 6px 12px;
+}
+.phone-line {
+  display: none;
+}
+.tag {
+  margin-left: 6px;
+  background: var(--hand);
+  color: #ffe0a3;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 500;
+}
+.tag.holder {
+  background: color-mix(in srgb, var(--danger) 22%, transparent);
+  color: #ffd9d6;
+  margin: 0 6px 0 0;
+}
+td .chip,
+.pay-cell .chip {
+  min-width: 0;
+  cursor: default;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+}
+td .chip.claros {
+  background: color-mix(in srgb, #58a6ff 22%, transparent);
+  border-color: #58a6ff;
+  color: var(--text);
+}
+td .chip.oscuros {
+  background: color-mix(in srgb, #bc8cff 22%, transparent);
+  border-color: #bc8cff;
+  color: var(--text);
+}
+.pay-cell .chip.paid {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: #d4f7dc;
+}
+.pay-cell {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.pay-cell .adjust {
+  display: inline-flex;
+  gap: 6px;
+}
+.pay-cell .adjust input {
+  width: 90px;
+  padding: 4px 8px;
+  font-size: 14px;
+}
+.side {
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+.side textarea {
+  width: 100%;
+  font-family: ui-monospace, monospace;
+}
+.unres {
+  border: 1px dashed var(--warn);
+  border-radius: 8px;
+}
+.cancelled-view .scroll {
+  opacity: 0.6;
+}
+
+@media (max-width: 760px) {
+  .app.wide {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+  header.top {
+    margin-left: -8px;
+    margin-right: -8px;
+  }
+  .game-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .game-grid[data-tab='main'] .p2,
+  .game-grid[data-tab='side'] .p1 {
+    display: none;
+  }
+  .game-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .game-tabs button {
+    flex: 1;
+    min-height: 44px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--text);
+    font: inherit;
+  }
+  .game-tabs button[aria-selected='true'] {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+  }
+  .bar {
+    padding: 10px;
+  }
+  .counters {
+    width: 100%;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .counters b {
+    font-size: 15px;
+  }
+  .steps .step:not(.now) {
+    display: none;
+  }
+  .steps {
+    margin: 8px 0;
+  }
+  .next .btn {
+    min-height: 44px;
+  }
+  .hide-sm {
+    display: none;
+  }
+  .p1 th,
+  .p1 td {
+    padding: 7px 4px;
+    font-size: 14px;
+  }
+  .p1 td:last-child {
+    white-space: normal;
+  }
+  .phone-line {
+    display: block;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .p1 td {
+    white-space: normal;
+  }
+  .p1 button.btn,
+  .p1 button.th-sort {
+    min-height: 44px;
+  }
+  .p1 td.grip {
+    width: 22px;
+  }
+  .card {
+    overflow: visible;
+  }
+}

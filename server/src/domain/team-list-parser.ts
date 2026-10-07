@@ -11,8 +11,8 @@ export interface TeamLine {
 
 const NO_LETTERS = /^[^a-zA-Zà-ÿÀ-Ÿ]*$/;
 
-/** Splits a pasted final list into its two teams' lines. */
-export class FinalListParser {
+/** Splits a pasted team list into its two teams' lines. */
+export class TeamListParser {
   constructor(private readonly stripper: NameStripper) {}
 
   /**

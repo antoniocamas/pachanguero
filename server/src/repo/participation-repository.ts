@@ -8,7 +8,6 @@ export interface ParticipationRow {
   played: number;
   paid_cents: number;
   paid_on: string | null;
-  guests: number;
   team: 'claros' | 'oscuros' | null;
   note: string | null;
 }
@@ -18,7 +17,6 @@ export interface ParticipationPatch {
   played?: boolean;
   paid_cents?: number;
   paid_on?: string | null;
-  guests?: number;
   team?: 'claros' | 'oscuros' | null;
   note?: string | null;
 }
@@ -58,7 +56,6 @@ export class ParticipationRepository {
     if (patch.signed_up !== undefined)
       put('signed_up', patch.signed_up ? 1 : 0);
     if (patch.played !== undefined) put('played', patch.played ? 1 : 0);
-    if (patch.guests !== undefined) put('guests', patch.guests);
     if (patch.team !== undefined) put('team', patch.team);
     if (patch.note !== undefined) put('note', patch.note);
     if (patch.paid_cents !== undefined) {
@@ -90,16 +87,21 @@ export class ParticipationRepository {
   }
 
   /**
-   * Forget what a final list recorded (played, team, payment) for every row of
-   * a game, so a corrected list can be written from scratch. Sign-ups stay.
+   * Mark exactly these players as having played the game and everyone else
+   * not. Players with no row yet get one, so a played flag is never lost.
    */
-  clearFinalOutcome(gameId: number): void {
+  setPlayedForGame(gameId: number, playerIds: readonly number[]): void {
     this.conn
-      .prepare(
-        `UPDATE participations
-            SET played = 0, team = NULL, paid_cents = 0, paid_on = NULL, guests = 0
-          WHERE game_id = ?`
-      )
+      .prepare('UPDATE participations SET played = 0 WHERE game_id = ?')
+      .run(gameId);
+    for (const playerId of playerIds)
+      this.set(gameId, playerId, { played: true });
+  }
+
+  /** Take every player of a game off their team, changing nothing else. */
+  clearTeams(gameId: number): void {
+    this.conn
+      .prepare('UPDATE participations SET team = NULL WHERE game_id = ?')
       .run(gameId);
   }
 

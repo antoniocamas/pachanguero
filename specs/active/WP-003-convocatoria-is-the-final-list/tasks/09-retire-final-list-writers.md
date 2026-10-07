@@ -30,10 +30,10 @@ Delete `FinalListResolutionService`, `FinalListTargetResolver`, their routes and
 
 ## Definition of Done
 
-- [ ] The search returns nothing; both full suites pass.
-- [ ] **Graduation:** UC-003-05 and UC-003-07 are realised by tasks 05, 07 and 08; here, `throwaway`.
-- [ ] **Hard requirements:** none introduced here.
-- [ ] **Documentation:** `AGENTS.md` — Architecture block (`FinalListParser`/`FinalListResolutionService` replaced by `GameLifecycle`, `PlayedDerivation`, `DebtLedger`, `GameLifecycleService`, `ConvocatoriaService`/`ConvocatoriaEditService`, `PaymentService`, `TeamAssignmentService`/`TeamPasteService`, `GameViewService`, `ConvocatoriaHistoryConverter`); the remaining "final list is the sole writer" text removed. `docs/domain-model/ciclo-del-partido.md` — §3 "Lista final" and "Partidos del pasado" removed. `docs/domain-model/README.md` — the index line follows the new scope. `README.md` — the "Lista final" bullet replaced by the lifecycle, hand-edited convocatoria, payments by share and optional teams. WP-001 `REQUIREMENTS.md` and `DESIGN_PLAN.md` — N2, N3, UC-001-05/06/07 and their elements retracted or revised by identifier, each with a one-line pointer to the replacing behaviour. Shipped documents carry no identifier that resolves only inside this work package.
-- [ ] **Tests:** `npm test` and `npm run test:e2e`.
-- [ ] **Regression:** `npm test` and `npm run test:e2e` pass in full.
-- [ ] **Code checks:** `npm run lint` and `npm run format:check`; the code follows both coding standards.
+- [x] The search returns nothing; both full suites pass.
+- [x] **Graduation:** UC-003-05 and UC-003-07 are realised by tasks 05, 07 and 08; here, `throwaway`.
+- [x] **Hard requirements:** none introduced here.
+- [x] **Documentation:** `AGENTS.md` — Architecture block (`FinalListParser`/`FinalListResolutionService` replaced by `GameLifecycle`, `PlayedDerivation`, `DebtLedger`, `GameLifecycleService`, `ConvocatoriaService`/`ConvocatoriaEditService`, `PaymentService`, `TeamAssignmentService`/`TeamPasteService`, `GameViewService`, `ConvocatoriaHistoryConverter`); the remaining "final list is the sole writer" text removed. `docs/domain-model/ciclo-del-partido.md` — §3 "Lista final" and "Partidos del pasado" removed. `docs/domain-model/README.md` — the index line follows the new scope. `README.md` — the "Lista final" bullet replaced by the lifecycle, hand-edited convocatoria, payments by share and optional teams. WP-001 `REQUIREMENTS.md` and `DESIGN_PLAN.md` — N2, N3, UC-001-05/06/07 and their elements retracted or revised by identifier, each with a one-line pointer to the replacing behaviour. Shipped documents carry no identifier that resolves only inside this work package.
+- [x] **Tests:** `npm test` and `npm run test:e2e`.
+- [x] **Regression:** `npm test` and `npm run test:e2e` pass in full.
+- [x] **Code checks:** `npm run lint` and `npm run format:check`; the code follows both coding standards.

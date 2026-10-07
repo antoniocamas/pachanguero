@@ -1415,6 +1415,8 @@ domain class makes about itself.
 
 #### F9 — Final list paste & resolution: attendance/payment/team-split source of truth, exclusion retraction
 
+> **Retracted by WP-003 (F12).** `FinalListResolutionService` and its routes are deleted; `GameLifecycleService`, `PlayedDerivation`, `PaymentService` and `TeamPasteService` replace it.
+
 ##### Current Implementation
 
 - No final-list ingestion code exists anywhere (verified — source, absence of any `final`/`team`/
@@ -1683,6 +1685,8 @@ its own parsing or matching logic.
   including the exclusion-retraction case.
 
 #### F10 — Historical backfill
+
+> **Retracted by WP-003 (F12).** Backfill by final list is gone; `ConvocatoriaHistoryConverter` and the normal lifecycle replace it.
 
 ##### Current Implementation
 

@@ -2,7 +2,7 @@ import type Database from 'better-sqlite3';
 import { PointsCalculator } from '../domain/points.js';
 import { PlayerRepository } from './player-repository.js';
 import { ExclusionRepository } from './exclusion-repository.js';
-import { SeasonRepository } from './season-repository.js';
+import { DebtRepository } from './debt-repository.js';
 
 export interface Standing {
   playerId: number;
@@ -21,7 +21,7 @@ export class StandingsService {
   constructor(
     private readonly players: PlayerRepository,
     private readonly exclusions: ExclusionRepository,
-    private readonly seasons: SeasonRepository,
+    private readonly debts: DebtRepository,
     private readonly points: PointsCalculator,
     private readonly conn: Database.Database
   ) {}
@@ -58,26 +58,11 @@ export class StandingsService {
       games_played: number;
     }>;
 
-    const season = this.seasons.get(seasonId);
     // Debt is always current — it is money owed, not a point-in-time score.
-    const debt = this.conn
-      .prepare(
-        `SELECT pa.player_id,
-                SUM(CASE WHEN pa.played = 1 AND pa.paid_cents = 0 THEN @price ELSE 0 END) AS debt
-           FROM participations pa JOIN games g ON g.id = pa.game_id
-          WHERE g.season_id = @seasonId AND g.status != 'cancelled'
-          GROUP BY pa.player_id`
-      )
-      .all({
-        seasonId,
-        price: Math.round(
-          (season?.price_cents ?? 5600) / (season?.slots ?? 14)
-        ),
-      }) as Array<{ player_id: number; debt: number }>;
+    const debtBy = this.debts.totalsByHolder(seasonId);
 
     const history = this.exclusions.historyFor(seasonId, upToGameId);
     const paidBy = new Map(paid.map(r => [r.player_id, r]));
-    const debtBy = new Map(debt.map(r => [r.player_id, r.debt]));
 
     return players
       .map(p => {

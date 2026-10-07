@@ -5,6 +5,7 @@ import { SeasonRepository } from './season-repository.js';
 import { PlayerRepository } from './player-repository.js';
 import { GameRepository } from './game-repository.js';
 import { ParticipationRepository } from './participation-repository.js';
+import { DebtRepository } from './debt-repository.js';
 import { ExclusionRepository } from './exclusion-repository.js';
 import { StandingsService } from './standings-service.js';
 import { PointsCalculator } from '../domain/points.js';
@@ -29,7 +30,7 @@ describe('StandingsService', () => {
     standings = new StandingsService(
       players,
       exclusions,
-      seasons,
+      new DebtRepository(conn),
       new PointsCalculator(),
       conn
     );
@@ -52,17 +53,51 @@ describe('StandingsService', () => {
     expect(table[1]).toMatchObject({ name: 'Bea', exclusions: 1, points: 1 });
   });
 
-  it('computes debt for a played, unpaid game at price/slots per head', () => {
-    const ana = players.add(seasonId, 'Ana', 0);
-    const g1 = games.create(seasonId, '2025-09-08').id;
-    participations.set(g1, ana.id, { played: true });
-    const [row] = standings.standings(seasonId);
-    expect(row.debtCents).toBe(400); // 5600 / 14
+  describe('debt', () => {
+    const debts = () => new DebtRepository(conn);
+
+    it('is the shares a holder still owes in played games', () => {
+      const ana = players.add(seasonId, 'Ana', 0);
+      const g1 = games.create(seasonId, '2025-09-08', null, 'played').id;
+      debts().insert(g1, { playerId: ana.id }, ana.id, 400);
+      const [row] = standings.standings(seasonId);
+      expect(row.debtCents).toBe(400); // 5600 / 14
+    });
+
+    it('lands on the holder, once, when a guest share is held by a host', () => {
+      const ana = players.add(seasonId, 'Ana', 0);
+      const marta = players.add(seasonId, 'Marta', 0);
+      const g1 = games.create(seasonId, '2025-09-08', null, 'played').id;
+      debts().insert(g1, { playerId: ana.id }, ana.id, 400);
+      debts().insert(g1, { playerId: marta.id }, ana.id, 400);
+      const table = standings.standings(seasonId);
+      expect(table.find(r => r.name === 'Ana')!.debtCents).toBe(800);
+      expect(table.find(r => r.name === 'Marta')!.debtCents).toBe(0);
+    });
+
+    it('ignores a game that is not played', () => {
+      const ana = players.add(seasonId, 'Ana', 0);
+      const g1 = games.create(
+        seasonId,
+        '2025-09-08',
+        null,
+        'cancelled',
+        'played'
+      ).id;
+      debts().insert(g1, { playerId: ana.id }, ana.id, 400);
+      expect(standings.standings(seasonId)[0].debtCents).toBe(0);
+    });
   });
 
   it('excludes a cancelled game from paid/games-played counts', () => {
     const ana = players.add(seasonId, 'Ana', 0);
-    const g1 = games.create(seasonId, '2025-09-08', null, 'cancelled').id;
+    const g1 = games.create(
+      seasonId,
+      '2025-09-08',
+      null,
+      'cancelled',
+      'open'
+    ).id;
     participations.set(g1, ana.id, { played: true, paid_cents: 400 });
     const [row] = standings.standings(seasonId);
     expect(row.paidGames).toBe(0);

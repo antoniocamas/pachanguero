@@ -1,3 +1,7 @@
+import { GuestOrdinals, type GuestLine } from '../domain/guest-ordinals.js';
+import type { MemberKey } from '../domain/types.js';
+import type { ConvocatoriaEditService } from './convocatoria-edit-service.js';
+import type { GameLifecycleService } from './game-lifecycle-service.js';
 import type Database from 'better-sqlite3';
 import type { NameMatch, NameMatcher } from '../domain/name-matcher.js';
 import type {
@@ -99,6 +103,8 @@ export class CandidateResolutionService {
     private readonly saved: CandidateLineRepository,
     private readonly parser: CandidateLineParser,
     registrar: PlayerRegistrar,
+    private readonly lifecycle: GameLifecycleService,
+    private readonly edits: ConvocatoriaEditService,
     private readonly conn: Database.Database
   ) {
     this.lines = new LineResolver(players, aliases, registrar);
@@ -148,7 +154,24 @@ export class CandidateResolutionService {
 
   /** Makes this list the game's: the lines, the sign-ups and the guests. */
   save(gameId: number, lines: readonly CandidateLine[]): CandidateRow[] {
-    const all = this.rows(this.requireGame(gameId), lines);
+    const game = this.requireGame(gameId);
+    this.lifecycle.require(gameId, 'edit_apuntados');
+    const all = this.rows(game, lines);
+
+    const signedUp = new Set<number>();
+    const guestRows: GuestLine[] = [];
+    for (const { resolved, guest } of all) {
+      if (!resolved) continue;
+      signedUp.add((resolved.playerId ?? resolved.hostPlayerId)!);
+      if (guest) guestRows.push({ position: resolved.line.position, ...guest });
+    }
+    const members: MemberKey[] = [
+      ...[...signedUp].map(playerId => ({ playerId })),
+      ...new GuestOrdinals(guestRows).keys(),
+    ];
+    // Refused before anything is written: someone still playing cannot be dropped.
+    this.edits.checkUnsign(gameId, members);
+
     this.conn.transaction(() => {
       this.saved.replaceAll(
         gameId,
@@ -159,18 +182,10 @@ export class CandidateResolutionService {
         }))
       );
       this.participations.clearSignups(gameId);
-      const guestRows = [];
-      for (const { resolved, guest } of all) {
-        if (!resolved) continue;
-        this.participations.set(
-          gameId,
-          (resolved.playerId ?? resolved.hostPlayerId)!,
-          { signed_up: true }
-        );
-        if (guest)
-          guestRows.push({ position: resolved.line.position, ...guest });
-      }
+      for (const playerId of signedUp)
+        this.participations.set(gameId, playerId, { signed_up: true });
       this.guests.replaceAll(gameId, guestRows);
+      this.edits.align(gameId, members);
     })();
     return all.map(r => r.row);
   }

@@ -24,7 +24,10 @@ import {
   games as gameRepository,
   participations,
   exclusions,
+  debtRepository,
+  paymentRepository,
   standingsService,
+  convocatoriaHistoryConverter,
 } from '../src/repo/index.js';
 import type { ExclusionKind } from '../src/domain/types.js';
 
@@ -159,7 +162,8 @@ function main() {
         season!.id,
         toIsoDate(dateHeader, startYear),
         label,
-        status
+        status,
+        status === 'cancelled' ? 'open' : null
       );
       gameIdByCol.set(col, game.id);
     }
@@ -177,15 +181,25 @@ function main() {
         const value = num(cell);
 
         if (value !== null && value > 0) {
-          // Paid. Values above one share cover guests.
+          // Paid. Values above one share cover guests; `paid_cents` is only
+          // the player's own share. The plus-ones' payments leave no record.
           const guests = Math.max(0, Math.round((value * 100) / perHead) - 1);
+          const ownCents = Math.round(value * 100) - guests * perHead;
+          const paidOn = toIsoDate(dateOf(col), startYear);
           participations.set(gameId, player.id, {
             signed_up: true,
             played: true,
-            paid_cents: Math.round(value * 100),
-            paid_on: toIsoDate(dateOf(col), startYear),
-            guests,
+            paid_cents: ownCents,
+            paid_on: paidOn,
             note: 'imported: settlement date unknown',
+          });
+          paymentRepository.append({
+            gameId,
+            member: { playerId: player.id },
+            holderId: player.id,
+            payerId: player.id,
+            amountCents: ownCents,
+            paidOn,
           });
         } else if (cell.includes('*')) {
           // Played, never settled. This is the debt the '*' encoded.
@@ -196,6 +210,12 @@ function main() {
             paid_on: null,
             note: 'imported: unpaid (*)',
           });
+          debtRepository.insert(
+            gameId,
+            { playerId: player.id },
+            player.id,
+            perHead
+          );
         }
       }
     }
@@ -231,6 +251,13 @@ function main() {
       }
     }
   });
+
+  // Every played game gets the convocatoria the selection would have made.
+  const conversion = convocatoriaHistoryConverter.convertSeason(season.id);
+  console.log(
+    `Convocatoria stored for ${conversion.converted.length} played games` +
+      ` (${conversion.skipped.length} skipped: cancelled or already done)`
+  );
 
   const table = standingsService.standings(season.id);
   console.log(`\nImported ${SEASON} (season id ${season.id})`);

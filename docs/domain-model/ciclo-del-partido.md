@@ -11,12 +11,52 @@ Una temporada va del **1 de septiembre al 31 de agosto** y se identifica por el
 año en que empieza (`2024/2025` empieza en 2024). No hay temporada «activa» que
 cambiar a mano: la temporada actual es la que contiene la fecha de hoy, y un
 partido pertenece a la temporada que contiene su fecha. Si no hay ninguna
-temporada para una fecha, no se inventa: hay que crearla.
+temporada para una fecha, no se inventa: hay que crearla. Un partido del pasado
+se registra con su fecha, se cobra al precio de **esa** temporada, la antigüedad se
+pregunta respecto a ella y recorre los mismos estados que cualquier otro.
 
 Un jugador no se «da de alta» en una temporada. Entra la primera vez que
 aparece en un partido de ella; en ese momento se le pregunta cuántas temporadas
 lleva (la sugerencia es la última que tenía registrada más una, o 0 si es
 nuevo) y no se le vuelve a preguntar.
+
+## Los estados de un partido
+
+Un partido está siempre en uno de cinco estados:
+
+| Estado                      | Qué significa                                    |
+| --------------------------- | ------------------------------------------------ |
+| **Abierto**                 | Se apuntan candidatos; aún no hay convocatoria.  |
+| **Convocatoria creada**     | Hay una selección guardada, todavía provisional. |
+| **Convocatoria confirmada** | El organizador la da por buena.                  |
+| **Jugado**                  | El partido se jugó.                              |
+| **Cancelado**               | No se juega.                                     |
+
+Movimientos permitidos:
+
+- **Crear la convocatoria**: desde Abierto, Convocatoria creada o Convocatoria
+  confirmada, a Convocatoria creada (volver a crearla recalcula).
+- **Confirmar**: de Convocatoria creada a Convocatoria confirmada.
+- **Marcar como jugado**: solo desde Convocatoria confirmada.
+- **Reabrir**: de Jugado a Convocatoria confirmada.
+- **Cancelar**: desde cualquier estado, también Jugado. El partido recuerda el
+  estado que dejó y **deshacer la cancelación** vuelve exactamente a él.
+
+Qué se puede tocar en cada estado:
+
+|                            | Abierto | Creada | Confirmada | Jugado | Cancelado |
+| -------------------------- | ------- | ------ | ---------- | ------ | --------- |
+| Apuntar y quitar apuntados | sí      | sí     | sí         | no     | no        |
+| Corregir la convocatoria   | no      | sí     | sí         | no     | no        |
+| Registrar pagos            | no      | no     | no         | sí     | no        |
+| Pegar los equipos          | no      | no     | no         | sí     | no        |
+
+Lo que no se puede hacer responde con el motivo («Reabre el partido para
+editarlo», «El partido está cancelado», «Confirma la convocatoria antes de
+marcar el partido como jugado»…). La pantalla ofrece en cada estado una sola
+acción siguiente: crear la convocatoria, confirmarla, marcar como jugado,
+registrar pagos (solo si queda alguna parte por pagar) o deshacer la
+cancelación.
 
 ## 1. Candidatos
 
@@ -46,29 +86,62 @@ al guardado.
 ## 2. Convocatoria
 
 Es la predicción de quién juega. Con los habituales dentro de las plazas entran
-todos y los invitados ocupan el resto por orden de llegada (el anónimo nunca se
-guarda). Si los habituales se pasan, compiten todos por puntos con la mercy
-rule. Confirmarla **no marca asistencia ni pagos**; solo guarda la selección
-(congelada) y los puntos de exclusión. Para puntuar hace falta tener la
-antigüedad capturada.
+todos y los invitados ocupan el resto por orden de llegada (un `+1` anónimo
+ocupa plaza como cualquiera). Si los habituales se pasan, compiten todos por
+puntos con la mercy rule. **Crearla** guarda la selección y pasa el partido a
+«Convocatoria creada»; no marca asistencia ni pagos ni puntos de exclusión
+(esos se deciden al jugarse el partido). Sin nadie apuntado no se puede crear
+(«No hay nadie apuntado»). Para puntuar hace falta tener la antigüedad
+capturada.
 
-## 3. Lista final
+Mientras está creada o confirmada se corrige a mano (ver
+[`convocatoria.md`](convocatoria.md)), y volver a crearla recalcula; si hay
+correcciones, pide confirmación antes de descartarlas («Se perderán tus
+correcciones»). **Confirmarla** solo la sella: no recalcula nada.
 
-Después del partido se pega la lista real, con sus dos equipos (`Claros` y
-`Oscuros`, en cualquier orden, con la separación que cada uno ponga). **Es la
-única fuente de quién jugó, de qué equipo y de cuánto debe cada uno**: cada
-jugador paga su parte y un `+1` suma otra parte a quien lo trae. Puede discrepar
-de la convocatoria, y manda.
+Los partidos importados del histórico ya jugados tienen una convocatoria
+confirmada calculada con los puntos de aquel momento; quién jugó y quién pagó
+sigue siendo lo que dice el histórico.
 
-Lo que la convocatoria dejó fuera y la lista final pone jugando pierde su punto
-de exclusión; si una corrección posterior lo vuelve a dejar fuera, el punto
-vuelve. La convocatoria guardada no se toca. Sin lista pegada se elige el
-partido más reciente que aún no tiene la suya, y el de hoy solo cuenta a partir
-de **una hora después del inicio**.
+## Quién jugó y el punto de exclusión
 
-## Partidos del pasado
+Al marcar el partido como jugado se **deriva** quién jugó y quién se lleva un
+punto de exclusión, a partir de la convocatoria tal como quedó (con las
+correcciones a mano). Un `+1` anónimo no genera nada.
 
-Un partido ya jugado se registra solo con su fecha: la temporada es la que la
-contiene, se cobra al precio de **esa** temporada y la antigüedad se pregunta
-respecto a ella. No tiene candidatos ni convocatoria; se rellena con su lista
-final.
+| En la convocatoria                         | Jugó | Punto de exclusión     |
+| ------------------------------------------ | ---- | ---------------------- |
+| Elegido por el algoritmo                   | sí   | ninguno                |
+| Dejado fuera por el algoritmo (`excluded`) | no   | 1, tipo `points`       |
+| Degradado (`demoted`) y sigue fuera        | no   | 1, tipo `demoted`      |
+| Elegido y sacado a mano                    | no   | 1, tipo `points`       |
+| Dejado fuera y metido a mano               | sí   | ninguno                |
+| Con el mercy seat                          | sí   | ninguno (nunca puntúa) |
+| Con el mercy seat y sacado a mano          | no   | 1, tipo `points`       |
+
+Reabrir o cancelar el partido retira todo esto (nadie queda como jugado y no
+queda ningún punto de ese partido), sin tocar los pagos ni los equipos; marcarlo
+jugado de nuevo lo recalcula. Un jugador que jugó y no ha pagado cuenta como
+jugado pero con 0 partidos pagados.
+
+## Pago después de jugar
+
+Al marcar el partido como jugado se **factura**: una deuda por cada parte de
+quien juega (el anfitrión responde por sus `+1` y por sus invitados con nombre).
+Se paga después, parte a parte: paga quien responde de ella o su beneficiario, y
+el punto de asistencia es del beneficiario. Una cantidad rara para una sola parte
+es un ajuste (3,75 € salda la parte, sin saldo pendiente). Deshacer un pago
+devuelve la parte a deuda y borra la fecha de pago. Reabrir o cancelar el
+partido conserva deudas y pagos, y volver a jugarlo no factura nada dos veces.
+
+## Equipos (opcional)
+
+Con el partido jugado se pueden pegar los dos equipos (`Claros` y `Oscuros`, en
+cualquier orden). Es un paso opcional: no hace falta para registrar pagos. El
+pegado **solo guarda el equipo** de cada jugador de la convocatoria; no toca
+quién jugó, los pagos, los puntos de exclusión ni los apuntados. Un nombre de un
+jugador que no estaba en la convocatoria se queda como texto, sin equipo; uno que
+no se reconoce o es ambiguo queda sin resolver (se elige un jugador de la
+convocatoria para esa línea, sin registrar jugadores nuevos); un `X +1` no nombra
+a nadie y se ignora. Volver a pegar sustituye los equipos anteriores. Antes de
+marcar el partido como jugado se rechaza.

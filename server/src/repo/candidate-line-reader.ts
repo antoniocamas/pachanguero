@@ -12,13 +12,19 @@ export class CandidateLineReader {
 
   private readLine(item: unknown): CandidateLine {
     if (typeof item !== 'object' || item === null) {
-      throw new Error('each line must be { text, links? }');
+      throw new Error('each line must be { text, links?, introduced? }');
     }
-    const { text, links } = item as { text?: unknown; links?: unknown };
+    const { text, links, introduced } = item as {
+      text?: unknown;
+      links?: unknown;
+      introduced?: unknown;
+    };
     if (typeof text !== 'string') throw new Error('a line needs its text');
-    return links === undefined
-      ? { text }
-      : { text, links: this.readLinks(links) };
+    return {
+      text,
+      ...(links !== undefined && { links: this.readLinks(links) }),
+      ...(introduced === true && { introduced: true as const }),
+    };
   }
 
   private readLinks(raw: unknown): CandidateLinks {

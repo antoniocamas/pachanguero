@@ -24,7 +24,13 @@ export interface Game {
   season_id: number;
   played_on: string;
   label: string | null;
-  status: 'scheduled' | 'played' | 'cancelled';
+  status:
+    | 'open'
+    | 'convocatoria_created'
+    | 'convocatoria_confirmed'
+    | 'played'
+    | 'cancelled';
+  cancelled_from: Exclude<Game['status'], 'cancelled'> | null;
   notes: string | null;
 }
 
@@ -36,7 +42,6 @@ export interface Participation {
   played: number;
   paid_cents: number;
   paid_on: string | null;
-  guests: number;
   team: Team | null;
   note: string | null;
 }
@@ -55,40 +60,71 @@ export interface Standing {
 
 export type Outcome = 'called_up' | 'mercy' | 'demoted' | 'excluded';
 
+export type GameState = Game['status'];
+
+/** A convocatoria member: a player, or the nth '+1' of a host. */
+export type MemberKey =
+  { playerId: number } | { hostPlayerId: number; ordinal: number };
+
 export interface ConvocatoriaEntry {
-  playerId: number;
+  id: number;
+  /** null for an anonymous plus-one. */
+  player_id: number | null;
+  guest_host_player_id: number | null;
+  guest_ordinal: number | null;
   name: string;
-  points: number;
+  changed_by_hand: boolean;
   position: number;
+  points: number;
+  wait_counter: number;
   outcome: Outcome;
-  waitCounter: number;
-  playing: boolean;
+  playing: number;
 }
 
-export interface ConvocatoriaResult {
-  entries: ConvocatoriaEntry[];
-  swaps: Array<{ promoted: number; demoted: number }>;
-  oversubscribed: boolean;
-  game: Game;
+/** A share still owed: who answers for it and whose it is. */
+export interface Debt {
+  id: number;
+  game_id: number;
+  holder_player_id: number;
+  /** null for an anonymous plus-one, named by its holder and ordinal. */
+  beneficiary_player_id: number | null;
+  guest_ordinal: number | null;
+  amount_cents: number;
+}
+
+/** A share settled: who paid it, how much and when. */
+export interface Payment extends Debt {
+  payer_player_id: number;
+  paid_on: string;
+}
+
+/** A matched line of the saved candidate list, in the order it arrived. */
+export interface Arrival {
+  position: number;
+  playerId: number | null;
+  hostPlayerId: number | null;
+  guest: 'named' | 'anonymous' | null;
+  text: string;
 }
 
 export interface GameDetail {
   game: Game;
+  state: GameState;
+  nextAction: string | null;
   participations: Participation[];
   convocatoria: {
     id: number;
     rules: unknown;
     created_at: string;
-    entries: Array<{
-      player_id: number;
-      name: string;
-      position: number;
-      points: number;
-      wait_counter: number;
-      outcome: Outcome;
-      playing: number;
-    }>;
+    confirmed_at: string | null;
+    source: 'generated' | 'history';
+    entries: ConvocatoriaEntry[];
   } | null;
+  debts: Debt[];
+  payments: Payment[];
+  arrivals: Arrival[];
+  /** Each player's points as of this game, by player id. */
+  points: Record<number, number>;
 }
 
 export type ParsedLine =
@@ -154,30 +190,29 @@ export type ResolveAction =
 export type ResolveResult =
   { outcome: 'resolved' } | { outcome: 'unresolved'; entry: UnresolvedEntry };
 
-export interface FinalUnresolved extends UnresolvedEntry {
+export interface TeamUnresolved extends UnresolvedEntry {
   team: Team;
 }
 
-export interface FinalParticipant {
+export interface TeamMember {
   position: number;
   team: Team;
   playerId: number;
   name: string;
-  companions: number;
-  paidCents: number;
-  seniorityPrompt?: true;
-  suggested?: number;
 }
 
-export interface FinalPasteResult {
-  game: Game;
-  matched: FinalParticipant[];
-  unresolved: FinalUnresolved[];
+export interface TeamPasteResult {
+  matched: TeamMember[];
+  outside: TeamMember[];
+  unresolved: TeamUnresolved[];
+  ignored: Array<{ position: number; team: Team; text: string }>;
 }
 
-export type FinalResolveResult =
-  | { outcome: 'resolved'; participant: FinalParticipant }
-  | { outcome: 'unresolved'; entry: FinalUnresolved };
+export type TeamResolveResult =
+  | { outcome: 'assigned'; member: TeamMember }
+  | { outcome: 'unresolved'; entry: TeamUnresolved };
+
+export type GameAction = 'play' | 'reopen' | 'cancel' | 'uncancel';
 
 async function call<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`/api${path}`, {
@@ -199,6 +234,7 @@ export const api = {
     call<Season>('/seasons', { method: 'POST', body: body(data) }),
   updateSeason: (id: number, patch: Partial<Season>) =>
     call<Season>(`/seasons/${id}`, { method: 'PATCH', body: body(patch) }),
+  missingSeason: () => call<{ name: string } | null>('/seasons/missing'),
   currentSeason: () => call<Season | null>('/seasons/current'),
 
   players: (seasonId: number) => call<Player[]>(`/seasons/${seasonId}/players`),
@@ -230,22 +266,6 @@ export const api = {
   updateGame: (gameId: number, patch: Partial<Game>) =>
     call<Game>(`/games/${gameId}`, { method: 'PATCH', body: body(patch) }),
 
-  setParticipation: (
-    gameId: number,
-    playerId: number,
-    patch: Partial<{
-      signed_up: boolean;
-      played: boolean;
-      paid_cents: number;
-      paid_on: string | null;
-      guests: number;
-    }>
-  ) =>
-    call<Participation[]>(`/games/${gameId}/players/${playerId}`, {
-      method: 'PUT',
-      body: body(patch),
-    }),
-
   /** The saved candidate list of a game. */
   candidateRows: (gameId: number) =>
     call<{ rows: CandidateRow[] }>(`/games/${gameId}/candidates`).then(
@@ -273,17 +293,17 @@ export const api = {
       body: body({ ...entry, action }),
     }),
 
-  pasteFinalList: (text: string, gameId?: number) =>
-    call<FinalPasteResult>('/games/final:paste', {
+  pasteTeams: (gameId: number, text: string) =>
+    call<TeamPasteResult>(`/games/${gameId}/teams/paste`, {
       method: 'POST',
-      body: body({ text, gameId }),
+      body: body({ text }),
     }),
-  resolveFinalLine: (
+  resolveTeamLine: (
     gameId: number,
-    entry: Pick<FinalUnresolved, 'line' | 'field' | 'team'>,
+    entry: Pick<TeamUnresolved, 'line' | 'field' | 'team'>,
     action: ResolveAction
   ) =>
-    call<FinalResolveResult>(`/games/${gameId}/final/resolve`, {
+    call<TeamResolveResult>(`/games/${gameId}/teams/paste/resolve`, {
       method: 'POST',
       body: body({ ...entry, action }),
     }),
@@ -295,10 +315,44 @@ export const api = {
 
   standings: (seasonId: number) =>
     call<Standing[]>(`/seasons/${seasonId}/standings`),
-  preview: (gameId: number) =>
-    call<ConvocatoriaResult>(`/games/${gameId}/convocatoria/preview`),
-  commit: (gameId: number) =>
-    call<ConvocatoriaResult>(`/games/${gameId}/convocatoria`, {
+
+  /** Moves a game along its lifecycle (play, reopen, cancel, undo cancelling). */
+  transition: (gameId: number, action: GameAction) =>
+    call<{ state: GameState }>(`/games/${gameId}/state`, {
       method: 'POST',
+      body: body({ action }),
     }),
+  /** Creates the convocatoria, or recreates it, which discards hand corrections only when told to. */
+  createConvocatoria: (gameId: number, discardEdits = false) =>
+    call<{ game: Game }>(`/games/${gameId}/convocatoria`, {
+      method: 'POST',
+      body: body({ discardEdits }),
+    }),
+  confirmConvocatoria: (gameId: number) =>
+    call<unknown>(`/games/${gameId}/convocatoria/confirm`, { method: 'POST' }),
+  /** Puts a member in or out of the playing line. */
+  moveMember: (gameId: number, member: MemberKey, playing: boolean) =>
+    call<unknown>(`/games/${gameId}/convocatoria/members`, {
+      method: 'PUT',
+      body: body({ member, playing }),
+    }),
+
+  /** Settles shares; the payer is whoever hands over the money. */
+  pay: (
+    gameId: number,
+    request: {
+      shares: MemberKey[];
+      payerPlayerId: number;
+      amountCents?: number;
+    }
+  ) =>
+    call<{ debts: Debt[]; payments: Payment[] }>(`/games/${gameId}/payments`, {
+      method: 'POST',
+      body: body(request),
+    }),
+  undoPayment: (gameId: number, paymentId: number) =>
+    call<{ debts: Debt[]; payments: Payment[] }>(
+      `/games/${gameId}/payments/${paymentId}`,
+      { method: 'DELETE' }
+    ),
 };

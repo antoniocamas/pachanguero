@@ -19,7 +19,7 @@ each has its own home, runner, and speed budget.
         ▼  fast, many, cheap
 ```
 
-## Unit tests — `server/src/domain/*.test.ts`, `web/src/**/*.test.tsx`
+## Unit tests — `server/src/domain/*.test.ts`, `web/src/lib/*.test.ts`
 
 **What they verify:** a single pure function or component's logic in isolation — no DB, no
 network, no filesystem.
@@ -33,8 +33,13 @@ transitions.
 what a user actually sees end-to-end. A domain test that mocks a repository to test a route is
 testing the mock, not the route.
 
-**Run:** `npm test` (root) or `npx vitest run` from `server/`. Gates every commit via the
-pre-commit hook.
+The web side is the pure calculation modules in `web/src/lib/` (euros and their parsing, the
+table's rows and columns per state, who holds which shares, the payment cell's buttons and labels,
+the counters): plain TypeScript with no DOM, run by `vitest` in the `web` workspace. A component
+is left to the E2E layer unless its logic moves into `lib/`.
+
+**Run:** `npm test` (root, which runs the server and the web suites) or `npx vitest run` from
+`server/` or `web/`. The server suite gates every commit via the pre-commit hook.
 
 ## Integration tests — `server/src/routes/*.test.ts`
 
@@ -48,6 +53,10 @@ work package's REQUIREMENTS.md land here: they describe API-observable behavior,
 
 **Do not use for:** anything about what renders in the browser, or multi-page/multi-request user
 flows where the sequence itself is the point.
+
+Performance claims belong here too: `server/src/repo/debt-query-cost.test.ts` seeds many played
+games with every share paid and asserts through `EXPLAIN QUERY PLAN` that reading debt searches
+`share_debts` by its indexes and never touches `participations`.
 
 **Run:** same as unit tests — `vitest run` in `server/`, same `npm test` command, same pre-commit
 gate. (There is no dedicated integration script yet; add `server/src/routes/*.test.ts` files and
@@ -63,7 +72,16 @@ via `PACHANGUERO_DB`, on ports 8788/5174 so a manual `npm run dev` on 8787/5173 
 spec in the run and never reset between them**, so a spec must either build the data it needs
 through the API or not depend on a clean slate — and a spec that needs an empty database (the
 first-season journey) has to run before any that create data, which today means it is the first
-test of the file that holds the others.
+test of the file that holds the others, and the spec files are ordered by name after it
+(`the-game-screen.spec.ts` runs after `season-and-player.spec.ts`). The suite therefore runs on a
+single worker.
+
+The game screen has a spec of its own that walks one game through every state and reads the state
+and next action from the screen; then, for each state, at a desktop (1280 × 800) and a phone
+(390 × 844) viewport, checks what is visible (the bar staying in view, the columns, no horizontal
+scroll, tap-sized buttons). The drag across the line is driven with real mouse events on the
+desktop. Touch cannot be driven faithfully by the runner, so a press-and-hold drag on a real phone
+is checked by hand.
 
 **Use when:** the requirement is a critical path that only exists as a sequence across
 screens/requests, and where the wiring between frontend and backend is itself what's being

@@ -3,6 +3,7 @@ import { api, type Game, type Player, type Season } from './api';
 import { GameDay } from './pages/GameDay';
 import { Standings } from './pages/Standings';
 import { Manage } from './pages/Manage';
+import { NewSeasonPrompt } from './components/NewSeasonPrompt';
 
 type Tab = 'game' | 'standings' | 'manage';
 
@@ -12,15 +13,18 @@ export function App() {
   const [season, setSeason] = useState<Season | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [games, setGames] = useState<Game[]>([]);
+  const [missingSeason, setMissingSeason] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const loadSeasons = useCallback(async () => {
     try {
-      const [all, current] = await Promise.all([
+      const [all, current, missing] = await Promise.all([
         api.seasons(),
         api.currentSeason(),
+        api.missingSeason(),
       ]);
       setSeasons(all);
+      setMissingSeason(missing?.name ?? null);
       // Keep the season being looked at; otherwise today's, else the latest.
       setSeason(
         prev => all.find(s => s.id === prev?.id) ?? current ?? all[0] ?? null
@@ -62,7 +66,7 @@ export function App() {
   }, [loadSeasons, loadSeasonData]);
 
   return (
-    <div className="app">
+    <div className={`app${tab === 'game' ? ' wide' : ''}`}>
       <header className="top">
         <h1>
           <span aria-hidden>⚽</span> Pachanguero
@@ -72,25 +76,24 @@ export function App() {
 
       {error && <div className="err">{error}</div>}
 
+      {missingSeason && (
+        <NewSeasonPrompt
+          name={missingSeason}
+          onCreated={async () => {
+            // Move to the season just created, not the one being looked at.
+            const created = (await api.currentSeason()) ?? null;
+            await refresh();
+            if (created) setSeason(created);
+          }}
+        />
+      )}
+
       {!season ? (
-        <div className="card">
-          <div className="empty">
-            No hay temporadas.
-            <div style={{ marginTop: 12 }}>
-              <button
-                className="btn primary"
-                onClick={async () => {
-                  const n = prompt('Nombre de la temporada', '2025/2026');
-                  if (!n) return;
-                  await api.createSeason({ name: n });
-                  await refresh();
-                }}
-              >
-                Crear la primera
-              </button>
-            </div>
+        missingSeason ? null : (
+          <div className="card">
+            <div className="empty">No hay temporadas.</div>
           </div>
-        </div>
+        )
       ) : tab === 'game' ? (
         <GameDay
           season={season}

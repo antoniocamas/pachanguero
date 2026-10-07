@@ -1,3 +1,4 @@
+import { LocalCalendar } from '../domain/local-calendar.js';
 import { CandidateLineReader } from '../repo/candidate-line-reader.js';
 import {
   Router,
@@ -11,12 +12,18 @@ import {
   aliases,
   games,
   schedule,
-  finalListTarget,
   candidateResolution,
-  finalListResolution,
   participations,
   standingsService,
   convocatoriaService,
+  convocatoriaEdit,
+  gameLifecycle,
+  debtRepository,
+  paymentRepository,
+  paymentService,
+  teamAssignment,
+  teamPaste,
+  gameView,
 } from '../repo/index.js';
 
 export const api = Router();
@@ -57,6 +64,15 @@ api.get(
 api.get(
   '/seasons/current',
   route((_req, res) => res.json(seasons.current() ?? null))
+);
+
+/** `{ name }` of today's season when it has not been created yet, else null. */
+api.get(
+  '/seasons/missing',
+  route((_req, res) => {
+    const name = seasons.missing(new LocalCalendar().dateOf(new Date()));
+    res.json(name ? { name } : null);
+  })
 );
 
 api.post(
@@ -238,48 +254,6 @@ api.post(
   })
 );
 
-api.post(
-  '/games/final\\:paste',
-  route((req, res) => {
-    const text = req.body?.text;
-    if (typeof text !== 'string') throw new Error('text is required');
-    const gameId = req.body?.gameId;
-    res.json(
-      finalListResolution.paste(
-        text,
-        gameId === undefined ? undefined : id(gameId)
-      )
-    );
-  })
-);
-
-api.post(
-  '/games/:gameId/final/resolve',
-  route((req, res) => {
-    const { line, field, team, action } = req.body ?? {};
-    if (!line || !action) throw new Error('line and action are required');
-    if (team !== 'claros' && team !== 'oscuros') {
-      throw new Error('team must be claros or oscuros');
-    }
-    res.json(
-      finalListResolution.resolve(
-        id(req.params.gameId),
-        {
-          line,
-          field: field ?? (line.kind === 'plusOne' ? 'host' : 'name'),
-          team,
-        },
-        action
-      )
-    );
-  })
-);
-
-api.get(
-  '/games/final-list-target',
-  route((_req, res) => res.json({ game: finalListTarget.resolve() ?? null }))
-);
-
 api.get(
   '/seasons/:id/games',
   route((req, res) => res.json(games.list(id(req.params.id))))
@@ -302,19 +276,29 @@ api.post(
 api.get(
   '/games/:gameId',
   route((req, res) => {
-    const game = games.get(id(req.params.gameId));
-    if (!game) return res.status(404).json({ error: 'not found' });
-    res.json({
-      game,
-      participations: participations.list(game.id),
-      convocatoria: convocatoriaService.saved(game.id),
-    });
+    const view = gameView.view(id(req.params.gameId));
+    if (!view) return res.status(404).json({ error: 'not found' });
+    res.json(view);
   })
 );
 
 api.patch(
   '/games/:gameId',
   route((req, res) => res.json(games.update(id(req.params.gameId), req.body)))
+);
+
+const STATE_ACTIONS = ['play', 'reopen', 'cancel', 'uncancel'];
+
+/** Moves a game along its lifecycle; creating and confirming the convocatoria have their own routes. */
+api.post(
+  '/games/:gameId/state',
+  route((req, res) => {
+    const action = req.body?.action;
+    if (!STATE_ACTIONS.includes(action)) throw new Error('Acción no válida');
+    const gameId = id(req.params.gameId);
+    gameLifecycle.perform(gameId, action);
+    res.json(gameLifecycle.describe(gameId));
+  })
 );
 
 api.delete(
@@ -325,16 +309,123 @@ api.delete(
   })
 );
 
+/* --------------------------------------------------------------- payments */
+
+/** A share is named like a convocatoria member: a player, or the nth '+1' of a host. */
+const memberOf = (v: unknown) => {
+  const member = v as {
+    playerId?: unknown;
+    hostPlayerId?: unknown;
+    ordinal?: unknown;
+  };
+  if (member && 'playerId' in member) return { playerId: id(member.playerId) };
+  if (member && 'hostPlayerId' in member)
+    return {
+      hostPlayerId: id(member.hostPlayerId),
+      ordinal: id(member.ordinal),
+    };
+  throw new Error('Cada parte debe nombrar a un jugador o a un invitado');
+};
+
+/** Settles one or more shares of a played game; the payer is whoever hands over the money. */
+api.post(
+  '/games/:gameId/payments',
+  route((req, res) => {
+    const { shares, payerPlayerId, amountCents, paidOn } = req.body ?? {};
+    if (!Array.isArray(shares)) throw new Error('shares must be a list');
+    const gameId = id(req.params.gameId);
+    paymentService.pay(gameId, {
+      shares: shares.map(memberOf),
+      payerPlayerId: id(payerPlayerId),
+      amountCents,
+      paidOn,
+    });
+    res.status(201).json({
+      debts: debtRepository.list(gameId),
+      payments: paymentRepository.list(gameId),
+    });
+  })
+);
+
+api.delete(
+  '/games/:gameId/payments/:paymentId',
+  route((req, res) => {
+    const gameId = id(req.params.gameId);
+    paymentService.undo(gameId, id(req.params.paymentId));
+    res.json({
+      debts: debtRepository.list(gameId),
+      payments: paymentRepository.list(gameId),
+    });
+  })
+);
+
+/* ------------------------------------------------------------------ teams */
+
+const teamOf = (v: unknown) => {
+  if (v !== 'claros' && v !== 'oscuros')
+    throw new Error('team must be claros or oscuros');
+  return v;
+};
+
+api.get(
+  '/games/:gameId/teams',
+  route((req, res) => res.json(teamAssignment.read(id(req.params.gameId))))
+);
+
+/** Replaces the teams with the given assignments, however they were produced. */
+api.put(
+  '/games/:gameId/teams',
+  route((req, res) => {
+    const list = req.body?.assignments;
+    if (!Array.isArray(list)) throw new Error('assignments must be a list');
+    const gameId = id(req.params.gameId);
+    teamAssignment.assign(
+      gameId,
+      list.map(a => ({ playerId: id(a?.playerId), team: teamOf(a?.team) }))
+    );
+    res.json(teamAssignment.read(gameId));
+  })
+);
+
+api.post(
+  '/games/:gameId/teams/paste',
+  route((req, res) => {
+    if (typeof req.body?.text !== 'string')
+      throw new Error('text must be a string');
+    res.json(teamPaste.paste(id(req.params.gameId), req.body.text));
+  })
+);
+
+api.post(
+  '/games/:gameId/teams/paste/resolve',
+  route((req, res) => {
+    const { line, field, team, action } = req.body ?? {};
+    if (!line || !action) throw new Error('line and action are required');
+    res.json(
+      teamPaste.resolve(
+        id(req.params.gameId),
+        { line, field, team: teamOf(team) },
+        action
+      )
+    );
+  })
+);
+
 /* --------------------------------------------------------- participations */
 
 api.put(
   '/games/:gameId/players/:playerId',
   route((req, res) => {
-    participations.set(
-      id(req.params.gameId),
-      id(req.params.playerId),
-      req.body ?? {}
-    );
+    gameLifecycle.require(id(req.params.gameId), 'edit_apuntados');
+    if (req.body?.signed_up === false)
+      convocatoriaEdit.requireNotMember(
+        id(req.params.gameId),
+        id(req.params.playerId)
+      );
+    participations.set(id(req.params.gameId), id(req.params.playerId), {
+      signed_up: req.body?.signed_up,
+      note: req.body?.note,
+    });
     res.json(participations.list(id(req.params.gameId)));
   })
 );
@@ -342,6 +433,11 @@ api.put(
 api.delete(
   '/games/:gameId/players/:playerId',
   route((req, res) => {
+    gameLifecycle.require(id(req.params.gameId), 'edit_apuntados');
+    convocatoriaEdit.requireNotMember(
+      id(req.params.gameId),
+      id(req.params.playerId)
+    );
     participations.remove(id(req.params.gameId), id(req.params.playerId));
     res.json(participations.list(id(req.params.gameId)));
   })
@@ -356,11 +452,48 @@ api.get(
   )
 );
 
+/** Creates the convocatoria, or recreates it (which discards hand corrections only when told to). */
 api.post(
   '/games/:gameId/convocatoria',
   route((req, res) =>
-    res.json(convocatoriaService.commit(id(req.params.gameId)))
+    res.json(
+      convocatoriaService.create(id(req.params.gameId), {
+        discardEdits: req.body?.discardEdits === true,
+      })
+    )
   )
+);
+
+api.post(
+  '/games/:gameId/convocatoria/confirm',
+  route((req, res) => {
+    const gameId = id(req.params.gameId);
+    convocatoriaService.confirm(gameId);
+    res.json(convocatoriaService.saved(gameId));
+  })
+);
+
+/** Puts a member in or out of the playing line: a player, or the nth '+1' of a host. */
+api.put(
+  '/games/:gameId/convocatoria/members',
+  route((req, res) => {
+    const { member, playing } = req.body ?? {};
+    if (typeof playing !== 'boolean')
+      throw new Error('playing must be true or false');
+    const key =
+      member && 'playerId' in member
+        ? { playerId: id(member.playerId) }
+        : member && 'hostPlayerId' in member
+          ? {
+              hostPlayerId: id(member.hostPlayerId),
+              ordinal: id(member.ordinal),
+            }
+          : null;
+    if (!key) throw new Error('member must name a player or a guest of a host');
+    const gameId = id(req.params.gameId);
+    convocatoriaEdit.move(gameId, key, playing);
+    res.json(convocatoriaService.saved(gameId));
+  })
 );
 
 /* ------------------------------------------------------------------ errors */

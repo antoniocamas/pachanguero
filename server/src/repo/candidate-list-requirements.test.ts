@@ -1,3 +1,7 @@
+import { ConvocatoriaEditService } from './convocatoria-edit-service.js';
+import { GameLifecycle } from '../domain/game-lifecycle.js';
+import { DebtRepository } from './debt-repository.js';
+import { GameLifecycleService } from './game-lifecycle-service.js';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type Database from 'better-sqlite3';
 import { CandidateLineParser } from '../domain/candidate-line-parser.js';
@@ -13,6 +17,7 @@ import {
   type CandidateRow,
 } from './candidate-resolution-service.js';
 import { CandidateLineRepository } from './candidate-line-repository.js';
+import { ConvocatoriaRepository } from './convocatoria-repository.js';
 import { ConvocatoriaService } from './convocatoria-service.js';
 import { ExclusionRepository } from './exclusion-repository.js';
 import { GameDayResolutionService } from './game-day-resolution-service.js';
@@ -72,6 +77,21 @@ describe('WP-001 candidate list requirements', () => {
     });
     seasonId = seasons.create({ name: '2025/2026', slots: 14 }).id;
     gameId = games.create(seasonId, '2025-11-10').id;
+    const lifecycle = new GameLifecycleService(
+      games,
+      new GameLifecycle(),
+      new DebtRepository(conn),
+      [],
+      conn
+    );
+    const convocatoriaRepository = new ConvocatoriaRepository(conn);
+    const standings = new StandingsService(
+      players,
+      exclusions,
+      new DebtRepository(conn),
+      new PointsCalculator(),
+      conn
+    );
     candidates = new CandidateResolutionService(
       games,
       new GameDayResolutionService(games, schedule, seasons),
@@ -82,25 +102,29 @@ describe('WP-001 candidate list requirements', () => {
       new CandidateLineRepository(conn),
       new CandidateLineParser(new NameStripper()),
       new PlayerRegistrar(players, aliases),
+      lifecycle,
+      new ConvocatoriaEditService(
+        games,
+        convocatoriaRepository,
+        lifecycle,
+        standings,
+        players,
+        conn
+      ),
       conn
     );
     convocatoria = new ConvocatoriaService(
       games,
       participations,
       exclusions,
-      new StandingsService(
-        players,
-        exclusions,
-        seasons,
-        new PointsCalculator(),
-        conn
-      ),
+      standings,
       new ConvocatoriaBuilder(),
       seasons,
       guests,
       players,
       new GuestSlotAllocator(),
-      conn
+      convocatoriaRepository,
+      lifecycle
     );
   });
 
@@ -271,7 +295,7 @@ describe('WP-001 candidate list requirements', () => {
       expect(guests.list(gameId).map(g => g.position)).toEqual([8, 12, 13, 14]);
 
       // When the organiser commits the convocatoria
-      const result = convocatoria.commit(gameId);
+      const result = convocatoria.create(gameId);
 
       // Then all regulars are called up plus the three earliest-positioned
       // guests, and Rubén, the latest, is excluded

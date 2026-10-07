@@ -1,3 +1,11 @@
+import { ConvocatoriaEditService } from './convocatoria-edit-service.js';
+import { ConvocatoriaRepository } from './convocatoria-repository.js';
+import { StandingsService } from './standings-service.js';
+import { ExclusionRepository } from './exclusion-repository.js';
+import { PointsCalculator } from '../domain/points.js';
+import { GameLifecycle } from '../domain/game-lifecycle.js';
+import { DebtRepository } from './debt-repository.js';
+import { GameLifecycleService } from './game-lifecycle-service.js';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type Database from 'better-sqlite3';
 import { CandidateLineParser } from '../domain/candidate-line-parser.js';
@@ -19,6 +27,7 @@ import { ScheduleRepository } from './schedule-repository.js';
 import { SeasonRepository } from './season-repository.js';
 
 describe('CandidateResolutionService', () => {
+  let convocatorias: ConvocatoriaRepository;
   let conn: Database.Database;
   let players: PlayerRepository;
   let aliases: AliasRepository;
@@ -57,6 +66,14 @@ describe('CandidateResolutionService', () => {
     });
     seasonId = seasons.create({ name: '2025/2026' }).id;
     gameId = games.create(seasonId, '2025-11-10').id;
+    convocatorias = new ConvocatoriaRepository(conn);
+    const lifecycle = new GameLifecycleService(
+      games,
+      new GameLifecycle(),
+      new DebtRepository(conn),
+      [],
+      conn
+    );
     service = new CandidateResolutionService(
       games,
       new GameDayResolutionService(games, schedule, seasons),
@@ -67,6 +84,21 @@ describe('CandidateResolutionService', () => {
       new CandidateLineRepository(conn),
       new CandidateLineParser(new NameStripper()),
       new PlayerRegistrar(players, aliases),
+      lifecycle,
+      new ConvocatoriaEditService(
+        games,
+        convocatorias,
+        lifecycle,
+        new StandingsService(
+          players,
+          new ExclusionRepository(conn),
+          new DebtRepository(conn),
+          new PointsCalculator(),
+          conn
+        ),
+        players,
+        conn
+      ),
       conn
     );
   });
@@ -257,6 +289,64 @@ describe('CandidateResolutionService', () => {
       expect(guests.list(gameId)).toEqual([
         { position: 1, player_id: null, host_player_id: alvaro },
       ]);
+    });
+
+    describe('with a stored convocatoria', () => {
+      const entry = (playerId: number, position: number, playing: boolean) => ({
+        key: { playerId },
+        position,
+        points: 1,
+        waitCounter: 0,
+        outcome: playing ? ('called_up' as const) : ('excluded' as const),
+        playing,
+      });
+      let ana: number;
+      let beto: number;
+
+      beforeEach(() => {
+        ana = enrol('Ana');
+        beto = enrol('Beto');
+        service.save(gameId, L('Ana', 'Beto'));
+        convocatorias.replace(gameId, '{"slots":14}', [
+          entry(ana, 1, true),
+          entry(beto, 2, false),
+        ]);
+      });
+
+      it('gives a newly signed-up player an entry below the line', () => {
+        enrol('Cris');
+        service.save(gameId, L('Ana', 'Beto', 'Cris'));
+        const cris = convocatorias
+          .find(gameId)!
+          .entries.find(e => e.name === 'Cris')!;
+        expect(cris).toMatchObject({
+          playing: 0,
+          outcome: 'excluded',
+          position: 3,
+        });
+      });
+
+      it('gives a newly added plus-one an entry named after its host', () => {
+        service.save(gameId, L('Ana', 'Beto', 'Ana +1'));
+        expect(
+          convocatorias.entryOf(gameId, { hostPlayerId: ana, ordinal: 1 })
+        ).toMatchObject({ playing: 0, name: 'Invitado de Ana' });
+      });
+
+      it('drops the entry of someone signed out who was not playing', () => {
+        service.save(gameId, L('Ana'));
+        expect(convocatorias.entryOf(gameId, { playerId: beto })).toBeNull();
+        expect(signedUp()).toEqual(['Ana']);
+      });
+
+      it('refuses to sign out someone who is playing, and writes nothing', () => {
+        expect(() => service.save(gameId, L('Beto'))).toThrow(
+          'Quítalo primero de la convocatoria'
+        );
+        expect(signedUp()).toEqual(['Ana', 'Beto']);
+        expect(service.load(gameId).map(r => r.text)).toEqual(['Ana', 'Beto']);
+        expect(convocatorias.find(gameId)!.entries).toHaveLength(2);
+      });
     });
 
     it('rejects an unknown game', () => {

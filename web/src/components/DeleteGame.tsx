@@ -34,9 +34,9 @@ export function DeleteGame({
   }
 
   return (
-    <div style={{ padding: '0 14px 12px' }}>
+    <div className="delete-game">
       {error && <div className="err">{error}</div>}
-      <button className="btn wide" disabled={busy} onClick={remove}>
+      <button className="btn link" disabled={busy} onClick={remove}>
         Borrar este partido
       </button>
     </div>

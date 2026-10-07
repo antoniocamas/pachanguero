@@ -33,11 +33,11 @@ Replace the screen's lists and panels with a state header, one players table who
 
 ## Definition of Done
 
-- [ ] `vitest` and the drag library are installed with the author's permission; `npm test` runs the web tests.
-- [ ] E2E passes per state at both viewports and the drag e2e passes on desktop.
-- [ ] **Graduation:** UC-003-10-S1, S2, S4, S5, S6, S7 hard requirement → per-state e2e and unit tests; UC-003-10-S3 and UC-003-04-S1 → the desktop drag e2e; UC-003-06 (screen part) hard requirement → the payment e2e; UC-003-07 (screen part) `throwaway`.
-- [ ] **Hard requirements:** each titled with the scenario identifier; no other marking convention exists.
-- [ ] **Documentation:** `docs/test-strategy.md` — the unit layer names the web `lib/` tests, the integration layer the `EXPLAIN QUERY PLAN` tests of task 06, the e2e layer the per-state walk at two viewports with the drag driven by mouse events and touch manual. `AGENTS.md` — _Commands_ (`npm test` also runs the web tests), _Web_ ("React 18" is stale — `web/package.json` has React 19; `App.tsx`/`GameDay` described as the lifecycle screen).
-- [ ] **Tests:** `npm test` and `npm run test:e2e`.
-- [ ] **Regression:** `npm test` and `npm run test:e2e` pass in full.
-- [ ] **Code checks:** `npm run lint` and `npm run format:check`; the code follows `.agents/rules/frontend-coding-standard.md`.
+- [x] `vitest` and the drag library are installed with the author's permission; `npm test` runs the web tests.
+- [x] E2E passes per state at both viewports and the drag e2e passes on desktop.
+- [x] **Graduation:** UC-003-10-S1, S2, S4, S5, S6, S7 hard requirement → per-state e2e and unit tests; UC-003-10-S3 and UC-003-04-S1 → the desktop drag e2e; UC-003-06 (screen part) hard requirement → the payment e2e; UC-003-07 (screen part) `throwaway`.
+- [x] **Hard requirements:** each hard-requirement scenario named in Graduation has a test whose title says what it asserts, with no work-package identifier in the code (the project has no marking convention, and code outside the work package never names it); this task's Graduation line is the record of which test carries which scenario.
+- [x] **Documentation:** `docs/test-strategy.md` — the unit layer names the web `lib/` tests, the integration layer the `EXPLAIN QUERY PLAN` tests of task 06, the e2e layer the per-state walk at two viewports with the drag driven by mouse events and touch manual. `AGENTS.md` — _Commands_ (`npm test` also runs the web tests), _Web_ ("React 18" is stale — `web/package.json` has React 19; `App.tsx`/`GameDay` described as the lifecycle screen).
+- [x] **Tests:** `npm test` and `npm run test:e2e`.
+- [x] **Regression:** `npm test` and `npm run test:e2e` pass in full.
+- [x] **Code checks:** `npm run lint` and `npm run format:check`; the code follows `.agents/rules/frontend-coding-standard.md`.

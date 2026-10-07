@@ -29,10 +29,10 @@ Teams become a resource (`GET`/`PUT /games/:id/teams`, the paste a sub-resource)
 
 ## Definition of Done
 
-- [ ] A paste leaves `played`, `paid_cents` and `signed_up` untouched (asserted).
-- [ ] **Graduation:** UC-003-07-S1…S5, `throwaway` (author: "I don't care, this is just to have something in the database"); the tests stay as ordinary regression tests.
-- [ ] **Hard requirements:** none — the scenario is `throwaway`.
-- [ ] **Documentation:** `docs/domain-model/glossary.md` — _Claros y Oscuros_ head the team-recording step, not "la lista final". `docs/domain-model/ciclo-del-partido.md` — the optional team step.
-- [ ] **Tests:** `npm test`.
-- [ ] **Regression:** `npm test` passes in full.
-- [ ] **Code checks:** `npm run lint` and `npm run format:check`; the code follows `.agents/rules/coding-standard.md`.
+- [x] A paste leaves `played`, `paid_cents` and `signed_up` untouched (asserted).
+- [x] **Graduation:** UC-003-07-S1…S5, `throwaway` (author: "I don't care, this is just to have something in the database"); the tests stay as ordinary regression tests.
+- [x] **Hard requirements:** none — the scenario is `throwaway`.
+- [x] **Documentation:** `docs/domain-model/glossary.md` — _Claros y Oscuros_ head the team-recording step, not "la lista final". `docs/domain-model/ciclo-del-partido.md` — the optional team step.
+- [x] **Tests:** `npm test`.
+- [x] **Regression:** `npm test` passes in full.
+- [x] **Code checks:** `npm run lint` and `npm run format:check`; the code follows `.agents/rules/coding-standard.md`.

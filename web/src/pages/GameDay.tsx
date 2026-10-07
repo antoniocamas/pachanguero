@@ -1,34 +1,25 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { CandidateList } from '../components/CandidateList';
-import { RecordPastGame } from '../components/RecordPastGame';
-import { DeleteGame } from '../components/DeleteGame';
+import { useCallback, useMemo, useState } from 'react';
+import { GameBar } from '../components/GameBar';
+import { LineView } from '../components/LineView';
+import { OpenView } from '../components/OpenView';
+import { PlayedView } from '../components/PlayedView';
+import { ReadOnlyView } from '../components/ReadOnlyView';
+import { fmtDate } from '../lib/dates';
+import { counters } from '../lib/counters';
+import { buildRows } from '../lib/gameRows';
+import { pickDefaultGame } from '../lib/defaultGame';
+import { localToday } from '../lib/today';
+import { useGameActions } from '../hooks/useGameActions';
+import { useGameDetail } from '../hooks/useGameDetail';
 import { useKnownPlayers } from '../hooks/useKnownPlayers';
-import { FinalListPaste } from '../components/FinalListPaste';
-import {
-  api,
-  type ConvocatoriaResult,
-  type Game,
-  type GameDetail,
-  type Player,
-  type Season,
-} from '../api';
-
-const euros = (cents: number) => (cents / 100).toFixed(2).replace('.', ',');
-const fmtDate = (iso: string) =>
-  new Date(`${iso}T12:00:00`).toLocaleDateString('es-ES', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-  });
+import type { Game, GameDetail, Player, Season } from '../api';
 
 /**
- * The screen that replaces hand-editing the spreadsheet: one row per player,
- * three taps' worth of state. Signed up / played / paid are separate here on
- * purpose — in the sheet they all shared one '*' cell.
+ * The screen that runs a game from sign-ups to played: the bar keeps its state
+ * and next step in view, and one table of players follows the state below it.
  */
 export function GameDay({
   season,
-  players,
   games,
   onGamesChanged,
   onSelectSeason,
@@ -40,389 +31,133 @@ export function GameDay({
   onSelectSeason: (seasonId: number) => void;
 }) {
   const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
-  const [detail, setDetail] = useState<GameDetail | null>(null);
-  const [preview, setPreview] = useState<ConvocatoriaResult | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  // Shown in the convocatoria card itself: the page banner is out of sight from there.
-  const [convocatoriaError, setConvocatoriaError] = useState<string | null>(
-    null
-  );
+  const [alert, setAlert] = useState<string | null>(null);
 
-  // Default to the next scheduled game, else the most recent one.
-  const defaultGameId = useMemo(() => {
-    if (!games.length) return null;
-    const today = new Date().toISOString().slice(0, 10);
-    const upcoming = games.find(
-      g => g.played_on >= today && g.status !== 'cancelled'
-    );
-    return (upcoming ?? games[games.length - 1]).id;
-  }, [games]);
+  const defaultGameId = useMemo(
+    () => pickDefaultGame(games, localToday())?.id ?? null,
+    [games]
+  );
+  // The default is pinned once found: playing the game must not make it
+  // stop being "the default" and leave the bar without a game.
+  if (selectedGameId === null && defaultGameId !== null)
+    setSelectedGameId(defaultGameId);
   const gameId = selectedGameId ?? defaultGameId;
   const knownPlayers = useKnownPlayers(games);
   const gameLabel = fmtDate(games.find(g => g.id === gameId)?.played_on ?? '');
+  const { detail, error, reload, clear } = useGameDetail(gameId);
+  const actions = useGameActions(gameId, reload, setAlert, onGamesChanged);
 
   const selectGame = useCallback((id: number | null) => {
     setSelectedGameId(id);
-    setPreview(null);
-    setConvocatoriaError(null);
+    setAlert(null);
   }, []);
 
-  const load = useCallback(async () => {
-    if (!gameId) return;
-    try {
-      setDetail(await api.game(gameId));
-      setError(null);
-    } catch (e) {
-      setError((e as Error).message);
-    }
-  }, [gameId]);
-
-  useEffect(() => {
-    void (async () => {
-      await load();
-    })();
-  }, [load]);
-
-  const perHead = Math.round(season.price_cents / season.slots);
-
-  const byPlayer = useMemo(() => {
-    const map = new Map(
-      detail?.participations.map(p => [p.player_id, p]) ?? []
-    );
-    return map;
-  }, [detail]);
-
-  const signedCount =
-    detail?.participations.filter(p => p.signed_up).length ?? 0;
-  const paidCount =
-    detail?.participations.filter(p => p.paid_cents > 0).length ?? 0;
-  const owed = (detail?.participations ?? [])
-    .filter(p => p.played && p.paid_cents === 0)
-    .reduce(sum => sum + perHead, 0);
-
-  async function mutate(
-    playerId: number,
-    patch: Parameters<typeof api.setParticipation>[2]
-  ) {
-    if (!gameId) return;
-    setBusy(true);
-    try {
-      const rows = await api.setParticipation(gameId, playerId, patch);
-      setDetail(d => (d ? { ...d, participations: rows } : d));
-      setPreview(null);
-      setError(null);
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  // A game closed with a final list but never selected for has nothing to
-  // show under candidates or convocatoria.
-  const recordedAfterTheFact =
-    detail?.game.status === 'played' && !detail.convocatoria;
-
   const gameRecorded = (game: Game) => {
-    if (game.season_id !== season.id) {
-      onSelectSeason(game.season_id);
-    } else {
-      onGamesChanged();
-    }
+    if (game.season_id !== season.id) onSelectSeason(game.season_id);
+    else onGamesChanged();
     selectGame(game.id);
-  };
-
-  const outcomeOf = (playerId: number) => {
-    const saved = detail?.convocatoria?.entries.find(
-      e => e.player_id === playerId
-    );
-    const live = preview?.entries.find(e => e.playerId === playerId);
-    return live?.outcome ?? saved?.outcome ?? null;
   };
 
   return (
     <>
-      {error && <div className="err">{error}</div>}
+      <GameBar
+        games={games}
+        gameId={gameId}
+        gameLabel={gameLabel}
+        state={detail?.state ?? null}
+        nextAction={detail?.nextAction ?? null}
+        counters={detail ? counters(detail, season.slots) : null}
+        busy={actions.busy}
+        actions={{
+          create: actions.create,
+          confirm: actions.confirm,
+          play: () => actions.transition('play'),
+          reopen: () => actions.transition('reopen'),
+          uncancel: () => actions.transition('uncancel'),
+        }}
+        onSelect={selectGame}
+        onCancel={() => actions.transition('cancel')}
+        onRecorded={gameRecorded}
+        onDeleted={() => {
+          selectGame(null);
+          clear();
+          onGamesChanged();
+        }}
+      />
 
-      <div className="card">
-        <h2>Partido</h2>
-        <RecordPastGame onRecorded={gameRecorded} />
-        <div style={{ padding: '12px 14px' }}>
-          <select
-            value={gameId ?? ''}
-            onChange={e => selectGame(Number(e.target.value))}
-            aria-label="Elegir partido"
-          >
-            {games.length === 0 && (
-              <option value="">Sin partidos todavía</option>
-            )}
-            {[...games].reverse().map(g => (
-              <option key={g.id} value={g.id}>
-                {fmtDate(g.played_on)}
-                {g.label ? ` (${g.label})` : ''}
-                {g.status === 'cancelled' ? ' — cancelado' : ''}
-              </option>
-            ))}
-          </select>
+      {(alert ?? error) && (
+        <div className="err" role="alert">
+          {alert ?? error}
+          {alert?.startsWith('Falta la antigüedad') &&
+            '. Confírmala en «Lista de apuntados».'}
         </div>
-        {gameId && (
-          <DeleteGame
-            gameId={gameId}
-            label={gameLabel}
-            onDeleted={() => {
-              selectGame(null);
-              setDetail(null);
-              onGamesChanged();
-            }}
-          />
-        )}
-        <div className="stat-row">
-          <div className="stat">
-            <b>{signedCount}</b>
-            <span>apuntados</span>
-          </div>
-          <div className="stat">
-            <b
-              style={{
-                color: signedCount > season.slots ? 'var(--warn)' : undefined,
-              }}
-            >
-              {season.slots}
-            </b>
-            <span>plazas</span>
-          </div>
-          <div className="stat">
-            <b>{paidCount}</b>
-            <span>pagados</span>
-          </div>
-          <div className="stat">
-            <b style={{ color: owed ? 'var(--danger)' : undefined }}>
-              {euros(owed)}
-            </b>
-            <span>deuda €</span>
-          </div>
-        </div>
-      </div>
+      )}
 
-      {gameId && !recordedAfterTheFact && (
-        <CandidateList
-          key={gameId}
-          gameId={gameId}
-          seasonId={detail?.game.season_id ?? season.id}
+      {detail && (
+        <GameBody
+          key={detail.game.id}
+          detail={detail}
           gameLabel={gameLabel}
           players={knownPlayers}
-          onChanged={load}
+          busy={actions.busy}
+          reload={reload}
+          report={setAlert}
+          onMove={actions.move}
           onEnrolled={onGamesChanged}
         />
-      )}
-
-      {gameId && (
-        <FinalListPaste
-          key={`final-${gameId}`}
-          gameId={gameId}
-          gameLabel={gameLabel}
-          seasonId={detail?.game.season_id ?? season.id}
-          players={knownPlayers}
-          onChanged={load}
-        />
-      )}
-
-      {gameId && (
-        <div className="card">
-          <h2>
-            Jugadores
-            <span className="right muted">
-              {signedCount > season.slots ? 'hay que convocar' : 'entran todos'}
-            </span>
-          </h2>
-          {players.length === 0 && (
-            <div className="empty">Añade jugadores primero.</div>
-          )}
-          {players.map(p => {
-            const row = byPlayer.get(p.id);
-            const signed = !!row?.signed_up;
-            const played = !!row?.played;
-            const paid = (row?.paid_cents ?? 0) > 0;
-            const outcome = outcomeOf(p.id);
-            return (
-              <div key={p.id} className={`row ${signed ? '' : 'out'}`}>
-                <span className="name">
-                  {p.name}
-                  {outcome === 'mercy' && (
-                    <>
-                      {' '}
-                      <span className="tag mercy">mercy</span>
-                    </>
-                  )}
-                  {outcome === 'demoted' && (
-                    <>
-                      {' '}
-                      <span className="tag demoted">fuera</span>
-                    </>
-                  )}
-                  {played && !paid && (
-                    <>
-                      {' '}
-                      <span className="tag debt">debe</span>
-                    </>
-                  )}
-                </span>
-                <div className="chips">
-                  <button
-                    className="chip signed"
-                    data-on={signed}
-                    disabled={busy}
-                    onClick={() => mutate(p.id, { signed_up: !signed })}
-                    title="Se apunta a este partido"
-                  >
-                    apunta
-                  </button>
-                  <button
-                    className={`chip ${paid ? 'paid' : played ? 'debt' : ''}`}
-                    data-on={played}
-                    disabled={busy}
-                    onClick={() =>
-                      mutate(
-                        p.id,
-                        played && paid
-                          ? { played: false, paid_cents: 0 }
-                          : played
-                            ? { paid_cents: perHead }
-                            : { signed_up: true, played: true }
-                      )
-                    }
-                    title="Sin jugar → jugó (debe) → pagó"
-                  >
-                    {paid ? `${euros(perHead)} €` : played ? 'debe' : 'jugó'}
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {gameId && !recordedAfterTheFact && (
-        <div className="card">
-          <h2>Convocatoria</h2>
-          {convocatoriaError && (
-            <div className="err" role="alert">
-              {convocatoriaError}
-              {convocatoriaError.startsWith('Falta la antigüedad') &&
-                '. Confírmala en «Lista de apuntados».'}
-            </div>
-          )}
-          <div className="actions">
-            <button
-              className="btn"
-              disabled={busy || !signedCount}
-              onClick={async () => {
-                try {
-                  setPreview(await api.preview(gameId));
-                  setConvocatoriaError(null);
-                } catch (e) {
-                  setConvocatoriaError((e as Error).message);
-                }
-              }}
-            >
-              Simular
-            </button>
-            <button
-              className="btn primary"
-              disabled={busy || !signedCount}
-              onClick={async () => {
-                if (!confirm('Guardar la convocatoria?')) return;
-                try {
-                  setPreview(await api.commit(gameId));
-                  await load();
-                  setConvocatoriaError(null);
-                } catch (e) {
-                  setConvocatoriaError((e as Error).message);
-                }
-              }}
-            >
-              Confirmar
-            </button>
-          </div>
-
-          {(preview ?? detail?.convocatoria) && (
-            <ConvocatoriaList
-              slots={season.slots}
-              rows={
-                preview
-                  ? preview.entries.map(e => ({ ...e, id: e.playerId }))
-                  : detail!.convocatoria!.entries.map(e => ({
-                      id: e.player_id,
-                      name: e.name,
-                      points: e.points,
-                      position: e.position,
-                      outcome: e.outcome,
-                      waitCounter: e.wait_counter,
-                      playing: !!e.playing,
-                    }))
-              }
-            />
-          )}
-        </div>
       )}
     </>
   );
 }
 
-function ConvocatoriaList({
-  rows,
-  slots,
+/** The part of the screen that depends on the game's state. */
+function GameBody({
+  detail,
+  gameLabel,
+  players,
+  busy,
+  reload,
+  report,
+  onMove,
+  onEnrolled,
 }: {
-  slots: number;
-  rows: Array<{
-    id: number;
-    name: string;
-    points: number;
-    position: number;
-    outcome: string;
-    waitCounter: number;
-    playing: boolean;
-  }>;
+  detail: GameDetail;
+  gameLabel: string;
+  players: Pick<Player, 'id' | 'name'>[];
+  busy: boolean;
+  reload: () => Promise<void>;
+  report: (message: string | null) => void;
+  onMove: Parameters<typeof LineView>[0]['onMove'];
+  onEnrolled: () => void;
 }) {
-  if (!rows.length) return <div className="empty">Nadie apuntado.</div>;
-  return (
-    <>
-      {rows.map(e => (
-        <div
-          key={e.id}
-          className={[
-            'row',
-            e.playing ? '' : 'out',
-            e.outcome === 'mercy' ? 'mercy' : '',
-            e.outcome === 'demoted' ? 'demoted' : '',
-            e.position === slots ? 'cut' : '',
-          ].join(' ')}
-        >
-          <span className="pos">{e.position}</span>
-          <span className="name">
-            {e.name}
-            {e.outcome === 'mercy' && (
-              <>
-                {' '}
-                <span className="tag mercy">mercy</span>
-              </>
-            )}
-            {e.outcome === 'demoted' && (
-              <>
-                {' '}
-                <span className="tag demoted">degradado</span>
-              </>
-            )}
-          </span>
-          {e.waitCounter > 0 && (
-            <span className="pts" title="Partidos esperando">
-              ⏳{e.waitCounter}
-            </span>
-          )}
-          <span className="pts">{e.points.toFixed(2)}</span>
-        </div>
-      ))}
-    </>
-  );
+  const table = useMemo(() => buildRows(detail), [detail]);
+  const candidates = {
+    gameId: detail.game.id,
+    seasonId: detail.game.season_id,
+    gameLabel,
+    players,
+    onChanged: () => void reload(),
+    onEnrolled,
+  };
+
+  if (table.readOnly) return <ReadOnlyView table={table} />;
+  switch (table.state) {
+    case 'open':
+      return <OpenView table={table} {...candidates} />;
+    case 'convocatoria_created':
+    case 'convocatoria_confirmed':
+      return (
+        <LineView table={table} busy={busy} onMove={onMove} {...candidates} />
+      );
+    case 'played':
+      return (
+        <PlayedView
+          detail={detail}
+          table={table}
+          players={players}
+          reload={reload}
+          report={report}
+        />
+      );
+  }
 }

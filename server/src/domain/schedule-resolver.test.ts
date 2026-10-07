@@ -34,21 +34,12 @@ describe('ScheduleResolver', () => {
 
     it('keeps resolving earlier dates against the old row', () => {
       expect(resolver.nextOccurrenceOnOrAfter('2026-02-20')).toBe('2026-02-23');
-      expect(resolver.cutoffFor('2026-02-23')).toBe('2026-02-23T23:00');
     });
 
     it('resolves dates from the change onwards against the new row', () => {
       expect(resolver.nextOccurrenceOnOrAfter('2026-03-04')).toBe('2026-03-04');
       expect(resolver.nextOccurrenceOnOrAfter('2026-03-05')).toBe('2026-03-11');
-      expect(resolver.cutoffFor('2026-03-04')).toBe('2026-03-04T22:00');
     });
-  });
-
-  it('rolls the cutoff into the next day for a late kickoff', () => {
-    const late = new ScheduleResolver([
-      { weekday: 1, kickoff_time: '23:30', effective_from: '2026-01-05' },
-    ]);
-    expect(late.cutoffFor('2026-01-05')).toBe('2026-01-06T00:30');
   });
 
   it('refuses a date before any schedule exists', () => {

@@ -20,6 +20,27 @@ ocupan el resto por orden de llegada; si no caben, se ordena por puntos,
 cogiendo los 14 primeros y luego aplicando la mercy rule. Es una predicción: no
 dice quién jugó de verdad (eso es la [convocatoria final](#convocatoria-final)).
 
+## Estados de un partido
+
+Abierto, Convocatoria creada, Convocatoria confirmada, Jugado y Cancelado.
+
+- **Abierto**: se apuntan candidatos y aún no hay convocatoria.
+- **Convocatoria creada**: hay una selección guardada, provisional.
+- **Convocatoria confirmada**: el organizador la da por buena; es la que se
+  marca como jugada.
+- **Jugado**: el partido se jugó; se puede reabrir.
+- **Cancelado**: no se juega. Recuerda el estado en que estaba y deshacer la
+  cancelación vuelve a él.
+
+El orden y lo que permite cada estado están en
+[`ciclo-del-partido.md`](ciclo-del-partido.md).
+
+## Cambiado a mano
+
+Una fila de la convocatoria cuyo estado actual (dentro o fuera de los 14)
+difiere de lo que eligió el algoritmo, porque el organizador la corrigió. El
+resultado original del algoritmo se conserva.
+
 ## Convocatoria final
 
 Lo que ocurrió de verdad en el partido: la lista pegada después del partido, con
@@ -31,8 +52,8 @@ reescribe nunca.
 
 ## Claros y Oscuros
 
-Los dos equipos del partido, tal como encabezan la lista final (`Claros` y
-`Oscuros`, en cualquier orden). Solo se guardan para mostrarlos: no influyen en
+Los dos equipos del partido, tal como encabezan la lista de equipos que se pega
+después de jugar (`Claros` y `Oscuros`, en cualquier orden). Solo se guardan para mostrarlos: no influyen en
 puntos, selección ni pagos.
 
 ## Los 14
@@ -75,6 +96,14 @@ anotación no cambia nada y entra como cualquier otro.
 Acompañante sin nombre, escrito como `Álvaro +1`. No es un jugador registrado:
 solo existe como plaza ligada a quien lo trae (quien sí queda apuntado). Compite
 por orden de llegada igual que un invitado nombrado.
+
+## Deuda
+
+Una **parte** (4 € por cabeza) que queda por pagar de un partido jugado. Tiene un
+**titular**, que responde de ella, y un **beneficiario**, de quien es la parte:
+el anfitrión responde por sus `+1` y por los invitados con nombre. Cualquiera de
+los dos puede pagarla y el pago guarda quién lo hizo. Al pagarse deja de ser
+deuda y pasa a ser un pago; la deuda de un titular cuenta cada parte una sola vez.
 
 ## Marcas de la hoja `Pagos`
 

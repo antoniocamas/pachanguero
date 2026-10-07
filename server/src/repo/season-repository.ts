@@ -52,6 +52,11 @@ export class SeasonRepository {
       .get({ on: asOf }) as SeasonRow | undefined;
   }
 
+  /** The name of the season `asOf` falls in, when it has not been created yet. */
+  missing(asOf: string): string | null {
+    return this.current(asOf) ? null : this.calendar.nameFor(asOf);
+  }
+
   /** Bounds follow from the name's leading year ('2024/2025' starts in 2024). */
   private boundsFromName(name: string): { startsOn: string; endsOn: string } {
     const prefix = name.slice(0, 4);
@@ -116,6 +121,12 @@ export class SeasonRepository {
       this.conn.prepare(`UPDATE seasons SET ${set} WHERE id = @id`).run(values);
     }
     return this.get(id);
+  }
+
+  /** The standard share of one player for a game of the season, in integer cents. */
+  shareCents(seasonId: number): number {
+    const season = this.get(seasonId)!;
+    return Math.round(season.price_cents / season.slots);
   }
 
   rulesOf(season: SeasonRow): SeasonRules {

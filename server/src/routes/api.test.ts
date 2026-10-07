@@ -12,13 +12,16 @@ describe('API', () => {
   let seasons: typeof import('../repo/index.js').seasons;
   let aliases: typeof import('../repo/index.js').aliases;
   let games: typeof import('../repo/index.js').games;
+  let players: typeof import('../repo/index.js').players;
+  let participations: typeof import('../repo/index.js').participations;
 
   beforeAll(async () => {
     // The composition root opens the DB at import time, so point it at a
     // throwaway file first.
     dir = mkdtempSync(join(tmpdir(), 'pachanguero-api-'));
     process.env.PACHANGUERO_DB = join(dir, 'test.db');
-    ({ seasons, aliases, games } = await import('../repo/index.js'));
+    ({ seasons, aliases, games, players, participations } =
+      await import('../repo/index.js'));
     const { api } = await import('./api.js');
     const app = express();
     app.use(express.json());
@@ -41,6 +44,15 @@ describe('API', () => {
     expect(await res.json()).toBeNull();
   });
 
+  it("GET /seasons/missing names today's season until it exists", async () => {
+    const year = new Date().getFullYear();
+    const startYear = new Date().getMonth() + 1 >= 9 ? year : year - 1;
+    const before = await fetch(`${base}/seasons/missing`);
+    expect(await before.json()).toEqual({
+      name: `${startYear}/${startYear + 1}`,
+    });
+  });
+
   it("GET /seasons/current returns the season whose Sept-Aug range contains today's date", async () => {
     const year = new Date().getFullYear();
     const month = new Date().getMonth() + 1;
@@ -52,6 +64,7 @@ describe('API', () => {
     const body = (await res.json()) as { name: string; starts_on: string };
     expect(body.name).toBe(`${startYear}/${startYear + 1}`);
     expect(body.starts_on).toBe(`${startYear}-09-01`);
+    expect(await (await fetch(`${base}/seasons/missing`)).json()).toBeNull();
   });
 
   describe('seniority capture', () => {
@@ -263,23 +276,6 @@ describe('API', () => {
     });
   });
 
-  describe('GET /games/final-list-target', () => {
-    it('returns { game: null } when no game is outstanding', async () => {
-      const res = await fetch(`${base}/games/final-list-target`);
-      expect(res.status).toBe(200);
-      expect(await res.json()).toEqual({ game: null });
-    });
-
-    it('returns the latest outstanding past game', async () => {
-      const season = seasons.create({ name: '2005/2006' });
-      games.create(season.id, '2005-10-03');
-      games.create(season.id, '2005-10-10');
-      const res = await fetch(`${base}/games/final-list-target`);
-      const body = (await res.json()) as { game: { played_on: string } };
-      expect(body.game.played_on).toBe('2005-10-10');
-    });
-  });
-
   describe('candidate list', () => {
     type Rows = {
       rows: {
@@ -416,6 +412,43 @@ describe('API', () => {
       });
     });
 
+    it('keeps a name registered with its host as that host guest through a save', async () => {
+      const season = seasons.create({ name: '1975/1976' });
+      const game = games.create(season.id, '1975-10-08');
+      const host = await (
+        await post(`/seasons/${season.id}/players`, {
+          name: 'Anfitriona',
+          seasons: 1,
+        })
+      ).json();
+      const { rows } = (await (
+        await post(`/games/${game.id}/candidates/preview`, {
+          paste: 'Invitada (Anfitriona)',
+        })
+      ).json()) as Rows;
+      await post(`/games/${game.id}/candidates/resolve`, {
+        ...rows[0].entry,
+        action: { type: 'register', name: 'Invitada', introducedBy: host.id },
+      });
+
+      await send('PUT', `/games/${game.id}/candidates`, {
+        lines: [
+          { text: 'Anfitriona' },
+          { text: 'Invitada (Anfitriona)', introduced: true },
+        ],
+      });
+
+      const guest = (await (
+        await fetch(`${base}/games/${game.id}/candidates`)
+      ).json()) as {
+        rows: { candidate: { guest: string | null; hostPlayerId: number } }[];
+      };
+      expect(guest.rows[1].candidate).toMatchObject({
+        guest: 'named',
+        hostPlayerId: host.id,
+      });
+    });
+
     it('rejects malformed lines and an unknown game', async () => {
       const season = seasons.create({ name: '1972/1973' });
       const game = games.create(season.id, '1972-10-09');
@@ -438,61 +471,6 @@ describe('API', () => {
         (await send('PUT', '/games/99999/candidates', { lines: [] })).status
       ).toBe(400);
       const res = await post('/games/99999/candidates/resolve', {
-        line: { position: 1, kind: 'plain', name: 'X' },
-        action: { type: 'register', name: 'X' },
-      });
-      expect(res.status).toBe(400);
-    });
-  });
-
-  describe('final list paste', () => {
-    const post = (path: string, body: unknown) =>
-      fetch(`${base}${path}`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-
-    it('pastes a final list, then settles an unknown name', async () => {
-      const season = seasons.create({ name: '2001/2002' });
-      const game = games.create(season.id, '2001-10-01');
-      await post(`/seasons/${season.id}/players`, { name: 'Ana', seasons: 1 });
-
-      const pasted = await post('/games/final:paste', {
-        text: 'Claros\n-----\nAna\nOscuros\n-----\nNuevo',
-        gameId: game.id,
-      });
-      expect(pasted.status).toBe(200);
-      const body = (await pasted.json()) as {
-        matched: { name: string; team: string; paidCents: number }[];
-        unresolved: { team: string }[];
-      };
-      expect(body.matched).toMatchObject([
-        { name: 'Ana', team: 'claros', paidCents: 400 },
-      ]);
-      expect(body.unresolved).toMatchObject([{ team: 'oscuros' }]);
-
-      const resolved = await post(`/games/${game.id}/final/resolve`, {
-        ...body.unresolved[0],
-        action: { type: 'register', name: 'Nuevo' },
-      });
-      expect(resolved.status).toBe(200);
-      expect(await resolved.json()).toMatchObject({
-        outcome: 'resolved',
-        participant: { name: 'Nuevo', team: 'oscuros' },
-      });
-      expect(games.get(game.id)?.status).toBe('played');
-    });
-
-    it('rejects a malformed paste and a resolve without a team', async () => {
-      const season = seasons.create({ name: '2000/2001' });
-      const game = games.create(season.id, '2000-10-02');
-      const bad = await post('/games/final:paste', {
-        text: 'Ana\nClaros',
-        gameId: game.id,
-      });
-      expect(bad.status).toBe(400);
-      const res = await post(`/games/${game.id}/final/resolve`, {
         line: { position: 1, kind: 'plain', name: 'X' },
         action: { type: 'register', name: 'X' },
       });
@@ -542,50 +520,508 @@ describe('API', () => {
       expect(res.status).toBe(404);
     });
 
-    it("records a past game at its own season's price and seniority", async () => {
-      const older = seasons.create({ name: '1989/1990' });
+    it("records a past game in its own season, with that season's price", async () => {
+      seasons.create({ name: '1989/1990' });
       const past = seasons.create({ name: '1990/1991' });
       seasons.update(past.id, { price_cents: 8000 });
-      const asReturning = await post(`/seasons/${older.id}/players`, {
-        name: 'Veterano',
-        seasons: 2,
-      });
-      const veteran = (await asReturning.json()) as { id: number };
-      await post(`/seasons/${past.id}/players`, {
-        name: 'Habitual',
-        seasons: 1,
-      });
 
       const created = await post('/games', { played_on: '1990-11-07' });
+      expect(created.status).toBe(201);
       const game = (await created.json()) as { id: number; season_id: number };
       expect(game.season_id).toBe(past.id);
-
-      const pasted = await post('/games/final:paste', {
-        text: 'Claros\nVeterano\nOscuros\nHabitual',
-        gameId: game.id,
-      });
-      const body = (await pasted.json()) as {
-        matched: {
-          name: string;
-          paidCents: number;
-          seniorityPrompt?: boolean;
-          suggested?: number;
-        }[];
-      };
-      // 8000 / 14 slots, this season's price rather than the default 5600.
-      expect(body.matched.map(m => m.paidCents)).toEqual([571, 571]);
-      const byName = Object.fromEntries(body.matched.map(m => [m.name, m]));
-      expect(byName.Veterano).toMatchObject({
-        seniorityPrompt: true,
-        suggested: 3,
-      });
-      expect(byName.Habitual.seniorityPrompt).toBeUndefined();
-      expect(veteran.id).toBeGreaterThan(0);
 
       // Nothing was ever selected for it.
       expect(
         await (await fetch(`${base}/games/${game.id}`)).json()
       ).toMatchObject({ convocatoria: null });
+    });
+  });
+
+  describe('game lifecycle', () => {
+    const send = (method: string, path: string, body?: unknown) =>
+      fetch(`${base}${path}`, {
+        method,
+        headers: { 'content-type': 'application/json' },
+        body: body === undefined ? undefined : JSON.stringify(body),
+      });
+    let seasonId: number;
+    let nextDay = 1;
+    const newGame = (status: Parameters<typeof games.setState>[1] = 'open') => {
+      const day = String(nextDay++).padStart(2, '0');
+      const game = games.create(seasonId, `2041-10-${day}`);
+      if (status !== 'open') games.setState(game.id, status);
+      return game.id;
+    };
+
+    beforeAll(() => {
+      seasonId = seasons.create({ name: '2041/2042' }).id;
+    });
+
+    it('GET /games/:id says the state and the next action', async () => {
+      const gameId = newGame('convocatoria_created');
+      const body = await (await send('GET', `/games/${gameId}`)).json();
+      expect(body).toMatchObject({
+        state: 'convocatoria_created',
+        nextAction: 'Confirmar convocatoria',
+      });
+    });
+
+    it('POST /games/:id/state refuses play before the convocatoria is confirmed', async () => {
+      const gameId = newGame();
+      const res = await send('POST', `/games/${gameId}/state`, {
+        action: 'play',
+      });
+      expect(res.status).toBe(400);
+      expect((await res.json()).error).toBe(
+        'Confirma la convocatoria antes de marcar el partido como jugado'
+      );
+      expect(games.get(gameId)?.status).toBe('open');
+    });
+
+    it('play, reopen, cancel and uncancel move the game and remember where it was', async () => {
+      const gameId = newGame('convocatoria_confirmed');
+      const act = async (action: string) =>
+        (await send('POST', `/games/${gameId}/state`, { action })).json();
+      expect((await act('play')).state).toBe('played');
+      expect((await act('reopen')).state).toBe('convocatoria_confirmed');
+      expect((await act('cancel')).state).toBe('cancelled');
+      expect(games.get(gameId)?.cancelled_from).toBe('convocatoria_confirmed');
+      expect((await act('uncancel')).state).toBe('convocatoria_confirmed');
+      expect(games.get(gameId)?.cancelled_from).toBeNull();
+    });
+
+    it('creating and confirming the convocatoria are not state actions', async () => {
+      const gameId = newGame();
+      const res = await send('POST', `/games/${gameId}/state`, {
+        action: 'create',
+      });
+      expect(res.status).toBe(400);
+      expect((await res.json()).error).toBe('Acción no válida');
+    });
+
+    it('PATCH /games/:id changes the plain fields and ignores status', async () => {
+      const gameId = newGame();
+      const res = await send('PATCH', `/games/${gameId}`, {
+        status: 'played',
+        cancelled_from: 'open',
+        label: 'Bis',
+      });
+      expect(await res.json()).toMatchObject({ status: 'open', label: 'Bis' });
+      expect(games.get(gameId)?.cancelled_from).toBeNull();
+    });
+
+    it.each(['played', 'cancelled'] as const)(
+      'a %s game refuses a candidate save and a sign-up change',
+      async status => {
+        const gameId = newGame(status === 'played' ? 'played' : 'open');
+        if (status === 'cancelled') games.setState(gameId, 'cancelled', 'open');
+        const saved = await send('PUT', `/games/${gameId}/candidates`, {
+          lines: [],
+        });
+        expect(saved.status).toBe(400);
+        const put = await send('PUT', `/games/${gameId}/players/1`, {
+          signed_up: true,
+        });
+        expect(put.status).toBe(400);
+        const del = await send('DELETE', `/games/${gameId}/players/1`);
+        expect(del.status).toBe(400);
+        expect((await del.json()).error).toBe(
+          status === 'played'
+            ? 'Reabre el partido para editarlo'
+            : 'El partido está cancelado'
+        );
+      }
+    );
+  });
+  describe('convocatoria', () => {
+    const send = (method: string, path: string, body?: unknown) =>
+      fetch(`${base}${path}`, {
+        method,
+        headers: { 'content-type': 'application/json' },
+        body: body === undefined ? undefined : JSON.stringify(body),
+      });
+    let seasonId: number;
+    let nextDay = 1;
+    /** A game with `count` regulars signed up. */
+    const gameWith = (count: number) => {
+      const day = String(nextDay++).padStart(2, '0');
+      const game = games.create(seasonId, `2043-10-${day}`);
+      const ids = Array.from({ length: count }, (_, i) => {
+        const p = players.add(seasonId, `C${game.id}-${i}`, 1);
+        participations.set(game.id, p.id, { signed_up: true });
+        return p.id;
+      });
+      return { gameId: game.id, ids };
+    };
+    const detail = async (gameId: number) =>
+      (await send('GET', `/games/${gameId}`)).json();
+
+    beforeAll(() => {
+      seasonId = seasons.create({ name: '2043/2044' }).id;
+    });
+
+    it('create stores the convocatoria and moves the game to created; confirm stamps it', async () => {
+      const { gameId } = gameWith(16);
+
+      const created = await send('POST', `/games/${gameId}/convocatoria`, {});
+      expect(created.status).toBe(200);
+      expect(await detail(gameId)).toMatchObject({
+        state: 'convocatoria_created',
+        nextAction: 'Confirmar convocatoria',
+        convocatoria: { confirmed_at: null, source: 'generated' },
+      });
+
+      const confirmed = await send(
+        'POST',
+        `/games/${gameId}/convocatoria/confirm`
+      );
+      expect((await confirmed.json()).confirmed_at).not.toBeNull();
+      expect(await detail(gameId)).toMatchObject({
+        state: 'convocatoria_confirmed',
+        nextAction: 'Marcar como jugado',
+      });
+    });
+
+    it('create refuses with nobody signed up and confirm refuses before creating', async () => {
+      const { gameId } = gameWith(0);
+      const none = await send('POST', `/games/${gameId}/convocatoria`, {});
+      expect(none.status).toBe(400);
+      expect((await none.json()).error).toBe('No hay nadie apuntado');
+      const early = await send('POST', `/games/${gameId}/convocatoria/confirm`);
+      expect((await early.json()).error).toBe(
+        'Crea la convocatoria antes de confirmarla'
+      );
+    });
+
+    it('moves a member by hand, refuses the 15th, and recreating asks before discarding the correction', async () => {
+      const { gameId } = gameWith(16);
+      await send('POST', `/games/${gameId}/convocatoria`, {});
+      type Entry = {
+        player_id: number;
+        playing: number;
+        changed_by_hand: boolean;
+      };
+      const entries = async (): Promise<Entry[]> =>
+        (await detail(gameId)).convocatoria.entries;
+      const reserve = (await entries()).find(e => e.playing === 0)!.player_id;
+      const member = (await entries()).find(e => e.playing === 1)!.player_id;
+      const move = (playerId: number, playing: boolean) =>
+        send('PUT', `/games/${gameId}/convocatoria/members`, {
+          member: { playerId },
+          playing,
+        });
+
+      const full = await move(reserve, true);
+      expect(full.status).toBe(400);
+      expect((await full.json()).error).toBe('No quedan plazas');
+
+      expect((await move(member, false)).status).toBe(200);
+      expect((await move(reserve, true)).status).toBe(200);
+      expect((await entries()).filter(e => e.changed_by_hand)).toHaveLength(2);
+
+      const again = await send('POST', `/games/${gameId}/convocatoria`, {});
+      expect((await again.json()).error).toBe('Se perderán tus correcciones');
+      const forced = await send('POST', `/games/${gameId}/convocatoria`, {
+        discardEdits: true,
+      });
+      expect(forced.status).toBe(200);
+    });
+
+    it('moves an anonymous plus-one by its host and ordinal', async () => {
+      const { gameId, ids } = gameWith(13);
+      const { guests } = await import('../repo/index.js').then(m => ({
+        guests: m.guestCandidates,
+      }));
+      guests.put(gameId, {
+        position: 14,
+        player_id: null,
+        host_player_id: ids[0],
+      });
+      await send('POST', `/games/${gameId}/convocatoria`, {});
+      const out = await send('PUT', `/games/${gameId}/convocatoria/members`, {
+        member: { hostPlayerId: ids[0], ordinal: 1 },
+        playing: false,
+      });
+      expect(out.status).toBe(200);
+      const guest = (await detail(gameId)).convocatoria.entries.find(
+        (e: { player_id: number | null }) => e.player_id === null
+      );
+      expect(guest).toMatchObject({
+        playing: 0,
+        name: expect.stringContaining('Invitado de'),
+      });
+    });
+
+    it('refuses an unreadable member or playing value', async () => {
+      const { gameId } = gameWith(2);
+      await send('POST', `/games/${gameId}/convocatoria`, {});
+      const noMember = await send(
+        'PUT',
+        `/games/${gameId}/convocatoria/members`,
+        {
+          playing: true,
+        }
+      );
+      expect(noMember.status).toBe(400);
+      const noFlag = await send(
+        'PUT',
+        `/games/${gameId}/convocatoria/members`,
+        {
+          member: { playerId: 1 },
+        }
+      );
+      expect(noFlag.status).toBe(400);
+    });
+
+    it('refuses to sign out someone who is playing, by PUT and by DELETE', async () => {
+      const { gameId, ids } = gameWith(3);
+      await send('POST', `/games/${gameId}/convocatoria`, {});
+      const put = await send('PUT', `/games/${gameId}/players/${ids[0]}`, {
+        signed_up: false,
+      });
+      expect((await put.json()).error).toBe(
+        'Quítalo primero de la convocatoria'
+      );
+      const del = await send('DELETE', `/games/${gameId}/players/${ids[0]}`);
+      expect((await del.json()).error).toBe(
+        'Quítalo primero de la convocatoria'
+      );
+      expect(
+        participations.list(gameId).find(p => p.player_id === ids[0])?.signed_up
+      ).toBe(1);
+    });
+
+    it('a game dated in the past walks open to played with no special case', async () => {
+      const created = await send('POST', '/games', { played_on: '2043-11-12' });
+      const game = (await created.json()) as { id: number };
+      const ids = Array.from({ length: 14 }, (_, i) => {
+        const p = players.add(seasonId, `Past${i}`, 1);
+        participations.set(game.id, p.id, { signed_up: true });
+        return p.id;
+      });
+      void ids;
+      await send('POST', `/games/${game.id}/convocatoria`, {});
+      await send('POST', `/games/${game.id}/convocatoria/confirm`);
+      const played = await send('POST', `/games/${game.id}/state`, {
+        action: 'play',
+      });
+      expect((await played.json()).state).toBe('played');
+    });
+  });
+
+  describe('payments', () => {
+    const send = (method: string, path: string, body?: unknown) =>
+      fetch(`${base}${path}`, {
+        method,
+        headers: { 'content-type': 'application/json' },
+        body: body === undefined ? undefined : JSON.stringify(body),
+      });
+    let gameId: number;
+    let ana: number;
+    let bea: number;
+
+    beforeAll(async () => {
+      const seasonId = seasons.create({ name: '2046/2047' }).id;
+      gameId = games.create(seasonId, '2046-10-07').id;
+      [ana, bea] = ['Ana', 'Bea'].map(name => {
+        const p = players.add(seasonId, `Pay${name}`, 1);
+        participations.set(gameId, p.id, { signed_up: true });
+        return p.id;
+      });
+      await send('POST', `/games/${gameId}/convocatoria`, {});
+      await send('POST', `/games/${gameId}/convocatoria/confirm`);
+    });
+
+    it('refuses payment before the game is played', async () => {
+      const res = await send('POST', `/games/${gameId}/payments`, {
+        shares: [{ playerId: ana }],
+        payerPlayerId: ana,
+      });
+      expect(res.status).toBe(400);
+      expect((await res.json()).error).toContain('jugado');
+    });
+
+    it('bills on play, settles a share and puts it back on undo', async () => {
+      await send('POST', `/games/${gameId}/state`, { action: 'play' });
+      const billed = await (await send('GET', `/games/${gameId}`)).json();
+      expect(billed.debts).toHaveLength(2);
+
+      const paid = await send('POST', `/games/${gameId}/payments`, {
+        shares: [{ playerId: ana }],
+        payerPlayerId: ana,
+        paidOn: '2046-10-08',
+      });
+      expect(paid.status).toBe(201);
+      const afterPay = await paid.json();
+      expect(afterPay.debts).toHaveLength(1);
+      expect(afterPay.payments[0]).toMatchObject({
+        beneficiary_player_id: ana,
+        amount_cents: 400,
+        paid_on: '2046-10-08',
+      });
+
+      const undone = await send(
+        'DELETE',
+        `/games/${gameId}/payments/${afterPay.payments[0].id}`
+      );
+      expect((await undone.json()).debts).toHaveLength(2);
+    });
+
+    it('refuses a share nobody can name and a payer who does not owe it', async () => {
+      const unnamed = await send('POST', `/games/${gameId}/payments`, {
+        shares: [{}],
+        payerPlayerId: ana,
+      });
+      expect(unnamed.status).toBe(400);
+
+      const wrongPayer = await send('POST', `/games/${gameId}/payments`, {
+        shares: [{ playerId: ana }],
+        payerPlayerId: bea,
+      });
+      expect((await wrongPayer.json()).error).toContain('Solo puede pagar');
+    });
+  });
+
+  describe('teams', () => {
+    const send = (method: string, path: string, body?: unknown) =>
+      fetch(`${base}${path}`, {
+        method,
+        headers: { 'content-type': 'application/json' },
+        body: body === undefined ? undefined : JSON.stringify(body),
+      });
+    let gameId: number;
+    let names: string[];
+
+    beforeAll(async () => {
+      const seasonId = seasons.create({ name: '2047/2048' }).id;
+      gameId = games.create(seasonId, '2047-10-07').id;
+      names = ['Uno', 'Dos'].map(name => {
+        const p = players.add(seasonId, `Team${name}`, 1);
+        participations.set(gameId, p.id, { signed_up: true });
+        return p.name;
+      });
+      await send('POST', `/games/${gameId}/convocatoria`, {});
+      await send('POST', `/games/${gameId}/convocatoria/confirm`);
+    });
+
+    const paste = () =>
+      send('POST', `/games/${gameId}/teams/paste`, {
+        text: `Claros\n-----\n${names[0]}\nOscuros\n-----\n${names[1]}`,
+      });
+
+    it('refuses a paste before the game is played', async () => {
+      const res = await paste();
+      expect(res.status).toBe(400);
+      expect((await res.json()).error).toBe(
+        'Marca el partido como jugado antes de pegar los equipos'
+      );
+    });
+
+    it('a paste sets only the team, and GET and PUT read and replace it', async () => {
+      await send('POST', `/games/${gameId}/state`, { action: 'play' });
+      const before = (await participations.list(gameId)).map(
+        ({ team: _team, ...rest }) => rest
+      );
+
+      const res = await paste();
+      expect(res.status).toBe(200);
+      expect((await res.json()).matched).toHaveLength(2);
+      expect(
+        participations.list(gameId).map(({ team: _team, ...rest }) => rest)
+      ).toEqual(before);
+
+      const teams = await (await send('GET', `/games/${gameId}/teams`)).json();
+      expect(teams.map((t: { team: string }) => t.team).sort()).toEqual([
+        'claros',
+        'oscuros',
+      ]);
+
+      const swapped = teams.map((t: { playerId: number; team: string }) => ({
+        playerId: t.playerId,
+        team: t.team === 'claros' ? 'oscuros' : 'claros',
+      }));
+      const put = await send('PUT', `/games/${gameId}/teams`, {
+        assignments: swapped,
+      });
+      expect(await put.json()).toEqual(swapped);
+    });
+  });
+
+  describe('GET /games/:id for the game screen', () => {
+    const send = (method: string, path: string, body?: unknown) =>
+      fetch(`${base}${path}`, {
+        method,
+        headers: { 'content-type': 'application/json' },
+        body: body === undefined ? undefined : JSON.stringify(body),
+      });
+    const view = async () => (await send('GET', `/games/${gameId}`)).json();
+    let gameId: number;
+    let ids: number[];
+
+    beforeAll(async () => {
+      const seasonId = seasons.create({ name: '2048/2049' }).id;
+      gameId = games.create(seasonId, '2048-10-07').id;
+      ids = ['Ana', 'Bea', 'Cai'].map(name => {
+        const p = players.add(seasonId, `View${name}`, 1);
+        return p.id;
+      });
+    });
+
+    it('in an open game gives the arrival order of the saved list and no convocatoria', async () => {
+      await send('PUT', `/games/${gameId}/candidates`, {
+        lines: [
+          { text: 'ViewCai' },
+          { text: 'ViewAna' },
+          { text: 'ViewAna +1' },
+        ],
+      });
+
+      const open = await view();
+
+      expect(open.state).toBe('open');
+      expect(open.convocatoria).toBeNull();
+      expect(
+        open.arrivals.map((a: { position: number }) => a.position)
+      ).toEqual([1, 2, 3]);
+      expect(open.arrivals[0]).toMatchObject({ playerId: ids[2] });
+      expect(open.arrivals[2]).toMatchObject({
+        playerId: null,
+        hostPlayerId: ids[0],
+        guest: 'anonymous',
+      });
+      expect(Object.keys(open.points).map(Number).sort()).toEqual(
+        [...ids].sort()
+      );
+    });
+
+    it('walks created, confirmed and played, each saying its state and next action', async () => {
+      await send('POST', `/games/${gameId}/convocatoria`, {});
+      const created = await view();
+      expect(created.state).toBe('convocatoria_created');
+      expect(created.convocatoria.entries).toHaveLength(3);
+      expect(created.nextAction).toEqual(expect.any(String));
+
+      await send('POST', `/games/${gameId}/convocatoria/confirm`);
+      expect((await view()).state).toBe('convocatoria_confirmed');
+
+      await send('POST', `/games/${gameId}/state`, { action: 'play' });
+      const played = await view();
+      expect(played.state).toBe('played');
+      expect(played.debts).toHaveLength(3);
+      expect(played.payments).toEqual([]);
+    });
+
+    it('in a cancelled game says where it was cancelled from', async () => {
+      await send('POST', `/games/${gameId}/state`, { action: 'cancel' });
+
+      const cancelled = await view();
+
+      expect(cancelled.state).toBe('cancelled');
+      expect(cancelled.game.cancelled_from).toBe('played');
+    });
+
+    it('answers 404 for a game that does not exist', async () => {
+      expect((await send('GET', '/games/999999')).status).toBe(404);
     });
   });
 });

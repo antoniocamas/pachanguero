@@ -33,9 +33,21 @@ datos** de `Pagos`. En el sistema nuevo es una tabla de inscripciones explícita
 > habituales más los invitados (nombrados y anónimos). Mientras los habituales
 > quepan en las plazas, todos entran y los invitados ocupan el resto por orden
 > de llegada; si los habituales solos desbordan las plazas, todos compiten por
-> puntos (un invitado anónimo entra con 0 puntos y nunca se guarda). Este
-> documento describe solo la **selección**, no lo que pasó en el campo: quién
-> jugó y quién pagó lo fija la lista final del partido, no la convocatoria.
+> puntos (un invitado anónimo entra con 0 puntos y ocupa plaza como cualquiera;
+> se identifica por su anfitrión y su número de orden). Este documento describe
+> la **selección**, no lo que pasó en el campo: quién jugó se deduce de la
+> convocatoria al marcar el partido como jugado, y los pagos se registran aparte.
+
+### Correcciones a mano
+
+La convocatoria guardada se puede corregir sin recalcularla: un jugador (o un
+`+1`) entra o sale de las 14, nunca por encima del tope de plazas
+(«No quedan plazas»), y solo se mueven personas apuntadas. Lo que el algoritmo
+eligió (`outcome`) y sus puntos no se tocan; «cambiado a mano» es simplemente
+que estar dentro o fuera difiere de lo elegido. Si alguien se apunta después de
+crearla, aparece debajo de la línea; si se borra a alguien apuntado, desaparece
+su fila, salvo que esté dentro de las 14: antes hay que sacarlo de la
+convocatoria. Volver a crearla recalcula y avisa si se perderían correcciones.
 
 ### 2. Ordenar por puntos, descendente
 

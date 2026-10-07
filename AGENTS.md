@@ -10,7 +10,7 @@ Pachanguero replaces the `Futbol_Miercoles` spreadsheet + Apps Script for a Wedn
 npm install          # workspaces: server + web
 npm run dev          # API on :8787 (tsx watch), web on :5173 (vite, proxies /api)
 npm run seed         # import the 2024/2025 season from data/seed/*.csv (-- --reset to wipe first)
-npm test             # domain/route tests (vitest, server workspace)
+npm test             # domain/route tests (vitest, server workspace) and the web lib/ tests (vitest, web workspace)
 npm run test:e2e     # full-stack browser tests (playwright, e2e workspace); specs share one database, see docs/test-strategy.md
 npm run build        # tsc for both workspaces; also copies schema.sql into server/dist/db
 npm start            # production: one port, Express serves the SPA + API
@@ -61,33 +61,42 @@ npm workspaces, both ESM (TS imports use `.js` extensions). Data flow is strictl
 ```
 server/src/domain/    classes: PointsCalculator, SeniorityCurve, ConvocatoriaBuilder,
                       ExclusionHistory, SeasonCalendar, ScheduleResolver, NameMatcher,
-                      CandidateLineParser, FinalListParser, GuestSlotAllocator, ...
+                      CandidateLineParser, TeamListParser, GameLifecycle, PlayedDerivation,
+                      DebtLedger, GuestSlotAllocator, ...
                       (+ all tests). Knows nothing of SQLite or HTTP. THE rules live here.
 server/src/db/        better-sqlite3 singleton; schema.sql runs idempotently on open
-                      (no migration system — edit schema.sql directly; an edit to an existing
-                      table needs the local DB file deleted or `npm run seed -- --reset`)
+                      (no migration system — edit schema.sql directly; a changed table
+                      definition needs the local DB file and its -wal/-shm deleted, then
+                      `npm run seed`; `--reset` only removes the imported season's rows)
 server/src/repo/      repository/service classes; converts snake_case rows to domain
                       types; server/src/repo/index.ts is the composition root.
                       Services orchestrate one use case each: CandidateResolutionService,
-                      ConvocatoriaService, FinalListResolutionService, ...
+                      ConvocatoriaService/ConvocatoriaEditService, GameLifecycleService,
+                      PaymentService, TeamAssignmentService/TeamPasteService,
+                      GameViewService, ConvocatoriaHistoryConverter, ...
 server/src/routes/    Express router; route() wrapper turns throws into 400s
 server/src/index.ts   mounts /api, then serves web/dist if it exists (single port for the Pi)
-web/src/              React 18 + Vite, no router/state lib: App.tsx holds three tabs
+web/src/              React 19 + Vite, no router/state lib: App.tsx holds three tabs
                       (GameDay, Standings, Manage) and refreshes by refetching everything.
-                      pages/ are the tabs, components/ the pieces (paste cards, resolve
-                      control), hooks/ the data access behind them
+                      GameDay is the lifecycle screen: GameBar keeps the state, counters and
+                      next step in view, and one PlayersTable follows the game's state
+                      (OpenView, LineView, PlayedView, ReadOnlyView). pages/ are the tabs,
+                      components/ the pieces, hooks/ the data access and actions behind them,
+                      lib/ the pure calculations (rows, columns, money, payment cell) with
+                      their vitest tests. The drag library is imported only in MemberDnd.tsx.
 ```
 
 ## Domain invariants
 
 - **Points = paid games + scoring exclusions + seniority.** Attendance counts _payments_, not appearances. Seniority is a log curve (`seniority.ts`), not a table. Only exclusions of kind `points` or `demoted` score; a `mercy` seat does not.
 - **Default behaviour reproduces the legacy Apps Script, including its bugs.** Notably, with `mercy_resets_counter = 0` a mercy seat _subtracts_ from the wait counter and it can go negative — this is deliberate; tests assert it. The flag switches to the organiser's stated rule (reset to zero). Any change away from legacy behaviour must be opt-in per season, never a default. Background: `docs/domain-model/legacy-script-review.md`.
-- **The legacy `*` meant three things; they are separate columns now**: `signed_up`, `played`, `paid_cents` with `paid_on` (when the money _arrived_, not the game date). Never collapse them.
+- **The legacy `*` meant three things; they are separate columns now**: `signed_up`, `played`, `paid_cents` with `paid_on` (when the money _arrived_, not the game date). Never collapse them. Payment is a debt row (`share_debts`, one per share, with a holder who answers for it and a beneficiary whose share it is) until settled and a `payments` row (who paid, how much, when) after; a share is in one table or the other, never both. `paid_cents` is the player's own share, settled by whoever paid it. `BillingEffect` creates the debts when a game is played and `PaymentService` is the writer that settles and undoes them.
 - **The season is derived, never picked.** A season runs 1 Sept–31 Aug and `seasons.starts_on`/`ends_on` follow from its name (`SeasonCalendar`); "current" is the season containing today, a game's season is the one containing its date (`SeasonRepository.current(asOf)`). There is no active-season flag. Players have no per-season sign-up step: a `season_players` row appears on first appearance, with seniority confirmed then.
-- **A game goes candidates → convocatoria → final list, and only the final list records what happened.** `CandidateResolutionService` writes `signed_up` and `guest_candidates`, on save only; `ConvocatoriaService` writes the frozen selection and exclusion rows but **never `played`/payment**; `FinalListResolutionService` is the sole writer of `played`, `team`, `paid_cents` and `guests`, and recomputes exclusions from the frozen outcome each time, so a point is retracted when someone played and restored if they did not. Overview in `docs/domain-model/ciclo-del-partido.md`.
+- **A game has five states, and only `GameLifecycle` says which moves are legal.** `open`, `convocatoria_created`, `convocatoria_confirmed`, `played`, `cancelled` (UI: Abierto, Convocatoria creada, Convocatoria confirmada, Jugado, Cancelado). Cancelling remembers the state it left in `cancelled_from` and undoing returns there. A state changes only through `GameLifecycleService.perform` (or `GameRepository.setState` inside it); what each state lets you edit is a capability (`edit_apuntados`, `edit_convocatoria`, `pay`, `teams`) the services check. `docs/domain-model/ciclo-del-partido.md` has the table.
+- **A game goes candidates → convocatoria → played, and the convocatoria is what says who played.** `CandidateResolutionService` writes `signed_up` and `guest_candidates`, on save only; `ConvocatoriaService` stores the selection (and writes **no** exclusion rows, nor `played`/payment); `PlayedOutcomeEffect` (run by `GameLifecycleService` when a game enters or leaves `played`) is the sole writer of `played` and of exclusion rows, derived from the convocatoria by `PlayedDerivation`, so a point is retracted on reopen or cancel and restored on playing again; `BillingEffect` and `PaymentService` own the debts and payments, and `TeamPasteService` records only `team`. Overview in `docs/domain-model/ciclo-del-partido.md`.
 - **Pasted names are never guessed**: an unmatched or ambiguous one is kept only as line text in `candidate_lines` and stores no player or sign-up.
 - **Weekly schedule rows are versioned (create-only)**, so earlier weeks keep resolving as they did.
-- **Convocatorias are frozen**: running one stores `rules_json` plus every entry with the points it saw, so past selections stay auditable after late payments change current standings.
+- **A convocatoria is stored when created and stamped when confirmed**: it keeps `rules_json` plus every entry with the points it saw and the outcome the selection chose, so past selections stay auditable after late payments change current standings. Confirming only stamps `confirmed_at`; recreating recomputes and asks before discarding hand corrections. Hand corrections (`ConvocatoriaEditService`) change only an entry's `playing`, never its `outcome`, points or position; anonymous plus-ones are entries too, named by host and ordinal. Seeded played games get a confirmed convocatoria with `source = 'history'` (`ConvocatoriaHistoryConverter`).
 - **Rules are per-season** (columns on `seasons`, editable from Ajustes), so history is never rewritten when rules change.
 - **Money is integer cents** (`price_cents`, `paid_cents`).
 - Ties in the convocatoria sort break by name (`es` locale) so results are deterministic.

@@ -34,11 +34,11 @@ Creating the convocatoria stores it; confirming stamps it; recreating recomputes
 
 ## Definition of Done
 
-- [ ] `ConvocatoriaService.commit` no longer exists (find-references).
-- [ ] `npm run seed -- --reset` on a temporary database prints the conversion report with no game above 14.
-- [ ] **Graduation:** UC-003-03-S1…S4 and UC-003-04-S1…S7, hard requirement → the tests above (the drag gesture of UC-003-04-S1 is task 08); UC-003-09-S1…S5, S8 hard requirement → converter and route tests; UC-003-09-S6 `document` → the report text in the seed output, described in `docs/domain-model/ciclo-del-partido.md`.
-- [ ] **Hard requirements:** each such test is titled with the scenario identifier; no other marking convention exists.
-- [ ] **Documentation:** `docs/domain-model/convocatoria.md` — the note "quién jugó y quién pagó lo fija la lista final" is replaced; hand corrections (`cambiado a mano`) and anonymous plus-ones as entries are added. `AGENTS.md` — the "Convocatorias are frozen" invariant: stored when created, stamped when confirmed, hand corrections change only `playing`. `docs/domain-model/ciclo-del-partido.md` — the convocatoria created, corrected, confirmed, and the history conversion. `docs/domain-model/glossary.md` — _cambiado a mano_.
-- [ ] **Tests:** `npm test`.
-- [ ] **Regression:** `npm test` passes in full.
-- [ ] **Code checks:** `npm run lint` and `npm run format:check`; the code follows `.agents/rules/coding-standard.md`.
+- [x] `ConvocatoriaService.commit` no longer exists (find-references).
+- [x] `npm run seed -- --reset` on a temporary database prints the conversion report with no game above 14.
+- [x] **Graduation:** UC-003-03-S1…S4 and UC-003-04-S1…S7, hard requirement → `convocatoria-service.test.ts`, `convocatoria-edit-service.test.ts`, `candidate-resolution-service.test.ts` (block "with a stored convocatoria") and the `convocatoria` block of `api.test.ts` (the drag gesture of UC-003-04-S1 is task 08); UC-003-09-S1…S5, S8 hard requirement → `convocatoria-history-converter.test.ts` and the past-dated game walk in `api.test.ts`; UC-003-09-S6 `document` → the report text in the seed output, described in `docs/domain-model/ciclo-del-partido.md`.
+- [x] **Hard requirements:** each hard-requirement scenario named in Graduation has a test whose title says what it asserts, with no work-package identifier in the code (the project has no marking convention, and code outside the work package never names it); this task's Graduation line is the record of which test carries which scenario.
+- [x] **Documentation:** `docs/domain-model/convocatoria.md` — the note "quién jugó y quién pagó lo fija la lista final" is replaced; hand corrections (`cambiado a mano`) and anonymous plus-ones as entries are added. `AGENTS.md` — the "Convocatorias are frozen" invariant: stored when created, stamped when confirmed, hand corrections change only `playing`. `docs/domain-model/ciclo-del-partido.md` — the convocatoria created, corrected, confirmed, and the history conversion. `docs/domain-model/glossary.md` — _cambiado a mano_.
+- [x] **Tests:** `npm test`.
+- [x] **Regression:** `npm test` passes in full.
+- [x] **Code checks:** `npm run lint` and `npm run format:check`; the code follows `.agents/rules/coding-standard.md`.

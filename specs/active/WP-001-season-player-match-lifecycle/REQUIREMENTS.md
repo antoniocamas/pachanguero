@@ -15,16 +15,16 @@ private note-taking, outside Pachanguero entirely. No use case below covers it, 
 
 ### Coverage
 
-| Need                                                                                                                                                                                                                               | Use Case(s)                                                                                                                    |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| N1 — Players persist independent of season boundaries; no per-season re-enrollment                                                                                                                                                 | UC-001-01                                                                                                                      |
-| N2 — The real three-stage lifecycle (candidate list → algorithmic Convocatoria → post-game final attendance) is modeled as distinct stages, against a game that itself needs no manual creation or selection at either paste point | UC-001-03, UC-001-05, UC-001-06, UC-001-08, UC-001-10                                                                          |
-| N3 — Points trigger correctly: an algorithmic cut still grants its point immediately, but the final list is authoritative and can retract it; the played/paid point is granted only on final confirmation                          | UC-001-05, UC-001-06                                                                                                           |
-| N4 — Named occasional/guest players are trackable as ordinary players, linked to whoever introduced them; anonymous guests can still occupy a real, contested candidate slot with no persistent identity                           | UC-001-03, UC-001-04, UC-001-05, UC-001-06                                                                                     |
-| N5 — New players (regular or occasional) can be registered inline while resolving a pasted list; seniority is captured the first time a player is tied to a season                                                                 | UC-001-02, UC-001-04                                                                                                           |
-| N6 — Pasted WhatsApp text is matched against canonical names/aliases with decorations stripped; aliases accumulate over time as they're recognized; an unresolved or ambiguous name is never silently guessed                      | UC-001-03, UC-001-06, UC-001-09                                                                                                |
-| N7 — A past game can be backfilled from its actual outcome alone, with no candidate/algorithm staging                                                                                                                              | UC-001-07                                                                                                                      |
-| N8 — The input channel stays thin enough that a future Telegram bot needs no rework of the domain/parsing core                                                                                                                     | handled as a **Constraint** (§6), not a use case: every operation below is a REST endpoint, and the web UI is one client of it |
+| Need                                                                                                                                                                                                                                                                                                                                                                                     | Use Case(s)                                                                                                                    |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| N1 — Players persist independent of season boundaries; no per-season re-enrollment                                                                                                                                                                                                                                                                                                       | UC-001-01                                                                                                                      |
+| N2 — The real three-stage lifecycle (candidate list → algorithmic Convocatoria → post-game final attendance) is modeled as distinct stages **[revised by WP-003: the stages are candidates → convocatoria → played; there is no final list, the convocatoria says who played]**, against a game that itself needs no manual creation or selection at either paste point                  | UC-001-03, UC-001-05, UC-001-06, UC-001-08, UC-001-10                                                                          |
+| N3 — Points trigger correctly: an algorithmic cut still grants its point immediately, but the final list is authoritative and can retract it; the played/paid point is granted only on final confirmation **[retracted by WP-003: `played` and the exclusion point are derived from the convocatoria when the game is marked played, and the attendance point follows each paid share]** | UC-001-05, UC-001-06                                                                                                           |
+| N4 — Named occasional/guest players are trackable as ordinary players, linked to whoever introduced them; anonymous guests can still occupy a real, contested candidate slot with no persistent identity                                                                                                                                                                                 | UC-001-03, UC-001-04, UC-001-05, UC-001-06                                                                                     |
+| N5 — New players (regular or occasional) can be registered inline while resolving a pasted list; seniority is captured the first time a player is tied to a season                                                                                                                                                                                                                       | UC-001-02, UC-001-04                                                                                                           |
+| N6 — Pasted WhatsApp text is matched against canonical names/aliases with decorations stripped; aliases accumulate over time as they're recognized; an unresolved or ambiguous name is never silently guessed                                                                                                                                                                            | UC-001-03, UC-001-06, UC-001-09                                                                                                |
+| N7 — A past game can be backfilled from its actual outcome alone, with no candidate/algorithm staging                                                                                                                                                                                                                                                                                    | UC-001-07                                                                                                                      |
+| N8 — The input channel stays thin enough that a future Telegram bot needs no rework of the domain/parsing core                                                                                                                                                                                                                                                                           | handled as a **Constraint** (§6), not a use case: every operation below is a REST endpoint, and the web UI is one client of it |
 
 Use case diagram: [`requirements/diagrams/use-cases.puml`](requirements/diagrams/use-cases.puml).
 
@@ -426,6 +426,8 @@ Graduation: hard requirement.
 
 ### UC-001-05 — Run the algorithmic Convocatoria over resolved candidates
 
+> **Revised by WP-003.** The convocatoria is stored when created and confirmed by hand-editable stamp; it no longer grants the exclusion point on commit (S1) — the point is derived when the game is marked played. S2 now holds in a stronger form: only marking played records attendance.
+
 Rests on [points-trigger.md](study/points-trigger.md) (Q-06). The selection algorithm itself
 (`domain/convocatoria.ts`, `ConvocatoriaBuilder.build`) is unchanged and out of scope
 (`VISION.md` §3); this
@@ -529,6 +531,8 @@ default path optimized for the common case, not the only path.
 Graduation: hard requirement.
 
 ### UC-001-06 — Paste and resolve the final Claros/Oscuros list
+
+> **Retracted by WP-003.** There is no final list. Who played comes from the convocatoria, payments are per share, and a pasted Claros/Oscuros list only records teams. Replacing behaviour: `docs/domain-model/ciclo-del-partido.md`.
 
 Which game an ordinary (non-backfilled) final-list paste targets is resolved automatically per
 UC-001-10 — the Organizer does not pick a game for the everyday Monday-night-or-later case.
@@ -642,6 +646,8 @@ work package may attach game-result data (score, or other match facts) to what's
 Graduation: hard requirement.
 
 ### UC-001-07 — Backfill a historical game from the final list alone
+
+> **Retracted by WP-003.** A past game is recorded by date and goes through the same states; seeded history gets a confirmed convocatoria (`source = 'history'`). Replacing behaviour: `docs/domain-model/ciclo-del-partido.md`.
 
 Rests on the author's decision (interview, this phase): _"no, just final list is ok"_ — historical
 games skip the candidate/algorithm stage entirely.

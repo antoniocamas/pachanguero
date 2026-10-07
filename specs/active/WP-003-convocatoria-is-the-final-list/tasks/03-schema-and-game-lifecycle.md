@@ -34,12 +34,12 @@ Edit `schema.sql` in place for the five-value game state, `cancelled_from`, the 
 
 ## Definition of Done
 
-- [ ] Standings after the seed equal the recorded pre-edit standings.
-- [ ] Find-references shows no reader of the old three-value status left unhandled.
-- [ ] Every transition and refusal of UC-003-01-S1…S7 has a test.
-- [ ] **Graduation:** UC-003-01 (S1…S7), hard requirement → the lifecycle tests above; the schema constraints → `schema.test.ts`.
-- [ ] **Hard requirements:** those tests are titled with the scenario identifier (e.g. `UC-003-01-S3 …`); the project has no other marking convention.
-- [ ] **Documentation:** `AGENTS.md` — the _db/_ paragraph (`--reset` removes only the imported season's rows; a changed table definition needs the DB file and its `-wal`/`-shm` deleted); the Domain-invariants line on the game's three statuses becomes the five states. `docs/domain-model/ciclo-del-partido.md` — the states and transitions are written (who may edit what in each). `docs/domain-model/glossary.md` — entries _Convocatoria creada / confirmada_, _Jugado_, _Cancelado_.
-- [ ] **Tests:** `npm test` and `npm run test:e2e` (the schema reaches the web).
-- [ ] **Regression:** `npm test` and `npm run test:e2e` pass in full.
-- [ ] **Code checks:** `npm run lint` and `npm run format:check`; the code follows `.agents/rules/coding-standard.md` and `.agents/rules/frontend-coding-standard.md`.
+- [x] Standings after the seed equal the recorded pre-edit standings.
+- [x] Find-references shows no reader of the old three-value status left unhandled.
+- [x] Every transition and refusal of UC-003-01-S1…S7 has a test.
+- [x] **Graduation:** UC-003-01 (S1…S7), hard requirement → `game-lifecycle.test.ts`, `game-lifecycle-service.test.ts` and the `game lifecycle` block of `api.test.ts` (each test's title says the behaviour it asserts); the schema constraints → `schema.test.ts`.
+- [x] **Hard requirements:** each hard-requirement scenario named in Graduation has a test whose title says what it asserts, with no work-package identifier in the code (the project has no marking convention, and code outside the work package never names it); this task's Graduation line is the record of which test carries which scenario.
+- [x] **Documentation:** `AGENTS.md` — the _db/_ paragraph (`--reset` removes only the imported season's rows; a changed table definition needs the DB file and its `-wal`/`-shm` deleted); the Domain-invariants line on the game's three statuses becomes the five states. `docs/domain-model/ciclo-del-partido.md` — the states and transitions are written (who may edit what in each). `docs/domain-model/glossary.md` — entries _Convocatoria creada / confirmada_, _Jugado_, _Cancelado_.
+- [x] **Tests:** `npm test` and `npm run test:e2e` (the schema reaches the web).
+- [x] **Regression:** `npm test` and `npm run test:e2e` pass in full.
+- [x] **Code checks:** `npm run lint` and `npm run format:check`; the code follows `.agents/rules/coding-standard.md` and `.agents/rules/frontend-coding-standard.md`.

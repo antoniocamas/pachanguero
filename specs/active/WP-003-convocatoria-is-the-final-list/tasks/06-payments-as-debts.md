@@ -32,11 +32,11 @@ Billing creates one `share_debts` row per share when the game is played; the hol
 
 ## Definition of Done
 
-- [ ] The query-plan test exists and passes.
-- [ ] Standings of the seeded history still equal the pre-WP-003 standings recorded in task 03.
-- [ ] **Graduation:** UC-003-06-S1…S6 and S3b–S3e, hard requirement → the tests above (the screen part is task 08).
-- [ ] **Hard requirements:** each titled with the scenario identifier; no other marking convention exists.
-- [ ] **Documentation:** `AGENTS.md` — the "legacy `*` meant three things" invariant gains: payment is a debt row (`share_debts`) until settled and a `payments` row after; `paid_cents` is the player's own share settled by whoever paid it. `docs/domain-model/points.md` — a game counts for a player when their own share is settled, by whoever paid it. `docs/domain-model/glossary.md` — _deuda_ (a share owed, with holder and beneficiary). `docs/domain-model/ciclo-del-partido.md` — payment after playing.
-- [ ] **Tests:** `npm test`.
-- [ ] **Regression:** `npm test` passes in full.
-- [ ] **Code checks:** `npm run lint` and `npm run format:check`; the code follows `.agents/rules/coding-standard.md`.
+- [x] The query-plan test exists and passes.
+- [x] Standings of the seeded history still equal the pre-WP-003 standings recorded in task 03.
+- [x] **Graduation:** UC-003-06-S1…S6 and S3b–S3e, hard requirement → the tests above (the screen part is task 08).
+- [x] **Hard requirements:** each hard-requirement scenario named in Graduation has a test whose title says what it asserts, with no work-package identifier in the code (the project has no marking convention, and code outside the work package never names it); this task's Graduation line is the record of which test carries which scenario.
+- [x] **Documentation:** `AGENTS.md` — the "legacy `*` meant three things" invariant gains: payment is a debt row (`share_debts`) until settled and a `payments` row after; `paid_cents` is the player's own share settled by whoever paid it. `docs/domain-model/points.md` — a game counts for a player when their own share is settled, by whoever paid it. `docs/domain-model/glossary.md` — _deuda_ (a share owed, with holder and beneficiary). `docs/domain-model/ciclo-del-partido.md` — payment after playing.
+- [x] **Tests:** `npm test`.
+- [x] **Regression:** `npm test` passes in full.
+- [x] **Code checks:** `npm run lint` and `npm run format:check`; the code follows `.agents/rules/coding-standard.md`.

@@ -9,4 +9,12 @@ export class SeasonCalendar {
       endsOn: `${startYear + 1}-08-31`,
     };
   }
+
+  /** The name of the season a date falls in: `2026-10-05` is `2026/2027`, `2027-03-01` too. */
+  nameFor(isoDate: string): string {
+    const year = Number(isoDate.slice(0, 4));
+    const month = Number(isoDate.slice(5, 7));
+    const startYear = month >= 9 ? year : year - 1;
+    return `${startYear}/${startYear + 1}`;
+  }
 }

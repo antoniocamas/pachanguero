@@ -29,11 +29,11 @@ Move every SQL statement out of `ConvocatoriaService` into a new `ConvocatoriaRe
 
 ## Definition of Done
 
-- [ ] `grep -n "prepare\|\.run(\|\.get(\|\.all(" server/src/repo/convocatoria-service.ts` returns nothing.
-- [ ] `git diff` on the existing tests shows only construction-site changes, no assertion edited.
-- [ ] **Graduation:** `throwaway` for UC-003-03-S1 and UC-003-04-S1 as realised here — the existing tests are the verification; both scenarios graduate to hard-requirement tests in task 04.
-- [ ] **Hard requirements:** none are introduced here.
-- [ ] **Documentation:** none — no document describes `ConvocatoriaService`'s internals.
-- [ ] **Tests:** `npm test`.
-- [ ] **Regression:** `npm test` passes in full.
-- [ ] **Code checks:** `npm run lint` and `npm run format:check`; the code follows `.agents/rules/coding-standard.md`.
+- [x] `ConvocatoriaService` holds no SQL: `grep -n "prepare\|\.run(\|\.all(" server/src/repo/convocatoria-service.ts` returns nothing (the literal `.get(` pattern only matches `Map.get` calls).
+- [x] `git diff` on the existing tests shows only construction-site changes, no assertion edited.
+- [x] **Graduation:** `throwaway` for UC-003-03-S1 and UC-003-04-S1 as realised here — the existing tests are the verification; both scenarios graduate to hard-requirement tests in task 04.
+- [x] **Hard requirements:** none are introduced here.
+- [x] **Documentation:** none — no document describes `ConvocatoriaService`'s internals.
+- [x] **Tests:** `npm test`.
+- [x] **Regression:** `npm test` passes in full.
+- [x] **Code checks:** `npm run lint` and `npm run format:check`; the code follows `.agents/rules/coding-standard.md`.

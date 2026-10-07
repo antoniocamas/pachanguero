@@ -31,14 +31,6 @@ export class ScheduleResolver {
     return this.isoDate(start + ahead * DAY_MS);
   }
 
-  /** One hour after kickoff on `gameDate`, as 'YYYY-MM-DDTHH:MM'. */
-  cutoffFor(gameDate: string): string {
-    const { kickoff_time } = this.effectiveRow(gameDate);
-    const [h, m] = kickoff_time.split(':').map(Number);
-    const cutoff = this.utc(gameDate) + ((h + 1) * 60 + m) * 60 * 1000;
-    return new Date(cutoff).toISOString().slice(0, 16);
-  }
-
   private effectiveRow(asOf: string): WeeklyScheduleRow {
     const row = this.rows.filter(r => r.effective_from <= asOf).at(-1);
     if (!row) throw new Error(`No weekly schedule in force on ${asOf}`);

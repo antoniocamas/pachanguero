@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { FinalListParser } from './final-list-parser.js';
+import { TeamListParser } from './team-list-parser.js';
 import { NameStripper } from './name-stripper.js';
 
-describe('FinalListParser', () => {
-  const parser = new FinalListParser(new NameStripper());
+describe('TeamListParser', () => {
+  const parser = new TeamListParser(new NameStripper());
   const players = (from: number, to: number) =>
     Array.from({ length: to - from + 1 }, (_, i) => `Player ${from + i}`);
 

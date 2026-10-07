@@ -24,9 +24,12 @@ por un amigo no te da más puntos).
 El `*` **no** puntúa: `">0"` lo excluye porque es texto. Esto es intencionado.
 Fuiste al partido pero no pagaste, así que no hay punto hasta que pagues.
 
-Un partido solo cuenta como pagado cuando hay una **lista final resuelta** del
-partido (quién jugó de verdad y quién pagó), no por haber confirmado una
-convocatoria: la convocatoria dice quién debía jugar, y ya no marca asistencia.
+Un partido cuenta para un jugador cuando **su propia parte está saldada**, la
+pague él o la pague quien responde de ella (su anfitrión, si vino de invitado).
+Un partido solo cuenta como pagado cuando el partido está **jugado** y hay un
+pago registrado (quién jugó se deriva de la convocatoria al marcarlo jugado, y
+quién pagó lo dice el pago), no por haber confirmado una convocatoria: la
+convocatoria dice quién debía jugar, y ya no marca asistencia.
 
 > **Los puntos se mueven hacia atrás en el tiempo.** Si pagas tres partidos de
 > golpe en diciembre, esos tres puntos aparecen con fecha de octubre pero no
@@ -48,9 +51,11 @@ Cuenta los `1` (fuera por puntos) y los `2` (degradado por la mercy rule). Las
 `D` no cuentan: son texto, y además si te tocó el mercy seat jugaste, así que tu
 punto sale de `Pagos`.
 
-> **El punto sigue a lo que pasó de verdad.** Si la convocatoria te dejó fuera
-> pero la lista final dice que jugaste, ese punto se retira; si una corrección
-> posterior de la lista final vuelve a dejarte fuera, vuelve. Ver
+> **El punto sigue a lo que pasó de verdad.** Un punto de exclusión existe
+> mientras el partido está jugado, te apuntaste y quedaste fuera de la
+> convocatoria. Se retira al reabrir o cancelar el partido y vuelve al marcarlo
+> jugado otra vez; si cambias a mano quién juega antes de volver a marcarlo, se
+> recalcula. Ver
 > [`ciclo-del-partido.md`](ciclo-del-partido.md).
 
 Que ambos motivos valgan lo mismo es deliberado: da igual por qué te quedaste

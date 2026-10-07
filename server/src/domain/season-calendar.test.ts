@@ -8,4 +8,14 @@ describe('SeasonCalendar', () => {
       endsOn: '2025-08-31',
     });
   });
+
+  it.each([
+    ['2026-09-01', '2026/2027'],
+    ['2026-10-05', '2026/2027'],
+    ['2027-08-31', '2026/2027'],
+    ['2027-09-01', '2027/2028'],
+    ['2027-01-15', '2026/2027'],
+  ])('names the season %s falls in', (date, name) => {
+    expect(new SeasonCalendar().nameFor(date)).toBe(name);
+  });
 });

@@ -30,11 +30,11 @@ Split `web/src/pages/GameDay.tsx` into a data hook, `lib/money.ts`, `lib/dates.t
 
 ## Definition of Done
 
-- [ ] The six files of the R2 File Changes exist and `GameDay.tsx` is composition only.
-- [ ] The nine e2e specs pass with no spec edited.
-- [ ] **Graduation:** UC-003-10-S6 (no capability lost) — `throwaway` here, the e2e suite is the verification; the scenario graduates to a hard-requirement test in task 08.
-- [ ] **Hard requirements:** none are introduced here.
-- [ ] **Documentation:** `.agents/rules/frontend-coding-standard.md` — the paragraph citing `GameDay.tsx (324 lines)` as the example the standard prevents is updated to name the new components, hooks and `lib/` modules.
-- [ ] **Tests:** `npm run test:e2e`.
-- [ ] **Regression:** `npm test` and `npm run test:e2e` pass in full.
-- [ ] **Code checks:** `npm run lint` and `npm run format:check`; the code follows `.agents/rules/frontend-coding-standard.md`.
+- [x] The six files of the R2 File Changes exist and `GameDay.tsx` is composition only.
+- [x] The nine e2e specs pass with no spec edited.
+- [x] **Graduation:** UC-003-10-S6 (no capability lost) — `throwaway` here, the e2e suite is the verification; the scenario graduates to a hard-requirement test in task 08.
+- [x] **Hard requirements:** none are introduced here.
+- [x] **Documentation:** `.agents/rules/frontend-coding-standard.md` — the paragraph citing `GameDay.tsx (324 lines)` as the example the standard prevents is updated to name the new components, hooks and `lib/` modules.
+- [x] **Tests:** `npm run test:e2e`.
+- [x] **Regression:** `npm test` and `npm run test:e2e` pass in full.
+- [x] **Code checks:** `npm run lint` and `npm run format:check`; the code follows `.agents/rules/frontend-coding-standard.md`.

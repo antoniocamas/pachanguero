@@ -1,6 +1,6 @@
 import type Database from 'better-sqlite3';
 import { ExclusionHistory } from '../domain/exclusion-history.js';
-import type { ExclusionKind, Outcome } from '../domain/types.js';
+import type { ExclusionKind } from '../domain/types.js';
 
 export class ExclusionRepository {
   constructor(private readonly conn: Database.Database) {}
@@ -20,19 +20,9 @@ export class ExclusionRepository {
       .run(gameId, playerId, kind);
   }
 
-  /**
-   * The outcome the selection froze for each player of a game; empty when no
-   * selection was ever committed for it.
-   */
-  frozenOutcomes(gameId: number): Map<number, Outcome> {
-    const rows = this.conn
-      .prepare(
-        `SELECT ce.player_id, ce.outcome
-           FROM convocatoria_entries ce JOIN convocatorias c ON c.id = ce.convocatoria_id
-          WHERE c.game_id = ?`
-      )
-      .all(gameId) as Array<{ player_id: number; outcome: Outcome }>;
-    return new Map(rows.map(r => [r.player_id, r.outcome]));
+  /** Remove every exclusion recorded for a game. */
+  clear(gameId: number): void {
+    this.conn.prepare('DELETE FROM exclusions WHERE game_id = ?').run(gameId);
   }
 
   /** Season exclusion history per player, in game order. */
