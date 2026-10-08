@@ -3,7 +3,7 @@ import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { api } from './routes/api.js';
-import { db } from './db/index.js';
+import { DB_PATH, db } from './db/index.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -25,6 +25,13 @@ const port = Number(process.env.PORT ?? 8787);
 const host = process.env.HOST ?? '0.0.0.0';
 
 db(); // open and migrate before accepting traffic
-app.listen(port, host, () => {
+const server = app.listen(port, host, () => {
   console.log(`pachanguero listening on http://${host}:${port}`);
+  console.log(`pachanguero database: ${DB_PATH}`);
+});
+// A second server must never sit silently beside the one holding the port:
+// it would look started while the old one, maybe on another database, answers.
+server.on('error', err => {
+  console.error(`pachanguero cannot listen on ${host}:${port}: ${err.message}`);
+  process.exit(1);
 });

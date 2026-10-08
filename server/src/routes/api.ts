@@ -9,7 +9,8 @@ import {
 import {
   seasons,
   players,
-  aliases,
+  playerEdit,
+  playerMerge,
   games,
   schedule,
   candidateResolution,
@@ -145,16 +146,52 @@ api.post(
   })
 );
 
+/** Every player with their aliases and who introduced them, for editing. */
+api.get(
+  '/players/details',
+  route((_req, res) => res.json(playerEdit.list()))
+);
+
+api.patch(
+  '/players/:playerId',
+  route((req, res) => {
+    const { name, introducedBy, keepOldAsAlias } = req.body ?? {};
+    res.json(
+      playerEdit.update(id(req.params.playerId), {
+        ...(name !== undefined && { name: String(name) }),
+        ...(introducedBy !== undefined && {
+          introducedBy: introducedBy === null ? null : id(introducedBy),
+        }),
+        keepOldAsAlias: keepOldAsAlias === true,
+      })
+    );
+  })
+);
+
+/** Folds the player in `from` into this one: they are the same person. */
+api.post(
+  '/players/:playerId/merge',
+  route((req, res) => {
+    playerMerge.merge(id(req.params.playerId), id(req.body?.from));
+    res.json({ ok: true });
+  })
+);
+
 api.post(
   '/players/:playerId/aliases',
   route((req, res) => {
     const playerId = id(req.params.playerId);
-    if (!players.nameOf(playerId))
-      throw new Error(`Unknown player: ${playerId}`);
     const alias = String(req.body?.alias ?? '').trim();
-    if (!alias) throw new Error('alias is required');
-    aliases.add(playerId, alias);
+    playerEdit.addAlias(playerId, alias);
     res.status(201).json({ playerId, alias });
+  })
+);
+
+api.delete(
+  '/players/:playerId/aliases/:alias',
+  route((req, res) => {
+    playerEdit.removeAlias(id(req.params.playerId), String(req.params.alias));
+    res.json({ ok: true });
   })
 );
 

@@ -367,7 +367,7 @@ describe('API', () => {
         action: { type: 'register', name: 'Nueva' },
       });
       expect(resolved.status).toBe(200);
-      expect(await resolved.json()).toEqual({ outcome: 'resolved' });
+      expect(await resolved.json()).toMatchObject({ outcome: 'resolved' });
 
       const again = (await (
         await post(`/games/${game.id}/candidates/preview`, {

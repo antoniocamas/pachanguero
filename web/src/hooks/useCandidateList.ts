@@ -9,8 +9,8 @@ import {
 import {
   hasUnsavedChanges,
   rowLines,
-  withIntroduced,
   withLink,
+  withRegistered,
 } from '../lib/candidateDraft';
 
 /**
@@ -29,13 +29,13 @@ export function useCandidateList(
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  /** Runs one action, reporting whether it worked. */
-  const guard = useCallback(async (fn: () => Promise<void>) => {
+  /** Runs one action, reporting whether it worked (an action may say it did not by returning false). */
+  const guard = useCallback(async (fn: () => Promise<boolean | void>) => {
     setBusy(true);
     try {
-      await fn();
+      const done = await fn();
       setError(null);
-      return true;
+      return done !== false;
     } catch (e) {
       setError((e as Error).message);
       return false;
@@ -117,24 +117,28 @@ export function useCandidateList(
         }
         const result = await api.resolveCandidate(gameId, entry, action);
         if (result.outcome === 'resolved') {
-          // A new name written with a host is that host's guest, and only
-          // the line that registered them says so.
+          // The line is linked to the player it was settled with: the name
+          // written on it may not be the one they are known by.
           const lines =
-            action.type === 'register' &&
-            entry.field === 'name' &&
-            entry.line.kind === 'hostAnnotated'
-              ? withIntroduced(rows, entry)
-              : rowLines(rows);
+            action.type === 'register'
+              ? withRegistered(rows, entry, result.playerId)
+              : withLink(rows, entry, result.playerId);
           setRows(await api.previewCandidates(gameId, lines));
-          return;
+          return true;
+        }
+        if (entry.reason === 'correction') {
+          throw new Error(
+            `Ese nombre ya es de otro jugador: elígelo en la lista (${result.entry.candidates.map(c => c.name).join(', ')})`
+          );
         }
         setRows(list =>
           list.map(r =>
-            r.status === 'unresolved' && r.entry === entry
+            r.status === 'unresolved' && r.position === entry.line.position
               ? { ...r, entry: result.entry }
               : r
           )
         );
+        return false;
       }),
     [gameId, guard, rows]
   );

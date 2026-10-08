@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { CandidateRow, Player } from '../api';
+import type { CandidateRow, Player, UnresolvedEntry } from '../api';
 import { fmtPoints } from '../lib/format';
 import type { GameRow } from '../lib/gameRows';
 import { useCandidateList } from '../hooks/useCandidateList';
@@ -13,6 +13,21 @@ const label = (row: Extract<CandidateRow, { status: 'matched' }>) =>
   row.candidate.guest === 'anonymous'
     ? row.text
     : (row.candidate.name ?? row.text);
+
+/** The names of a matched line that can be corrected: the player's and the host's. */
+const correctable = (
+  row: Extract<CandidateRow, { status: 'matched' }>
+): UnresolvedEntry[] =>
+  (['name', 'host'] as const)
+    .filter(field =>
+      field === 'name' ? row.line.kind !== 'plusOne' : row.line.kind !== 'plain'
+    )
+    .map(field => ({
+      line: row.line,
+      field,
+      reason: 'correction' as const,
+      candidates: [],
+    }));
 
 /**
  * A game's list of candidates, in the order it was pasted. Pasting adds to it,
@@ -43,6 +58,8 @@ export function CandidateList({
   const [text, setText] = useState('');
   // The dialog opens after a paste, never just because the page was opened.
   const [asking, setAsking] = useState(false);
+  // The matched row whose name is being corrected.
+  const [correcting, setCorrecting] = useState<number | null>(null);
   const list = useCandidateList(gameId, seasonId, onChanged, onEnrolled);
   useUnsavedWarning(list.unsaved);
 
@@ -150,6 +167,20 @@ export function CandidateList({
             Quitar
           </button>
         );
+        const modify =
+          row.status === 'matched' ? (
+            <button
+              className="btn"
+              aria-label={`Modificar ${row.text}`}
+              aria-expanded={correcting === row.position}
+              disabled={list.busy}
+              onClick={() =>
+                setCorrecting(correcting === row.position ? null : row.position)
+              }
+            >
+              Modificar
+            </button>
+          ) : null;
         return (
           <div key={row.position} data-testid="candidate-row">
             <div className="row">
@@ -171,8 +202,25 @@ export function CandidateList({
                 </>
               )}
               {/* A row waiting for seniority has its Quitar beside Confirmar. */}
+              {!asksSeniority && modify}
               {!asksSeniority && remove}
             </div>
+            {row.status === 'matched' && correcting === row.position && (
+              <div className="resolve-item">
+                {correctable(row).map(entry => (
+                  <ResolveLine
+                    key={entry.field}
+                    entry={entry}
+                    players={players}
+                    busy={list.busy}
+                    onResolve={async action => {
+                      if (await list.resolve(entry, action))
+                        setCorrecting(null);
+                    }}
+                  />
+                ))}
+              </div>
+            )}
             {row.status === 'matched' && asksSeniority && (
               <SeniorityPrompt
                 name={label(row)}
@@ -181,7 +229,12 @@ export function CandidateList({
                 onConfirm={seasons =>
                   list.confirmSeniority(row.candidate.playerId!, seasons)
                 }
-                extra={remove}
+                extra={
+                  <>
+                    {modify}
+                    {remove}
+                  </>
+                }
               />
             )}
           </div>

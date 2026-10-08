@@ -14,7 +14,21 @@ const REASONS: Record<UnresolvedEntry['reason'], string> = {
   unmatched: 'No encuentro a nadie con ese nombre',
   ambiguous: 'Puede ser más de una persona',
   collision: 'Ese nombre ya existe',
+  duplicate: 'Ya hay uno en la lista con otro anfitrión: ¿es otra persona?',
+  correction: 'Corregir quién es',
 };
+
+/** Who the entry's name could be: the players it matched, or anyone. */
+const optionsFor = <P,>(entry: UnresolvedEntry, everyone: P[]) =>
+  entry.reason === 'ambiguous' || entry.reason === 'collision'
+    ? entry.candidates
+    : everyone;
+
+/** A second person with a known name needs a different one: "Javi de Caro". */
+const suggestedName = (entry: UnresolvedEntry, text: string) =>
+  entry.reason === 'duplicate' && entry.line.kind === 'hostAnnotated'
+    ? `${text} de ${entry.line.hostName}`
+    : text;
 
 /**
  * One unresolved name and the ways to settle it: pick the player it is,
@@ -36,11 +50,13 @@ export function ResolveLine({
   onResolve: (action: ResolveAction) => void;
 }) {
   const text = spelled(entry);
-  const options = entry.candidates.length ? entry.candidates : players;
+  const options = optionsFor(entry, players);
   const [playerId, setPlayerId] = useState<number | ''>(
-    entry.candidates.length === 1 ? entry.candidates[0].id : ''
+    entry.candidates.length === 1 && entry.reason !== 'duplicate'
+      ? entry.candidates[0].id
+      : ''
   );
-  const [newName, setNewName] = useState(text);
+  const [newName, setNewName] = useState(suggestedName(entry, text));
   const [hostId, setHostId] = useState<number | ''>('');
 
   return (

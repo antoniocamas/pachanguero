@@ -848,3 +848,15 @@ td .chip.oscuros {
   border-top: 1px solid var(--line);
   border-radius: 0 0 var(--radius) var(--radius);
 }
+
+.section-tabs {
+  margin-bottom: 14px;
+}
+.section-tabs .chip {
+  flex: 1;
+  padding: 9px 11px;
+}
+.section-tabs .chip[data-on='true'] {
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  border-color: var(--accent);
+}

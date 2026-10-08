@@ -212,6 +212,43 @@ describe('CandidateResolutionService', () => {
       });
     });
 
+    it('reports a guest whose name is already listed with another host, never folding them', () => {
+      enrol('Fer');
+      enrol('Caro');
+      const javi = enrol('Javi');
+      const rows = service.preview(gameId, L(), 'Javi (Fer)\nJavi (Caro)');
+      expect(rows).toHaveLength(2);
+      expect(rows[0]).toMatchObject({ status: 'matched' });
+      expect(unresolvedOf(rows)).toMatchObject([
+        {
+          field: 'name',
+          reason: 'duplicate',
+          candidates: [{ id: javi, name: 'Javi' }],
+        },
+      ]);
+    });
+
+    it('still folds the same guest pasted twice with the same host', () => {
+      enrol('Fer');
+      enrol('Javi');
+      expect(
+        service.preview(gameId, L(), 'Javi (Fer)\nJavi (Fer)')
+      ).toHaveLength(1);
+    });
+
+    it("respects the organiser's choice of a different player for the repeated name", () => {
+      enrol('Fer');
+      const caro = enrol('Caro');
+      enrol('Javi');
+      const other = enrol('Javi de Caro');
+      const rows = service.preview(gameId, [
+        { text: 'Javi (Fer)' },
+        { text: 'Javi (Caro)', links: { name: other } },
+      ]);
+      expect(matchedNames(rows)).toEqual(['Javi', 'Javi de Caro']);
+      expect(caro).toBeGreaterThan(0);
+    });
+
     it('records an anonymous plus-one against the host', () => {
       const alvaro = enrol('Álvaro');
       const [row] = service.preview(gameId, L(), '1 Álvaro +1');

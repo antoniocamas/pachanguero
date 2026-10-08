@@ -17,6 +17,14 @@ export interface Player {
   seasons: number;
 }
 
+/** A player with everything the organiser can correct about them. */
+export interface PlayerDetail {
+  id: number;
+  name: string;
+  introducedBy: number | null;
+  aliases: string[];
+}
+
 export type Team = 'claros' | 'oscuros';
 
 export interface Game {
@@ -135,7 +143,8 @@ export type ParsedLine =
 export interface UnresolvedEntry {
   line: ParsedLine;
   field: 'name' | 'host';
-  reason: 'unmatched' | 'ambiguous' | 'collision';
+  /** 'correction' is only ever made on screen, for a name that matched but is wrong. */
+  reason: 'unmatched' | 'ambiguous' | 'collision' | 'duplicate' | 'correction';
   candidates: { id: number; name: string }[];
 }
 
@@ -171,6 +180,7 @@ export type CandidateRow =
       links?: CandidateLinks;
       introduced?: true;
       status: 'matched';
+      line: ParsedLine;
       candidate: MatchedCandidate;
     }
   | {
@@ -188,7 +198,8 @@ export type ResolveAction =
   | { type: 'register'; name: string; introducedBy?: number };
 
 export type ResolveResult =
-  { outcome: 'resolved' } | { outcome: 'unresolved'; entry: UnresolvedEntry };
+  | { outcome: 'resolved'; playerId: number }
+  | { outcome: 'unresolved'; entry: UnresolvedEntry };
 
 export interface TeamUnresolved extends UnresolvedEntry {
   team: Team;
@@ -239,6 +250,35 @@ export const api = {
 
   players: (seasonId: number) => call<Player[]>(`/seasons/${seasonId}/players`),
   knownPlayers: () => call<Pick<Player, 'id' | 'name'>[]>('/players'),
+  playerDetails: () => call<PlayerDetail[]>('/players/details'),
+  editPlayer: (
+    playerId: number,
+    patch: {
+      name?: string;
+      introducedBy?: number | null;
+      keepOldAsAlias?: boolean;
+    }
+  ) =>
+    call<PlayerDetail>(`/players/${playerId}`, {
+      method: 'PATCH',
+      body: body(patch),
+    }),
+  /** Folds `from` into `playerId`: they are the same person. */
+  mergePlayers: (playerId: number, from: number) =>
+    call<{ ok: true }>(`/players/${playerId}/merge`, {
+      method: 'POST',
+      body: body({ from }),
+    }),
+  addAlias: (playerId: number, alias: string) =>
+    call<{ playerId: number; alias: string }>(`/players/${playerId}/aliases`, {
+      method: 'POST',
+      body: body({ alias }),
+    }),
+  removeAlias: (playerId: number, alias: string) =>
+    call<{ ok: true }>(
+      `/players/${playerId}/aliases/${encodeURIComponent(alias)}`,
+      { method: 'DELETE' }
+    ),
   addPlayer: (seasonId: number, name: string, seasons: number) =>
     call<Player>(`/seasons/${seasonId}/players`, {
       method: 'POST',

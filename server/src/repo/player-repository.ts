@@ -39,6 +39,28 @@ export class PlayerRepository {
     };
   }
 
+  /** Every player with who introduced them, for editing. */
+  listDetailed(): { id: number; name: string; introducedBy: number | null }[] {
+    return this.conn
+      .prepare(
+        `SELECT id, name, introduced_by AS introducedBy FROM players
+          ORDER BY name COLLATE NOCASE`
+      )
+      .all() as { id: number; name: string; introducedBy: number | null }[];
+  }
+
+  rename(playerId: number, name: string): void {
+    this.conn
+      .prepare('UPDATE players SET name = ? WHERE id = ?')
+      .run(name, playerId);
+  }
+
+  setIntroducedBy(playerId: number, introducedBy: number | null): void {
+    this.conn
+      .prepare('UPDATE players SET introduced_by = ? WHERE id = ?')
+      .run(introducedBy, playerId);
+  }
+
   nameOf(playerId: number): string | undefined {
     const row = this.conn
       .prepare('SELECT name FROM players WHERE id = ?')

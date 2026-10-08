@@ -12,8 +12,11 @@ export type LineField = 'name' | 'host';
 export interface UnresolvedEntry {
   line: ParsedLine;
   field: LineField;
-  /** 'collision' is a new name that turned out to belong to an existing player. */
-  reason: 'unmatched' | 'ambiguous' | 'collision';
+  /**
+   * 'collision' is a new name that turned out to belong to an existing player;
+   * 'duplicate' is a guest whose name is already in the list with another host.
+   */
+  reason: 'unmatched' | 'ambiguous' | 'collision' | 'duplicate';
   /** Players the name could be; empty when nothing matched. */
   candidates: { id: number; name: string }[];
 }

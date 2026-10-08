@@ -50,6 +50,8 @@ export type CandidateRow =
       links?: CandidateLinks;
       introduced?: true;
       status: 'matched';
+      /** The line as read, so a wrong match can be corrected. */
+      line: ParsedLine;
       candidate: MatchedCandidate;
     }
   | {
@@ -62,7 +64,8 @@ export type CandidateRow =
     };
 
 export type ResolveResult =
-  { outcome: 'resolved' } | { outcome: 'unresolved'; entry: UnresolvedEntry };
+  | { outcome: 'resolved'; playerId: number }
+  | { outcome: 'unresolved'; entry: UnresolvedEntry };
 
 /** A line whose players are all settled, ready to persist. */
 interface ResolvedLine {
@@ -207,7 +210,7 @@ export class CandidateResolutionService {
     }
     const typed = this.lines.settle(entry, action);
     return typed.settled
-      ? { outcome: 'resolved' }
+      ? { outcome: 'resolved', playerId: typed.playerId }
       : { outcome: 'unresolved', entry: typed.entry };
   }
 
@@ -264,13 +267,20 @@ export class CandidateResolutionService {
     const matcher = this.lines.matcher();
     const names = this.lines.names();
     const seen = new Set<string>();
+    // Who each player came with on the line that first listed them.
+    const hosts = new Map<number, number | null>();
     const out: ReadLine[] = [];
     for (const { text: raw, links, introduced } of lines) {
       const position = out.length + 1;
       const text = this.parser.texts(raw)[0];
       if (text === undefined) continue;
       const line = this.parser.parse(text, position);
-      const outcome = this.resolveLine(line, matcher, names, links);
+      const outcome = this.withoutImpostors(
+        this.resolveLine(line, matcher, names, links),
+        hosts,
+        names,
+        links
+      );
       const key =
         'entry' in outcome
           ? `text:${text.toLocaleLowerCase('es')}`
@@ -295,6 +305,10 @@ export class CandidateResolutionService {
         continue;
       }
       const guest = this.guestRow(outcome.line, introduced);
+      const who = outcome.line.playerId;
+      if (who !== null && !hosts.has(who)) {
+        hosts.set(who, outcome.line.hostPlayerId);
+      }
       out.push({
         resolved: outcome.line,
         guest: guest ?? undefined,
@@ -304,11 +318,45 @@ export class CandidateResolutionService {
           links,
           introduced,
           status: 'matched',
+          line: outcome.line.line,
           candidate: this.describe(game, outcome.line, names, guest),
         },
       });
     }
     return out;
+  }
+
+  /**
+   * "Javi (Fer)" and "Javi (Caro)" are two people, not one Javi listed twice:
+   * a name written with a host that already stands in the list with another
+   * host (or none) is reported, never folded into that player. A choice the
+   * organiser made on the line is respected.
+   */
+  private withoutImpostors(
+    outcome: { line: ResolvedLine } | { entry: UnresolvedEntry },
+    hosts: ReadonlyMap<number, number | null>,
+    names: Map<number, string>,
+    links?: CandidateLinks
+  ): { line: ResolvedLine } | { entry: UnresolvedEntry } {
+    if (!('line' in outcome)) return outcome;
+    const { line, playerId, hostPlayerId } = outcome.line;
+    if (
+      line.kind !== 'hostAnnotated' ||
+      playerId === null ||
+      links?.name !== undefined ||
+      !hosts.has(playerId) ||
+      hosts.get(playerId) === hostPlayerId
+    ) {
+      return outcome;
+    }
+    return {
+      entry: {
+        line,
+        field: 'name',
+        reason: 'duplicate',
+        candidates: [{ id: playerId, name: names.get(playerId) ?? '' }],
+      },
+    };
   }
 
   private resolveLine(

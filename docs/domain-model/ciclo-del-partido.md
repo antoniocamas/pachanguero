@@ -73,10 +73,15 @@ busca entre los jugadores y sus apodos, sin importar mayúsculas ni tildes:
 - Lo que hay bajo un encabezado `Reservas` se descarta.
 - `Nombre (Anfitrión)` es un invitado nombrado solo en la línea que registra a
   ese nombre como nuevo; un jugador que ya existe no cambia por el paréntesis.
+  Pero si ese nombre ya está en la lista con **otro anfitrión** (`Javi (Fer)` y
+  `Javi (Caro)`), no se funde con él: queda «sin resolver» como posible duplicado
+  y el organizador decide si es otra persona (se registra con otro nombre, p. ej.
+  «Javi de Caro»).
 - `Anfitrión +1` es un acompañante anónimo.
 
 La lista conserva el orden y un jugador repetido ocupa una sola línea; se puede
-quitar un nombre o vaciarla. **Nada cuenta hasta pulsar «Guardar lista»**: al
+quitar un nombre, **modificarlo** (elegir a otro jugador, recordar el apodo o
+registrar uno nuevo cuando el reconocimiento se equivocó) o vaciarla. **Nada cuenta hasta pulsar «Guardar lista»**: al
 guardar quedan apuntados los reconocidos y la lista sustituye a la anterior (lo
 jugado y lo pagado se conservan). Las líneas sin resolver se guardan solo como
 texto y se leen de nuevo contra los jugadores de ese momento, así que un apodo

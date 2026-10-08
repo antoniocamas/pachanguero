@@ -20,4 +20,10 @@ export class AliasRepository {
       )
       .run(playerId, alias);
   }
+
+  remove(playerId: number, alias: string): void {
+    this.conn
+      .prepare('DELETE FROM player_aliases WHERE player_id = ? AND alias = ?')
+      .run(playerId, alias);
+  }
 }
