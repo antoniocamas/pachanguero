@@ -47,4 +47,19 @@ export class ExclusionHistory {
   exclusionCount(): number {
     return this.kinds.filter(k => k !== 'mercy').length;
   }
+
+  /** Weeks left out on points alone: not a mercy seat, not a demotion. */
+  outOnPointsCount(): number {
+    return this.kinds.filter(k => k === 'points').length;
+  }
+
+  /**
+   * How many more points-scoring exclusions until the wait counter reaches the
+   * threshold that makes this player a mercy candidate; 0 once they are one.
+   */
+  gamesUntilMercy(
+    rules: Pick<SeasonRules, 'gamesOutForMercy' | 'mercyResetsCounter'>
+  ): number {
+    return Math.max(0, rules.gamesOutForMercy - this.waitCounter(rules));
+  }
 }

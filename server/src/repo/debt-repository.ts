@@ -7,6 +7,21 @@ export interface DebtRow extends ShareRow {
   id: number;
 }
 
+/** An owed share with the names and game a debts report needs. */
+export interface OutstandingShare {
+  id: number;
+  gameId: number;
+  playedOn: string;
+  gameLabel: string | null;
+  holderId: number;
+  holderName: string;
+  /** The player the share is for; null for an anonymous plus-one. */
+  beneficiaryId: number | null;
+  beneficiaryName: string | null;
+  guestOrdinal: number | null;
+  amountCents: number;
+}
+
 /** Shares still owed. Rows are removed once settled, so reads stay small. */
 export class DebtRepository {
   private readonly members = new ShareRowMember();
@@ -68,6 +83,24 @@ export class DebtRepository {
 
   delete(debtId: number): void {
     this.conn.prepare('DELETE FROM share_debts WHERE id = ?').run(debtId);
+  }
+
+  /** Every share still owed, oldest game first. */
+  outstanding(): OutstandingShare[] {
+    return this.conn
+      .prepare(
+        `SELECT d.id, d.game_id AS gameId, g.played_on AS playedOn,
+                g.label AS gameLabel, d.holder_player_id AS holderId,
+                h.name AS holderName, d.beneficiary_player_id AS beneficiaryId,
+                b.name AS beneficiaryName, d.guest_ordinal AS guestOrdinal,
+                d.amount_cents AS amountCents
+           FROM share_debts d
+           JOIN games g   ON g.id = d.game_id
+           JOIN players h ON h.id = d.holder_player_id
+           LEFT JOIN players b ON b.id = d.beneficiary_player_id
+          ORDER BY g.played_on, g.id, d.id`
+      )
+      .all() as OutstandingShare[];
   }
 
   /** What each holder owes across the played games of a season. */

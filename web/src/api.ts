@@ -100,6 +100,59 @@ export interface Debt {
   amount_cents: number;
 }
 
+/** A share still owed, with the names and game a report shows. */
+export interface OutstandingShare {
+  id: number;
+  gameId: number;
+  playedOn: string;
+  gameLabel: string | null;
+  holderId: number;
+  holderName: string;
+  /** null for an anonymous plus-one. */
+  beneficiaryId: number | null;
+  beneficiaryName: string | null;
+  guestOrdinal: number | null;
+  amountCents: number;
+}
+
+/** Whether a player's own share of a game is settled. */
+export type PaymentValue =
+  | {
+      status: 'paid';
+      amountCents: number;
+      payerId: number;
+      payerName: string;
+      paidOn: string;
+    }
+  | {
+      status: 'owed';
+      amountCents: number;
+      holderId: number;
+      holderName: string;
+    }
+  | { status: 'none' };
+
+/** Every game a player played, with what each statistic says about it. */
+export interface PlayerReport {
+  player: { id: number; name: string };
+  games: Array<{
+    gameId: number;
+    playedOn: string;
+    label: string | null;
+    seasonId: number;
+    season: string;
+    /** On the pitch; false when signed up and left out. */
+    played: boolean;
+    /** By statistic key; see lib/playerStats.ts. */
+    stats: Record<string, unknown>;
+  }>;
+  /** Today's season, which the season stats are about. */
+  season: { id: number; name: string } | null;
+  /** By statistic key; null where the player has no part in the season. */
+  seasonStats: Record<string, unknown>;
+  summary: { gamesPlayed: number } & Record<string, unknown>;
+}
+
 /** A share settled: who paid it, how much and when. */
 export interface Payment extends Debt {
   payer_player_id: number;
@@ -352,6 +405,11 @@ export const api = {
       method: 'POST',
       body: body({ seasons }),
     }),
+
+  playerReport: (playerId: number) =>
+    call<PlayerReport>(`/players/${playerId}/report`),
+
+  debts: () => call<OutstandingShare[]>('/debts'),
 
   standings: (seasonId: number) =>
     call<Standing[]>(`/seasons/${seasonId}/standings`),

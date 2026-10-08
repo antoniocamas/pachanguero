@@ -860,3 +860,44 @@ td .chip.oscuros {
   background: color-mix(in srgb, var(--accent) 20%, transparent);
   border-color: var(--accent);
 }
+
+/* ------------------------------------------------------------------- debts */
+
+.debt-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+}
+
+.debt-filters .sel {
+  flex: 1 1 160px;
+  min-width: 0;
+}
+
+.debt-filters .sp {
+  flex: 1;
+}
+
+.debtor-line {
+  flex-wrap: wrap;
+}
+
+.tag.stat-good {
+  background: var(--accent-dim);
+  color: #d4f7dc;
+}
+
+.tag.stat-bad {
+  background: rgba(248, 81, 73, 0.15);
+  color: var(--danger);
+}
+
+.tag.stat-muted {
+  color: var(--muted);
+}
+
+b.stat-good {
+  color: var(--accent);
+}

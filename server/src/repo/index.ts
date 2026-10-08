@@ -22,6 +22,11 @@ import { ParticipationRepository } from './participation-repository.js';
 import { ExclusionRepository } from './exclusion-repository.js';
 import { StandingsService } from './standings-service.js';
 import { GameLifecycle } from '../domain/game-lifecycle.js';
+import { CallUpStat } from './call-up-stat.js';
+import { MercySeasonStat } from './mercy-season-stat.js';
+import { PointsSeasonStat } from './points-season-stat.js';
+import { PaymentStat } from './payment-stat.js';
+import { PlayerReportService } from './player-report-service.js';
 import { DebtRepository } from './debt-repository.js';
 import { GameLifecycleService } from './game-lifecycle-service.js';
 import { ConvocatoriaRepository } from './convocatoria-repository.js';
@@ -91,6 +96,16 @@ export const gameLifecycle = new GameLifecycleService(
       new BillingPlanner()
     ),
   ],
+  db()
+);
+
+export const playerReport = new PlayerReportService(
+  [new CallUpStat(db()), new PaymentStat(db())],
+  [
+    new PointsSeasonStat(standingsService),
+    new MercySeasonStat(exclusions, seasons),
+  ],
+  seasons,
   db()
 );
 

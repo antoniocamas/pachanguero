@@ -80,3 +80,22 @@ describe('ExclusionHistory.exclusionCount', () => {
     ).toBe(3);
   });
 });
+
+describe('ExclusionHistory mercy progress', () => {
+  const stated = rules({ mercyResetsCounter: true, gamesOutForMercy: 2 });
+
+  it('counts the weeks out on points apart from demotions and mercy seats', () => {
+    expect(
+      history('points', 'demoted', 'mercy', 'points').outOnPointsCount()
+    ).toBe(2);
+  });
+
+  it('says how many more weeks out until a mercy seat is possible', () => {
+    expect(history().gamesUntilMercy(stated)).toBe(2);
+    expect(history('points').gamesUntilMercy(stated)).toBe(1);
+    expect(history('points', 'demoted').gamesUntilMercy(stated)).toBe(0);
+    expect(history('points', 'points', 'mercy').gamesUntilMercy(stated)).toBe(
+      2
+    );
+  });
+});

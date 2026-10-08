@@ -867,6 +867,25 @@ describe('API', () => {
       expect((await undone.json()).debts).toHaveLength(2);
     });
 
+    it('lists every share still owed, with names and game, on GET /debts', async () => {
+      const owed = (await (await send('GET', '/debts')).json()) as Array<{
+        gameId: number;
+        holderName: string;
+        beneficiaryName: string | null;
+        playedOn: string;
+        amountCents: number;
+      }>;
+      const ofGame = owed.filter(d => d.gameId === gameId);
+      expect(ofGame.map(d => d.holderName).sort()).toEqual([
+        'PayAna',
+        'PayBea',
+      ]);
+      expect(ofGame[0]).toMatchObject({
+        playedOn: '2046-10-07',
+        amountCents: 400,
+      });
+    });
+
     it('refuses a share nobody can name and a payer who does not owe it', async () => {
       const unnamed = await send('POST', `/games/${gameId}/payments`, {
         shares: [{}],

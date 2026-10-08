@@ -11,6 +11,7 @@ import {
   players,
   playerEdit,
   playerMerge,
+  playerReport,
   games,
   schedule,
   candidateResolution,
@@ -94,6 +95,11 @@ api.get(
   route((req, res) => res.json(standingsService.standings(id(req.params.id))))
 );
 
+api.get(
+  '/debts',
+  route((_req, res) => res.json(debtRepository.outstanding()))
+);
+
 /* ---------------------------------------------------------------- players */
 
 api.get(
@@ -150,6 +156,19 @@ api.post(
 api.get(
   '/players/details',
   route((_req, res) => res.json(playerEdit.list()))
+);
+
+/** Every game a player played, with the statistics about each. */
+api.get(
+  '/players/:playerId/report',
+  route((req, res) =>
+    res.json(
+      playerReport.report(
+        id(req.params.playerId),
+        new LocalCalendar().dateOf(new Date())
+      )
+    )
+  )
 );
 
 api.patch(

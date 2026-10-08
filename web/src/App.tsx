@@ -2,10 +2,12 @@ import { useCallback, useEffect, useState } from 'react';
 import { api, type Game, type Player, type Season } from './api';
 import { GameDay } from './pages/GameDay';
 import { Standings } from './pages/Standings';
+import { Debts } from './pages/Debts';
+import { PlayerReportPage } from './pages/PlayerReportPage';
 import { Manage } from './pages/Manage';
 import { NewSeasonPrompt } from './components/NewSeasonPrompt';
 
-type Tab = 'game' | 'standings' | 'manage';
+type Tab = 'game' | 'standings' | 'debts' | 'player' | 'manage';
 
 export function App() {
   const [tab, setTab] = useState<Tab>('game');
@@ -106,6 +108,10 @@ export function App() {
         />
       ) : tab === 'standings' ? (
         <Standings season={season} />
+      ) : tab === 'debts' ? (
+        <Debts />
+      ) : tab === 'player' ? (
+        <PlayerReportPage />
       ) : (
         <Manage
           season={season}
@@ -131,6 +137,21 @@ export function App() {
             🏆
           </span>
           Puntos
+        </button>
+        <button aria-current={tab === 'debts'} onClick={() => setTab('debts')}>
+          <span className="ico" aria-hidden>
+            💸
+          </span>
+          Deudas
+        </button>
+        <button
+          aria-current={tab === 'player'}
+          onClick={() => setTab('player')}
+        >
+          <span className="ico" aria-hidden>
+            👤
+          </span>
+          Jugador
         </button>
         <button
           aria-current={tab === 'manage'}
