@@ -78,14 +78,14 @@ export const peopleOwing = (
 export const whatsappText = (shares: OutstandingShare[]): string => {
   const lines = ['*Deudas del fútbol* ⚽'];
   for (const d of groupByDebtor(shares)) {
-    lines.push('', `*${d.name}* — ${euros(d.totalCents)}`);
+    lines.push('', `*${d.name}*`);
     for (const s of d.shares) {
       const who = forWhom(s);
       lines.push(
         `• ${gameName(s)}${who ? ` (${who})` : ''}: ${euros(s.amountCents)}`
       );
     }
+    lines.push(`Total: ${euros(d.totalCents)}`);
   }
-  lines.push('', `*Total: ${euros(totalCents(shares))}*`);
   return lines.join('\n');
 };

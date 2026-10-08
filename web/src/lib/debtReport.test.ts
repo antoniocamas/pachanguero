@@ -3,6 +3,7 @@ import type { OutstandingShare } from '../api';
 import {
   filterShares,
   gamesOwed,
+  gameName,
   groupByDebtor,
   peopleOwing,
   whatsappText,
@@ -66,11 +67,21 @@ describe('debt report', () => {
     expect(peopleOwing(shares).map(p => p.name)).toEqual(['Ana', 'Bea']);
   });
 
-  it('writes a message with a plus-one named and the total', () => {
-    const text = whatsappText(shares);
-    expect(text).toContain('*Ana* — 12 €');
-    expect(text).toContain('(+1): 4 €');
-    expect(text).toContain('*Bea* — 4 €');
-    expect(text.endsWith('*Total: 16 €*')).toBe(true);
+  it('writes each person with their games and a total of their own, and no grand total', () => {
+    expect(whatsappText(shares)).toBe(
+      [
+        '*Deudas del fútbol* ⚽',
+        '',
+        '*Ana*',
+        `• ${gameName(shares[0])}: 4 €`,
+        `• ${gameName(shares[1])}: 4 €`,
+        `• ${gameName(shares[3])} (+1): 4 €`,
+        'Total: 12 €',
+        '',
+        '*Bea*',
+        `• ${gameName(shares[2])}: 4 €`,
+        'Total: 4 €',
+      ].join('\n')
+    );
   });
 });
