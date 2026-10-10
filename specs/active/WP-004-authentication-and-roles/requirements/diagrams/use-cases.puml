@@ -1,0 +1,47 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Usuario anónimo" as Anon
+actor "Jugador\n(regular)" as Regular
+actor "Administrador" as Admin
+
+rectangle "Pachanguero" {
+  usecase "UC-004-01\nIniciar sesión" as UC01
+  usecase "UC-004-02\nMantener la sesión y salir" as UC02
+  usecase "UC-004-03\nSólo el admin llega\na las rutas del organizador" as UC03
+  usecase "UC-004-04\nGestionar usuarios (CLI)" as UC04
+  usecase "UC-004-05\nVer mis deudas" as UC05
+  usecase "UC-004-06\nVer mis pagos" as UC06
+  usecase "UC-004-07\nVer mis estadísticas" as UC07
+  usecase "UC-004-08\nEditar mi email y teléfono" as UC08
+  usecase "UC-004-09\nCambiar mi contraseña" as UC09
+  usecase "UC-004-10\nCrear copia de seguridad (CLI)" as UC10
+  usecase "UC-004-11\nVer como jugador / volver a admin" as UC11
+}
+
+Anon --> UC01
+Regular --> UC01
+Admin --> UC01
+Regular --> UC02
+Admin --> UC02
+Regular --> UC05
+Regular --> UC06
+Regular --> UC07
+Regular --> UC08
+Regular --> UC09
+Admin --> UC09
+Admin --> UC04
+Admin --> UC10
+Admin --> UC11
+Admin --> UC03
+
+UC02 ..> UC01 : <<include>> sesión
+UC05 ..> UC03 : <<include>> comprobar rol
+UC06 ..> UC03 : <<include>> comprobar rol
+UC07 ..> UC03 : <<include>> comprobar rol
+UC08 ..> UC03 : <<include>> comprobar rol
+UC11 ..> UC05 : <<extend>>
+UC11 ..> UC06 : <<extend>>
+UC11 ..> UC07 : <<extend>>
+@enduml

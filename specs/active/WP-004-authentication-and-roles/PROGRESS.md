@@ -5,9 +5,9 @@
 | Phase        | Status  | Completed  |
 | ------------ | ------- | ---------- |
 | Proposal     | settled | 2026-10-09 |
-| Vision       | pending | —          |
-| Study        | pending | —          |
-| Requirements | pending | —          |
+| Vision       | settled | 2026-10-10 |
+| Study        | settled | 2026-10-10 |
+| Requirements | settled | 2026-10-11 |
 | Design       | pending | —          |
 | Anatomy      | pending | —          |
 

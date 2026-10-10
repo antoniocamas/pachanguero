@@ -1,8 +1,8 @@
 {
   "id": "WP-004-authentication-and-roles",
-  "status": "proposal",
+  "status": "Requirements settled",
   "importance": "must",
   "priority": 3,
   "created": "2026-10-09",
-  "updated": "2026-10-09"
+  "updated": "2026-10-11"
 }
