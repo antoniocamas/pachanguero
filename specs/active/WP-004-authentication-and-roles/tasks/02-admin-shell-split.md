@@ -38,15 +38,15 @@ and the two existing E2E specs are the verification that the admin tabs are iden
 
 ## Definition of Done
 
-- [ ] `pages/AdminShell.tsx` holds the former `App.tsx` behaviour; `App.tsx` renders it
+- [x] `pages/AdminShell.tsx` holds the former `App.tsx` behaviour; `App.tsx` renders it
       (`npm run build` compiles both workspaces).
-- [ ] The existing E2E specs run unmodified and pass (`npm run test:e2e`).
-- [ ] **Graduation:** UC-004-03-S7 is a hard requirement → the two existing E2E specs staying green,
+- [x] The existing E2E specs run unmodified and pass (`npm run test:e2e`).
+- [x] **Graduation:** UC-004-03-S7 is a hard requirement → the two existing E2E specs staying green,
       and the shell tests added by task 03 (login, guard); recorded here as carried by those specs.
-- [ ] **Hard requirements:** no new test is added by this task; the carrier is the unchanged E2E
+- [x] **Hard requirements:** no new test is added by this task; the carrier is the unchanged E2E
       specs named above, and this line is the record.
-- [ ] **Documentation:** none made untrue by the move alone (the `AGENTS.md` description of `App.tsx`
+- [x] **Documentation:** none made untrue by the move alone (the `AGENTS.md` description of `App.tsx`
       is changed by task 03, when the root first chooses between shells).
-- [ ] **Tests:** `npm test` and `npm run test:e2e`.
-- [ ] **Regression:** the two commands above are the regression for this task.
-- [ ] **Code checks:** `npm run lint` and `npm run format:check` pass on every touched file.
+- [x] **Tests:** `npm test` and `npm run test:e2e`.
+- [x] **Regression:** the two commands above are the regression for this task.
+- [x] **Code checks:** `npm run lint` and `npm run format:check` pass on every touched file.
