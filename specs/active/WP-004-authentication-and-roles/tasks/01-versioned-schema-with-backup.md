@@ -50,18 +50,18 @@ Testability: fully automatable (HLD 2.10, R1 row). Types per the design's R1 Tes
 
 ## Definition of Done
 
-- [ ] `SchemaMigrator`, `DatabaseBackup`, `Clock` and the `LocalCalendar` change exist as the R1
+- [x] `SchemaMigrator`, `DatabaseBackup`, `Clock` and the `LocalCalendar` change exist as the R1
       subsection specifies, and `db()` runs the migrator (`npm test --workspace=server`).
-- [ ] The three UC-004-10-S5/S6/S7 behaviours each have a test (list above).
-- [ ] **Graduation:** UC-004-10-S5, S6 and S7 are hard requirements → `schema-migrator.test.ts` and
+- [x] The three UC-004-10-S5/S6/S7 behaviours each have a test (list above).
+- [x] **Graduation:** UC-004-10-S5, S6 and S7 are hard requirements → `schema-migrator.test.ts` and
       `database-backup.test.ts`.
-- [ ] **Hard requirements:** each scenario named in Graduation has a test whose title says what it
+- [x] **Hard requirements:** each scenario named in Graduation has a test whose title says what it
       asserts, with no work-package identifier in the code (the project has no marking convention);
       this line is the record of which test carries which scenario.
-- [ ] **Documentation:** `AGENTS.md`, the `server/src/db/` paragraph ("no migration system — edit
+- [x] **Documentation:** `AGENTS.md`, the `server/src/db/` paragraph ("no migration system — edit
       `schema.sql` directly …"): replace with the version-stamp rule, the backup before a migration and
       its location, and keep the "delete and reseed" note only for throwaway local databases.
-- [ ] **Tests:** `npm test`.
-- [ ] **Regression:** `npm test` (the full server and web suites); the closing regression task 06 runs
+- [x] **Tests:** `npm test`.
+- [x] **Regression:** `npm test` (the full server and web suites); the closing regression task 06 runs
       the E2E.
-- [ ] **Code checks:** `npm run lint` and `npm run format:check` pass on every touched file.
+- [x] **Code checks:** `npm run lint` and `npm run format:check` pass on every touched file.

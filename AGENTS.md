@@ -64,10 +64,15 @@ server/src/domain/    classes: PointsCalculator, SeniorityCurve, ConvocatoriaBui
                       CandidateLineParser, TeamListParser, GameLifecycle, PlayedDerivation,
                       DebtLedger, GuestSlotAllocator, ...
                       (+ all tests). Knows nothing of SQLite or HTTP. THE rules live here.
-server/src/db/        better-sqlite3 singleton; schema.sql runs idempotently on open
-                      (no migration system — edit schema.sql directly; a changed table
-                      definition needs the local DB file and its -wal/-shm deleted, then
-                      `npm run seed`; `--reset` only removes the imported season's rows)
+server/src/db/        better-sqlite3 singleton; SchemaMigrator runs schema.sql on open and
+                      keeps the file's version in `PRAGMA user_version`. A new file gets
+                      schema.sql; an older one is first copied by DatabaseBackup to
+                      `<PACHANGUERO_BACKUPS, default backups/ beside the DB>/pachanguero-<time>-before-migration.db`
+                      and then migrated in one transaction. A changed table definition is a
+                      new MigrationStep (raise LATEST_SCHEMA_VERSION) plus the same change in
+                      schema.sql for new files. Only a throwaway local database is deleted
+                      with its -wal/-shm and reseeded (`npm run seed`; `--reset` only removes
+                      the imported season's rows)
 server/src/repo/      repository/service classes; converts snake_case rows to domain
                       types; server/src/repo/index.ts is the composition root.
                       Services orchestrate one use case each: CandidateResolutionService,

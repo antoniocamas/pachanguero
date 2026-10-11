@@ -1,0 +1,257 @@
+import Database from 'better-sqlite3';
+import {
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import type { Clock } from '../domain/clock.js';
+import { LocalCalendar } from '../domain/local-calendar.js';
+import { DatabaseBackup } from './database-backup.js';
+import {
+  LATEST_SCHEMA_VERSION,
+  SchemaMigrator,
+  type MigrationBackup,
+  type MigrationStep,
+} from './schema-migrator.js';
+
+const here = dirname(fileURLToPath(import.meta.url));
+const currentSchema = readFileSync(join(here, 'schema.sql'), 'utf8');
+const legacySchema = readFileSync(join(here, 'fixtures/schema-v0.sql'), 'utf8');
+
+class FixedClock implements Clock {
+  now(): Date {
+    return new Date(2026, 9, 11, 19, 30, 0);
+  }
+}
+
+class FailingBackup implements MigrationBackup {
+  create(): string {
+    throw new Error('disk full');
+  }
+}
+
+class AddsATable implements MigrationStep {
+  constructor(
+    readonly version: number,
+    private readonly table: string,
+    private readonly fails = false
+  ) {}
+  apply(conn: Database.Database): void {
+    conn.exec(`CREATE TABLE ${this.table} (id INTEGER PRIMARY KEY)`);
+    if (this.fails) throw new Error('step failed');
+  }
+}
+
+describe('SchemaMigrator', () => {
+  let root: string;
+  let dbPath: string;
+  let backupDir: string;
+  const open: Database.Database[] = [];
+
+  const connect = () => {
+    const conn = new Database(dbPath);
+    conn.pragma('foreign_keys = ON');
+    open.push(conn);
+    return conn;
+  };
+  const backupFor = (conn: Database.Database) =>
+    new DatabaseBackup(conn, backupDir, new FixedClock(), new LocalCalendar());
+  const migrator = (
+    conn: Database.Database,
+    steps: MigrationStep[] = [],
+    latest = LATEST_SCHEMA_VERSION,
+    backup: MigrationBackup = backupFor(conn)
+  ) => new SchemaMigrator(conn, currentSchema, latest, steps, backup);
+  const version = (conn: Database.Database) =>
+    conn.pragma('user_version', { simple: true });
+  const tables = (conn: Database.Database) =>
+    conn
+      .prepare(
+        "SELECT name, sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%' ORDER BY name"
+      )
+      .all();
+
+  /** A database as an older release left it: schema without a version stamp, with live rows. */
+  const legacyDatabase = () => {
+    const conn = connect();
+    conn.exec(legacySchema);
+    conn.exec(`
+      INSERT INTO seasons (id, name, starts_on, ends_on, price_cents) VALUES (1, '2025/2026', '2025-09-01', '2026-08-31', 5600);
+      INSERT INTO players (id, name) VALUES (1, 'Ana López'), (2, 'Beto Ruiz'), (3, 'Carlos García');
+      INSERT INTO games (id, season_id, played_on, status) VALUES (1, 1, '2025-09-10', 'played'), (2, 1, '2025-09-17', 'open');
+      INSERT INTO participations (game_id, player_id, signed_up, played, paid_cents, paid_on)
+        VALUES (1, 1, 1, 1, 800, '2025-09-12'), (1, 2, 1, 1, 0, NULL);
+      INSERT INTO convocatorias (id, game_id, rules_json, confirmed_at, source)
+        VALUES (1, 1, '{}', '2025-09-09', 'history');
+      INSERT INTO share_debts (game_id, holder_player_id, beneficiary_player_id, amount_cents) VALUES (1, 2, 2, 800);
+      INSERT INTO payments (game_id, holder_player_id, beneficiary_player_id, payer_player_id, amount_cents, paid_on)
+        VALUES (1, 1, 1, 1, 800, '2025-09-12');
+    `);
+    return conn;
+  };
+  const counts = (conn: Database.Database) => {
+    const names = [
+      'seasons',
+      'players',
+      'games',
+      'participations',
+      'convocatorias',
+      'share_debts',
+      'payments',
+    ];
+    return Object.fromEntries(
+      names.map(n => [
+        n,
+        (conn.prepare(`SELECT COUNT(*) AS c FROM ${n}`).get() as { c: number })
+          .c,
+      ])
+    );
+  };
+  const content = (conn: Database.Database) =>
+    conn
+      .prepare(
+        `SELECT g.id, g.played_on, g.status, p.player_id, p.paid_cents, p.paid_on,
+                (SELECT SUM(amount_cents) FROM payments) AS paid_total,
+                (SELECT holder_player_id FROM share_debts) AS debt_holder
+           FROM games g LEFT JOIN participations p ON p.game_id = g.id ORDER BY g.id, p.player_id`
+      )
+      .all();
+
+  beforeEach(() => {
+    root = mkdtempSync(join(tmpdir(), 'pachanguero-migrator-'));
+    dbPath = join(root, 'live.db');
+    backupDir = join(root, 'backups');
+  });
+
+  afterEach(() => {
+    for (const conn of open.splice(0)) conn.close();
+    rmSync(root, { recursive: true, force: true });
+  });
+
+  it('gives a new file the whole schema and the latest version, with no backup', () => {
+    const conn = connect();
+    migrator(conn).run();
+    expect(version(conn)).toBe(LATEST_SCHEMA_VERSION);
+    expect(tables(conn).length).toBeGreaterThan(10);
+    expect(existsSync(backupDir)).toBe(false);
+  });
+
+  it('keeps every row of a file written before versions existed', () => {
+    const conn = legacyDatabase();
+    const before = { counts: counts(conn), content: content(conn) };
+    expect(version(conn)).toBe(0);
+
+    migrator(conn).run();
+
+    expect(counts(conn)).toEqual(before.counts);
+    expect(content(conn)).toEqual(before.content);
+    expect(version(conn)).toBe(LATEST_SCHEMA_VERSION);
+  });
+
+  it('migrates a legacy file to the same schema as a new one', () => {
+    const fresh = new Database(':memory:');
+    open.push(fresh);
+    migrator(fresh).run();
+
+    const legacy = legacyDatabase();
+    migrator(legacy).run();
+
+    expect(tables(legacy)).toEqual(tables(fresh));
+  });
+
+  it('starting the same file twice makes one backup and no more', () => {
+    const first = legacyDatabase();
+    migrator(first).run();
+    expect(readdirSync(backupDir)).toEqual([
+      'pachanguero-20261011-193000-before-migration.db',
+    ]);
+
+    const again = connect();
+    migrator(again).run();
+    expect(readdirSync(backupDir)).toEqual([
+      'pachanguero-20261011-193000-before-migration.db',
+    ]);
+    expect(version(again)).toBe(LATEST_SCHEMA_VERSION);
+  });
+
+  it('writes a backup that holds the rows the file had before it was migrated', () => {
+    const conn = legacyDatabase();
+    const before = counts(conn);
+    migrator(conn).run();
+
+    const copy = new Database(join(backupDir, readdirSync(backupDir)[0]), {
+      readonly: true,
+    });
+    open.push(copy);
+    expect(counts(copy)).toEqual(before);
+    expect(version(copy)).toBe(0);
+  });
+
+  it('does not migrate, and reports the failure, when the backup cannot be written', () => {
+    const conn = legacyDatabase();
+    const run = () =>
+      migrator(
+        conn,
+        [new AddsATable(1, 'extra')],
+        1,
+        new FailingBackup()
+      ).run();
+
+    expect(run).toThrow('disk full');
+    expect(version(conn)).toBe(0);
+    expect(tables(conn).map(t => (t as { name: string }).name)).not.toContain(
+      'extra'
+    );
+  });
+
+  it('applies the steps above the stored version, in order, and stamps the latest', () => {
+    const conn = legacyDatabase();
+    migrator(
+      conn,
+      [new AddsATable(1, 'one'), new AddsATable(2, 'two')],
+      2
+    ).run();
+    const names = tables(conn).map(t => (t as { name: string }).name);
+    expect(names).toContain('one');
+    expect(names).toContain('two');
+    expect(version(conn)).toBe(2);
+
+    conn.pragma('user_version = 1');
+    conn.exec('DROP TABLE two');
+    migrator(
+      conn,
+      [new AddsATable(1, 'one'), new AddsATable(2, 'two')],
+      2
+    ).run();
+    expect(tables(conn).map(t => (t as { name: string }).name)).toContain(
+      'two'
+    );
+  });
+
+  it('leaves the file at its old version when a step fails halfway', () => {
+    const conn = legacyDatabase();
+    const run = () =>
+      migrator(conn, [new AddsATable(1, 'half', true)], 1).run();
+
+    expect(run).toThrow('step failed');
+    expect(version(conn)).toBe(0);
+    expect(tables(conn).map(t => (t as { name: string }).name)).not.toContain(
+      'half'
+    );
+  });
+
+  it('refuses a file made by a newer application and touches nothing', () => {
+    const conn = legacyDatabase();
+    conn.pragma(`user_version = ${LATEST_SCHEMA_VERSION + 1}`);
+
+    expect(() => migrator(conn).run()).toThrow('más nueva');
+    expect(existsSync(backupDir)).toBe(false);
+    expect(version(conn)).toBe(LATEST_SCHEMA_VERSION + 1);
+  });
+});
