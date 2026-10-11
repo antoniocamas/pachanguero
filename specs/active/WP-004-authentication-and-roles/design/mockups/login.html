@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Entrar</title>
+<link rel="stylesheet" href="mockups.css">
+</head>
+<body>
+<div class="page">
+<h1>Entrar</h1>
+<p class="lead">Pantalla que ve cualquiera sin sesión (UC-004-01). El mismo mensaje para usuario inexistente, desactivado o contraseña incorrecta; la cuenta bloqueada sí dice cuánto falta.</p>
+<nav class="index"><a href="index.html">Índice</a><a href="login.html">Entrar</a><a href="debts.html">Deudas</a><a href="payments.html">Pagos</a><a href="stats.html">Estadísticas</a><a href="settings.html">Ajustes del jugador</a><a href="admin-account.html">Ajustes del administrador</a></nav>
+<div class="frames">
+<figure class="shot"><figcaption><b>1.</b> Primera pantalla, sin sesión.</figcaption><div class="phone"><div class="login">
+<h1><span aria-hidden="true">⚽</span> Pachanguero</h1>
+<p class="sub">Entra con tu usuario</p>
+
+<label class="field"><span>Usuario</span><input value="" autocomplete="username"></label>
+<label class="field"><span>Contraseña</span><input type="password" value="" autocomplete="current-password"></label>
+<button class="btn primary wide">Entrar</button>
+</div></div></figure>
+<figure class="shot"><figcaption><b>2.</b> Contraseña incorrecta (también usuario inexistente o desactivado: mismo texto).</figcaption><div class="phone"><div class="login">
+<h1><span aria-hidden="true">⚽</span> Pachanguero</h1>
+<p class="sub">Entra con tu usuario</p>
+<div class="err">Usuario o contraseña incorrectos.</div>
+<label class="field"><span>Usuario</span><input value="carlos" autocomplete="username"></label>
+<label class="field"><span>Contraseña</span><input type="password" value="••••••••••" autocomplete="current-password"></label>
+<button class="btn primary wide">Entrar</button>
+</div></div></figure>
+<figure class="shot"><figcaption><b>3.</b> Quinto fallo: cuenta bloqueada 15 minutos.</figcaption><div class="phone"><div class="login">
+<h1><span aria-hidden="true">⚽</span> Pachanguero</h1>
+<p class="sub">Entra con tu usuario</p>
+<div class="err">Cuenta bloqueada. Inténtalo de nuevo en 15 minutos.</div>
+<label class="field"><span>Usuario</span><input value="carlos" autocomplete="username"></label>
+<label class="field"><span>Contraseña</span><input type="password" value="••••••••••" autocomplete="current-password"></label>
+<button class="btn primary wide" disabled>Entrar</button>
+</div></div></figure>
+<figure class="shot"><figcaption><b>4.</b> Después de cambiar la contraseña, se cierra la sesión y se vuelve aquí.</figcaption><div class="phone"><div class="login">
+<h1><span aria-hidden="true">⚽</span> Pachanguero</h1>
+<p class="sub">Entra con tu usuario</p>
+<div class="ok">Contraseña cambiada. Entra con la nueva.</div>
+<label class="field"><span>Usuario</span><input value="carlos" autocomplete="username"></label>
+<label class="field"><span>Contraseña</span><input type="password" value="••••••••••" autocomplete="current-password"></label>
+<button class="btn primary wide">Entrar</button>
+</div></div></figure>
+</div>
+</div>
+</body>
+</html>

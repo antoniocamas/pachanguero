@@ -1,0 +1,19 @@
+@startuml request-path
+title Every /api request, in mount order
+actor Caller
+participant "securityHeaders\n+ json" as H
+participant "publicRouter\n/auth/login|refresh|logout" as P
+participant "authenticate" as A
+participant "sessionRouter\nPUT /me/password, POST /auth/view" as S
+participant "ownRouter\n/me/debts|payments|report|contact" as O
+participant "adminRouter\n(existing api.ts, 43 routes)" as D
+
+Caller -> H
+H -> P : match? yes -> handle (no token needed)
+H -> A : no match
+A -> A : verify Bearer (HS256, type=access, exp)\nelse 401
+A -> S : match? needs a verified principal
+A -> O : requireEffective('regular') else 403\nplayer id read from users row
+A -> D : requireEffective('admin') else 403
+D --> Caller : unknown path -> 404 only for admin;\nanon 401, regular 403
+@enduml

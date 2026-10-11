@@ -1,0 +1,33 @@
+@startuml components
+title WP-004 — components and the request path
+skinparam componentStyle rectangle
+
+package "web/src" {
+  [Web session\n(api.ts, lib/sessionClient, useSession, Login)] as WEBS
+  [Web shells and own view\n(App, AdminShell, OwnView, components)] as WEBV
+}
+
+package "server/src" {
+  [HTTP edge\n(index.ts, routes/*)] as EDGE
+  [Access domain\n(domain/*)] as DOM
+  [Identity repositories and services\n(repo/*)] as REP
+  [Schema and backup\n(db/*)] as DB
+  [Operator CLI\n(cli/*)] as CLI
+}
+
+[Packaging and docs] as PKG
+[Test support] as TST
+
+WEBV --> WEBS : token + 401 handling
+WEBS --> EDGE : /api/auth/*, Bearer
+WEBV --> EDGE : /api/me/*, admin routes
+EDGE --> REP : AuthService, OwnDataService, ...
+EDGE --> DOM : EffectiveRole, TokenService
+REP --> DOM : policies, hasher, disclosure
+REP --> DB : better-sqlite3 via db()
+CLI --> REP : UserAdminService, backup
+CLI --> DB
+PKG ..> CLI : docker exec
+TST ..> EDGE
+TST ..> DB
+@enduml

@@ -1,0 +1,373 @@
+/* Static mockups of the WP-004 screens. Same look as web/src/styles.css (copied tokens
+   and the few components used); sample data only; no scripts. */
+:root {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --surface-2: #1c2430;
+  --line: #2a3441;
+  --text: #e6edf3;
+  --muted: #8b98a5;
+  --accent: #3fb950;
+  --accent-dim: #1f6f33;
+  --warn: #d29922;
+  --danger: #f85149;
+  --mercy: #a371f7;
+  --radius: 12px;
+  color-scheme: dark;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: #05080c;
+  color: var(--text);
+  font:
+    15px/1.5 -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    system-ui,
+    sans-serif;
+}
+
+/* ---- page around the phones ---- */
+.page {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+.page > h1 {
+  font-size: 20px;
+  margin: 0 0 4px;
+}
+.page > p.lead {
+  color: var(--muted);
+  margin: 0 0 20px;
+  max-width: 70ch;
+}
+.page nav.index {
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+.page nav.index a {
+  color: var(--accent);
+  margin-right: 14px;
+}
+.frames {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 28px;
+  align-items: flex-start;
+}
+figure.shot {
+  margin: 0;
+}
+figure.shot figcaption {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 0 0 8px;
+  max-width: 375px;
+}
+figure.shot figcaption b {
+  color: var(--text);
+}
+
+/* ---- the phone (375 x 760) ---- */
+.phone {
+  width: 375px;
+  height: 760px;
+  overflow-y: auto;
+  position: relative;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  display: flex;
+  flex-direction: column;
+}
+.phone .app {
+  flex: 1;
+  padding: 0 16px 16px;
+}
+
+/* ---- header ---- */
+header.top {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(13, 17, 23, 0.95);
+  border-bottom: 1px solid var(--line);
+  margin: 0 -16px 16px;
+  padding: 12px 16px;
+}
+header.top h1 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+header.top .who {
+  margin-left: auto;
+  font-size: 13px;
+  font-weight: 450;
+  color: var(--muted);
+}
+header.top .link {
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font: inherit;
+  font-size: 13px;
+}
+
+/* ---- bottom tabs (sticky inside the phone instead of fixed) ---- */
+nav.tabs {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  background: rgba(22, 27, 34, 0.98);
+  border-top: 1px solid var(--line);
+}
+nav.tabs button {
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  padding: 10px 4px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+nav.tabs button .ico {
+  font-size: 18px;
+  line-height: 1;
+}
+nav.tabs button[aria-current='true'] {
+  color: var(--accent);
+}
+
+/* ---- cards and rows ---- */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+.card > h2 {
+  margin: 0;
+  padding: 12px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card > h2 .right {
+  margin-left: auto;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.card > p.note {
+  margin: 0;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.row:last-child {
+  border-bottom: none;
+}
+.row .name {
+  flex: 1;
+  min-width: 0;
+}
+.row .name small {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+}
+.row .amount {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.row.total {
+  background: var(--surface-2);
+  font-weight: 650;
+}
+.tag {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--surface-2);
+  color: var(--muted);
+}
+.tag.stat-good {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  color: #d4f7dc;
+}
+.tag.stat-bad {
+  background: color-mix(in srgb, var(--danger) 22%, transparent);
+  color: #ffd9d6;
+}
+.tag.stat-muted {
+  background: var(--surface-2);
+  color: var(--muted);
+}
+.debtor-line {
+  flex-wrap: wrap;
+}
+.debtor-line .name {
+  flex-basis: 100%;
+}
+b.stat-good {
+  color: var(--accent);
+}
+b.stat-bad {
+  color: var(--danger);
+}
+.empty {
+  padding: 28px 16px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 14px;
+}
+.empty .big {
+  display: block;
+  font-size: 28px;
+  margin-bottom: 6px;
+}
+.muted {
+  color: var(--muted);
+}
+
+/* ---- forms ---- */
+.form {
+  padding: 14px;
+}
+input {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--text);
+  border-radius: 9px;
+  padding: 9px 11px;
+  font: inherit;
+  font-size: 16px;
+  width: 100%;
+}
+input.invalid {
+  border-color: var(--danger);
+}
+label.field {
+  display: block;
+  margin: 0 0 12px;
+}
+label.field span {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 5px;
+}
+label.field small {
+  display: block;
+  color: var(--danger);
+  font-size: 12px;
+  margin-top: 4px;
+}
+button.btn {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--text);
+  border-radius: 9px;
+  padding: 9px 14px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 550;
+}
+button.btn.primary {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: #d4f7dc;
+}
+button.btn.wide {
+  width: 100%;
+}
+.err {
+  background: color-mix(in srgb, var(--danger) 15%, transparent);
+  border: 1px solid var(--danger);
+  color: #ffd9d6;
+  border-radius: 9px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  font-size: 14px;
+}
+.ok {
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  border: 1px solid var(--accent);
+  color: #d4f7dc;
+  border-radius: 9px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  font-size: 14px;
+}
+ul.rules {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  font-size: 13px;
+}
+
+/* ---- login ---- */
+.login {
+  padding: 64px 16px 16px;
+}
+.login h1 {
+  text-align: center;
+  font-size: 24px;
+  margin: 0 0 4px;
+}
+.login p.sub {
+  text-align: center;
+  color: var(--muted);
+  margin: 0 0 28px;
+}
+
+/* ---- admin shell bits ---- */
+.sections {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.sections .chip {
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 5px 11px;
+  font-size: 12px;
+  font-weight: 550;
+}
+.sections .chip[data-on='true'] {
+  color: var(--text);
+  border-color: var(--accent);
+}
