@@ -15,7 +15,7 @@
 
 | #   | Iteration                            | Status  |
 | --- | ------------------------------------ | ------- |
-| 1   | Authentication and roles, end to end | ongoing |
+| 1   | Authentication and roles, end to end | done    |
 
 ## Tasks
 
