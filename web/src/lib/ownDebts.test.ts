@@ -93,6 +93,7 @@ describe('viewSwitchAction', () => {
     mode: 'admin',
     playerName: 'Antonio',
     canSwitchView: true,
+    viewingAs: null,
     ...over,
   });
 

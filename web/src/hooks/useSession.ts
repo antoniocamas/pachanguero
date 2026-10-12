@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../api';
-import type { SessionUser } from '../lib/sessionClient';
+import type { SessionUser, SwitchView } from '../lib/sessionClient';
 
 export type SessionState =
   | { status: 'loading' }
@@ -36,8 +36,8 @@ export function useSession() {
     setState({ status: 'anonymous' });
   }, []);
 
-  const switchView = useCallback(async (view: 'admin' | 'regular') => {
-    const user = await api.switchView(view);
+  const switchView = useCallback<SwitchView>(async (view, playerId) => {
+    const user = await api.switchView(view, playerId);
     setState({ status: 'authenticated', user });
   }, []);
 

@@ -1,4 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { ContactRepository } from '../repo/contact-repository.js';
+import { ViewAsLogRepository } from '../repo/view-as-log-repository.js';
 import { OwnDataService } from '../repo/own-data-service.js';
 import { AuthTestApp, type ApiReply } from './auth-test-support.js';
 
@@ -356,6 +358,186 @@ describe('the routes of any signed-in user', () => {
       const second = await admin();
       const reply = await switchTo('regular', first.token, second.cookie);
       expect(reply.status).toBe(401);
+    });
+
+    describe('looking at the app as another player', () => {
+      const viewAs = (playerId: unknown, token: string, cookie?: string) =>
+        app.request('/api/auth/view', {
+          token,
+          cookie,
+          body: { view: 'regular', player: playerId },
+        });
+      const as = async (name: string) => {
+        const { players } = repo;
+        return (
+          players.listAll().find(p => p.name === name) ?? players.register(name)
+        ).id;
+      };
+      const logged = () =>
+        new ViewAsLogRepository(app.conn)
+          .recent(100)
+          .map(e => [e.admin, e.playerName]);
+
+      it('shows an admin, with or without a player of their own, what that player sees, and no organiser route', async () => {
+        const { token, cookie } = await admin(false);
+        const target = await as(`Visto ${fresh('p')}`);
+        const game = repo.games.create(
+          repo.seasons.create({ name: `2031/${2032 + n}` }).id,
+          `2031-10-${String(10 + n).padStart(2, '0')}`
+        ).id;
+        repo.games.setState(game, 'played');
+        repo.debtRepository.insert(game, { playerId: target }, target, 700);
+
+        const reply = await viewAs(target, token, cookie);
+
+        expect(reply.status).toBe(200);
+        expect(reply.body.user).toMatchObject({
+          role: 'admin',
+          mode: 'regular',
+          viewingAs: repo.players.nameOf(target),
+          playerName: repo.players.nameOf(target),
+        });
+        expect(await status('/api/debts', reply)).toBe(403);
+        const debts = await app.request('/api/me/debts', {
+          token: reply.body.accessToken,
+        });
+        expect(debts.body).toMatchObject({ owedCents: 700 });
+      });
+
+      it('leaves a log entry for another player, and none for the admin own', async () => {
+        const { username, user, token, cookie } = await admin();
+        const target = await as(`Visto ${fresh('p')}`);
+
+        await viewAs(user.playerId, token, cookie);
+        expect(logged()).not.toContainEqual([username, expect.anything()]);
+        const own = await viewAs(user.playerId, token, cookie);
+        expect(own.body.user?.viewingAs).toBeNull();
+
+        await viewAs(target, token, cookie);
+        expect(logged()[0]).toEqual([username, repo.players.nameOf(target)]);
+      });
+
+      it('lets the admin change the contact data of the player they are looking at, not their own', async () => {
+        const { user, token, cookie } = await admin();
+        const target = await as(`Visto ${fresh('p')}`);
+        const reply = await viewAs(target, token, cookie);
+
+        const saved = await app.request('/api/me/contact', {
+          method: 'PATCH',
+          token: reply.body.accessToken,
+          body: { email: 'visto@example.com' },
+        });
+
+        expect(saved.status).toBe(200);
+        expect(new ContactRepository(app.conn).get(target)).toMatchObject({
+          email: 'visto@example.com',
+        });
+        expect(new ContactRepository(app.conn).get(user.playerId!)).toEqual({
+          email: null,
+          phone: null,
+        });
+      });
+
+      it('refuses to change a password while looking at another player, since it would be the admin own', async () => {
+        const { username, token, cookie } = await admin();
+        const target = await as(`Visto ${fresh('p')}`);
+        const reply = await viewAs(target, token, cookie);
+        const before = passwordHash(username);
+
+        const attempt = await changePassword(reply.body.accessToken!, {
+          current: AuthTestApp.PASSWORD,
+          next: NEW,
+          confirm: NEW,
+        });
+
+        expect(attempt.status).toBe(403);
+        expect(passwordHash(username)).toBe(before);
+      });
+
+      it('keeps the player through a refresh and a reload, and the next login starts as the admin', async () => {
+        const { username, token, cookie } = await admin();
+        const target = await as(`Visto ${fresh('p')}`);
+        await viewAs(target, token, cookie);
+
+        app.advance(31);
+        const refreshed = await app.request('/api/auth/refresh', {
+          method: 'POST',
+          cookie,
+        });
+        expect(refreshed.body.user).toMatchObject({
+          mode: 'regular',
+          viewingAs: repo.players.nameOf(target),
+        });
+        expect(
+          (
+            await app.request('/api/me/contact', {
+              token: refreshed.body.accessToken,
+            })
+          ).status
+        ).toBe(200);
+
+        const back = await switchTo(
+          'admin',
+          refreshed.body.accessToken!,
+          app.refreshCookieOf(refreshed)
+        );
+        expect(back.body.user).toMatchObject({
+          mode: 'admin',
+          viewingAs: null,
+        });
+        expect(await status('/api/debts', back)).toBe(200);
+        expect((await app.login(username)).body.user?.viewingAs).toBeNull();
+      });
+
+      it('refuses an unknown player, a malformed one, a player in the admin view, and a regular user', async () => {
+        const { token, cookie } = await admin();
+        expect((await viewAs(999_999, token, cookie)).status).toBe(404);
+        for (const bad of ['3', 0, -1, 1.5, null]) {
+          expect((await viewAs(bad, token, cookie)).status).toBe(400);
+        }
+        const toAdmin = await app.request('/api/auth/view', {
+          token,
+          cookie,
+          body: { view: 'admin', player: 1 },
+        });
+        expect(toAdmin.status).toBe(400);
+
+        const username = fresh('player');
+        await app.createUser(username, 'regular', `Jugador ${username}`);
+        const login = await app.login(username);
+        const denied = await viewAs(
+          await as(`Visto ${fresh('p')}`),
+          login.body.accessToken!,
+          app.refreshCookieOf(login)
+        );
+        expect(denied.status).toBe(403);
+      });
+
+      it('does not honour a player carried by the token of anyone but an admin in the regular view', async () => {
+        const username = fresh('player');
+        const user = await app.createUser(
+          username,
+          'regular',
+          `Jugador ${username}`
+        );
+        const other = await as(`Visto ${fresh('p')}`);
+        new ContactRepository(app.conn).save(other, {
+          email: 'otro@example.com',
+        });
+        const token = await app.server.tokens.issueAccess(
+          {
+            userId: user.id,
+            role: 'regular',
+            view: 'regular',
+            actingAs: other,
+          },
+          app.clock.now()
+        );
+
+        const reply = await app.request('/api/me/contact', { token });
+
+        expect(reply.body).toEqual({ email: null, phone: null });
+      });
     });
   });
 });

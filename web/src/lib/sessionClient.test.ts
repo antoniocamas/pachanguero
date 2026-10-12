@@ -11,6 +11,7 @@ const user: SessionUser = {
   mode: 'admin',
   playerName: null,
   canSwitchView: false,
+  viewingAs: null,
 };
 
 const json = (status: number, body: unknown) =>
@@ -23,11 +24,19 @@ const session = (accessToken: string) =>
 
 /** A fake server: answers by path, in order, and remembers what it was asked. */
 function fakeFetch(answers: Record<string, Array<() => Response>>) {
-  const calls: Array<{ path: string; auth: string | null }> = [];
+  const calls: Array<{
+    path: string;
+    auth: string | null;
+    body: unknown;
+  }> = [];
   const impl = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const path = String(input).replace('/api', '');
     const headers = new Headers(init?.headers);
-    calls.push({ path, auth: headers.get('Authorization') });
+    calls.push({
+      path,
+      auth: headers.get('Authorization'),
+      body: init?.body ? JSON.parse(String(init.body)) : undefined,
+    });
     const next = answers[path]?.shift();
     if (!next) throw new Error(`no answer left for ${path}`);
     return next();
@@ -256,6 +265,30 @@ describe('the session client', () => {
         ['/auth/view', 'Bearer old'],
         ['/me/debts', 'Bearer regular'],
       ]);
+    });
+
+    it('names the player when looking at the app as another one, and not otherwise', async () => {
+      const f = fakeFetch({
+        '/auth/login': [() => session('old')],
+        '/auth/view': [
+          () =>
+            json(200, {
+              accessToken: 'as',
+              expiresIn: 1800,
+              user: { ...player, viewingAs: 'Carlos' },
+            }),
+          () => json(200, { accessToken: 'back', expiresIn: 1800, user }),
+        ],
+      });
+      const client = createSessionClient(f.impl);
+      await client.login('boss', 'pw');
+
+      expect((await client.switchView('regular', 7)).viewingAs).toBe('Carlos');
+      await client.switchView('admin');
+
+      expect(
+        f.calls.filter(c => c.path === '/auth/view').map(c => c.body)
+      ).toEqual([{ view: 'regular', player: 7 }, { view: 'admin' }]);
     });
 
     it('goes through the normal refresh when the token has expired', async () => {

@@ -82,3 +82,22 @@ password; **"Volver a administrador"** (in Ajustes) takes them back. The chosen
 view survives a page reload, but every sign-in starts in the admin view. In the
 player view the server treats them as a regular user: they cannot call the
 organiser's routes.
+
+### Looking at the app as another player
+
+For troubleshooting, any admin (with a player of their own or not) can choose
+**"Ver como otro jugador"** in "Mi cuenta" and pick any player of the group, with
+or without a user. The app then shows that player's debts, payments, statistics
+and contact data, exactly as that player sees them, under a notice saying whose
+view it is; "Volver a administrador" in Ajustes ends it.
+
+- **The admin acts as that player on their own data**: they can read it and change
+  the player's contact data. They cannot change a password (it would be the
+  admin's own, not the player's), and they remain a regular user as far as the
+  server is concerned: no organiser route answers.
+- **It is logged.** Each time an admin starts looking at another player, the
+  admin, the player and the time are recorded; `pachanguero-admin views` lists the
+  latest 50. Looking at their own player is not logged.
+- Like the choice of view, it belongs to the session: it survives a reload and a
+  token renewal, ends with "Volver a administrador" or by signing out, and a new
+  sign-in starts as the admin.

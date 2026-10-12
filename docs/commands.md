@@ -85,6 +85,7 @@ exist only through it; there is no registration (see
 | `activate` / `deactivate --username <name>`                              | Allows or forbids signing in (deactivating ends the sessions)                                                                                                        |
 | `link --username <name> --player <id\|name>`                             | Gives a user that has no player its player (ends the user's sessions, so they sign in again). Refuses a user who already has one, or a player who already has a user |
 | `promote` / `demote --username <name>`                                   | Makes a user an admin, or a regular user (which needs a player)                                                                                                      |
+| `views`                                                                  | Lists the latest times an admin looked at the app as another player: when, who, as whom                                                                              |
 | `backup`                                                                 | Writes a consistent copy of the live database, see [`backup_and_restore.md`](backup_and_restore.md)                                                                  |
 
 Passwords are never an argument: `create` and `reset-pwd` ask for them on the

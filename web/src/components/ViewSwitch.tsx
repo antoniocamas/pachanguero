@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { viewSwitchAction } from '../lib/ownDebts';
-import type { SessionUser } from '../lib/sessionClient';
+import type { SessionUser, SwitchView } from '../lib/sessionClient';
 
 /** The admin's way into the player's view and back; nothing for anyone else. */
 export function ViewSwitch({
@@ -8,7 +8,7 @@ export function ViewSwitch({
   onSwitchView,
 }: {
   user: SessionUser;
-  onSwitchView: (view: 'admin' | 'regular') => Promise<void>;
+  onSwitchView: SwitchView;
 }) {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);

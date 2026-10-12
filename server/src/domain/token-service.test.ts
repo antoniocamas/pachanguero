@@ -45,6 +45,7 @@ describe('TokenService', () => {
       userId: 7,
       role: 'admin',
       view: 'regular',
+      actingAs: null,
     });
     await expect(
       tokens.verifyAccess(token, new Date(now.getTime() + 1799_000))
@@ -52,6 +53,19 @@ describe('TokenService', () => {
     await expect(
       tokens.verifyAccess(token, new Date(now.getTime() + 1800_000))
     ).rejects.toBeInstanceOf(InvalidTokenError);
+  });
+
+  it('carries the player an admin looks at the app as, and nothing when there is none', async () => {
+    const acting = await tokens.issueAccess(
+      { userId: 7, role: 'admin', view: 'regular', actingAs: 42 },
+      now
+    );
+    expect((await tokens.verifyAccess(acting, now)).actingAs).toBe(42);
+    const none = await tokens.issueAccess(
+      { userId: 7, role: 'admin', view: 'regular', actingAs: null },
+      now
+    );
+    expect((await tokens.verifyAccess(none, now)).actingAs).toBeNull();
   });
 
   it('round-trips a refresh token with a random id and its expiry', async () => {

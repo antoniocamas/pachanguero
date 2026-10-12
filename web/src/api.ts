@@ -336,7 +336,8 @@ export const api = {
   restore: () => sessionClient.restore(),
   logout: () => sessionClient.logout(),
   onExpired: (listener: () => void) => sessionClient.onExpired(listener),
-  switchView: (view: 'admin' | 'regular') => sessionClient.switchView(view),
+  switchView: (view: 'admin' | 'regular', playerId?: number) =>
+    sessionClient.switchView(view, playerId),
 
   ownDebts: () => call<OwnDebts>('/me/debts'),
   ownPayments: () => call<OwnPaymentRow[]>('/me/payments'),

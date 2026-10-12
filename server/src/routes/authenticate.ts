@@ -10,6 +10,8 @@ export interface Principal {
   role: Role;
   view: View;
   effective: Role;
+  /** The player an admin is looking at the app as, or null: only an admin in the regular view has one. */
+  actingAs: number | null;
 }
 
 /** The guard: checks the access token of a request and decides who may pass. */
@@ -29,6 +31,10 @@ export class Authenticate {
         const principal: Principal = {
           ...claims,
           effective: new EffectiveRole(claims.role, claims.view).value(),
+          actingAs:
+            claims.role === 'admin' && claims.view === 'regular'
+              ? (claims.actingAs ?? null)
+              : null,
         };
         res.locals.principal = principal;
         next();

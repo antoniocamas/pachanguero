@@ -7,7 +7,7 @@ import { OwnStats } from '../components/OwnStats';
 import { useOwnDebts } from '../hooks/useOwnDebts';
 import { useOwnPayments } from '../hooks/useOwnPayments';
 import { useOwnReport } from '../hooks/useOwnReport';
-import type { SessionUser } from '../lib/sessionClient';
+import type { SessionUser, SwitchView } from '../lib/sessionClient';
 
 type Tab = 'debts' | 'payments' | 'stats' | 'settings';
 
@@ -56,7 +56,7 @@ export function OwnView({
 }: {
   user: SessionUser;
   onLogout: () => Promise<void>;
-  onSwitchView: (view: 'admin' | 'regular') => Promise<void>;
+  onSwitchView: SwitchView;
 }) {
   const [tab, setTab] = useState<Tab>('debts');
 
@@ -76,8 +76,15 @@ export function OwnView({
         </h1>
       </header>
 
-      {user.role === 'admin' && (
-        <div className="ok">Estás viendo la aplicación como jugador.</div>
+      {user.viewingAs !== null ? (
+        <div className="ok">
+          Estás viendo la aplicación como {user.viewingAs}. Para volver, pulsa
+          «Volver a administrador» en Ajustes.
+        </div>
+      ) : (
+        user.role === 'admin' && (
+          <div className="ok">Estás viendo la aplicación como jugador.</div>
+        )
       )}
 
       {tab === 'debts' ? (

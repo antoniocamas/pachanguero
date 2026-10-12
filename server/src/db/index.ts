@@ -6,6 +6,7 @@ import { SystemClock } from '../domain/clock.js';
 import { LocalCalendar } from '../domain/local-calendar.js';
 import { DatabaseBackup } from './database-backup.js';
 import { LATEST_SCHEMA_VERSION, SchemaMigrator } from './schema-migrator.js';
+import { ViewAsMigration } from './view-as-migration.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -32,7 +33,13 @@ export function db(): Database.Database {
   );
   const schema = readFileSync(join(here, 'schema.sql'), 'utf8');
   try {
-    new SchemaMigrator(conn, schema, LATEST_SCHEMA_VERSION, [], backup).run();
+    new SchemaMigrator(
+      conn,
+      schema,
+      LATEST_SCHEMA_VERSION,
+      [new ViewAsMigration()],
+      backup
+    ).run();
   } catch (error) {
     conn.close();
     throw error;

@@ -12,6 +12,7 @@ import { PasswordPolicy } from '../domain/password-policy.js';
 import { UsernamePolicy } from '../domain/username-policy.js';
 import { PlayerRepository } from '../repo/player-repository.js';
 import { RefreshTokenRepository } from '../repo/refresh-token-repository.js';
+import { ViewAsLogRepository } from '../repo/view-as-log-repository.js';
 import { UserAdminService } from '../repo/user-admin-service.js';
 import { UserRepository } from '../repo/user-repository.js';
 import type { PasswordPrompt } from './password-prompt.js';
@@ -58,7 +59,13 @@ describe('UserCli', () => {
     );
     return {
       run: (...argv: string[]) =>
-        new UserCli(admin, prompt, io, backups).run(argv),
+        new UserCli(
+          admin,
+          prompt,
+          io,
+          backups,
+          new ViewAsLogRepository(conn)
+        ).run(argv),
       prompt,
     };
   };
@@ -212,6 +219,25 @@ describe('UserCli', () => {
     ).toBe(1);
     expect(err.join('\n')).toContain('ya tiene un jugador');
     expect(await cli().run('link', '--username', 'boss')).toBe(2);
+  });
+
+  it('lists who looked at the app as which player, newest first, or says nobody did', async () => {
+    expect(await cli().run('views')).toBe(0);
+    expect(out.join('\n')).toContain('Nadie ha visto');
+
+    await cli().run('create', '--username', 'boss', '--role', 'admin');
+    const log = new ViewAsLogRepository(conn);
+    const boss = users.byUsername('boss')!.id;
+    const player = new PlayerRepository(conn).findByName('Carlos García')[0];
+    log.record(boss, player.id, player.name, new Date('2026-10-11T10:00:00Z'));
+    log.record(boss, player.id, player.name, new Date('2026-10-12T09:30:00Z'));
+    out.length = 0;
+
+    expect(await cli().run('views')).toBe(0);
+    expect(out).toEqual([
+      `2026-10-12T09:30:00.000Z  boss vio como Carlos García (jugador ${player.id})`,
+      `2026-10-11T10:00:00.000Z  boss vio como Carlos García (jugador ${player.id})`,
+    ]);
   });
 
   describe('backup', () => {

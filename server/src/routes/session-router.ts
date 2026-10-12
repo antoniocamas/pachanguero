@@ -28,7 +28,13 @@ export class SessionRouter {
     });
     router.put('/me/password', async (req, res) => {
       const { current, next, confirm } = this.passwordFields(req);
-      const { userId } = this.authenticate.principalOf(res);
+      const { userId, actingAs } = this.authenticate.principalOf(res);
+      if (actingAs !== null) {
+        throw new HttpError(
+          403,
+          'No se puede cambiar la contraseña mientras ves la aplicación como otro jugador'
+        );
+      }
       try {
         await this.passwords.change(userId, current, next, confirm);
       } catch (err) {
@@ -44,13 +50,26 @@ export class SessionRouter {
       res.status(204).end();
     });
     router.post('/auth/view', async (req, res) => {
-      const { view } = (req.body ?? {}) as Record<string, unknown>;
+      const { view, player } = (req.body ?? {}) as Record<string, unknown>;
       if (view !== 'admin' && view !== 'regular') {
         throw new HttpError(400, 'Vista no válida');
       }
+      if (
+        player !== undefined &&
+        (view !== 'regular' ||
+          !Number.isInteger(player) ||
+          (player as number) < 1)
+      ) {
+        throw new HttpError(400, 'Jugador no válido');
+      }
       const { userId } = this.authenticate.principalOf(res);
       res.json(
-        await this.auth.switchView(userId, view, this.cookies.read(req))
+        await this.auth.switchView(
+          userId,
+          view,
+          this.cookies.read(req),
+          player as number | undefined
+        )
       );
     });
     router.use(this.errors.handler());

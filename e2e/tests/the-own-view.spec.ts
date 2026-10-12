@@ -233,6 +233,42 @@ test.describe('the player own view', () => {
     await page.context().close();
   });
 
+  test('an admin with no player of their own looks at the app as another player, keeps it over a reload, and goes back', async ({
+    browser,
+    request,
+  }) => {
+    await new Backend(request).twoGames('Zvisto Dueño', 'Zvisto Otro');
+    createAccount({
+      username: 'e2e-zsupport',
+      password: PASSWORD,
+      role: 'admin',
+    });
+    const page = await signIn(browser, 'e2e-zsupport');
+
+    await tab(page, 'Ajustes').click();
+    await page.getByRole('tab', { name: 'Mi cuenta' }).click();
+    await page.getByLabel('Jugador').selectOption({ label: 'Zvisto Otro' });
+    await page.getByRole('button', { name: 'Ver como este jugador' }).click();
+
+    await expect(tab(page, 'Deudas')).toBeVisible();
+    await expect(tab(page, 'Partido')).toHaveCount(0);
+    await expect(
+      page.getByText('Estás viendo la aplicación como Zvisto Otro.')
+    ).toBeVisible();
+    await expect(page.getByText('Zvisto Otro').first()).toBeVisible();
+
+    await page.reload();
+    await expect(
+      page.getByText('Estás viendo la aplicación como Zvisto Otro.')
+    ).toBeVisible();
+
+    await tab(page, 'Ajustes').click();
+    await expect(page.getByText('Cambiar contraseña')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Volver a administrador' }).click();
+    await expect(tab(page, 'Partido')).toBeVisible();
+    await page.context().close();
+  });
+
   test('an admin with no player is offered no player view', async ({
     browser,
   }) => {

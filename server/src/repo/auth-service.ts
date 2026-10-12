@@ -9,6 +9,7 @@ import { HttpError } from '../routes/http-error.js';
 import type { AuthConfig } from './auth-config.js';
 import type { PlayerRepository } from './player-repository.js';
 import type { RefreshTokenRepository } from './refresh-token-repository.js';
+import type { ViewAsLogRepository } from './view-as-log-repository.js';
 import type { UserRecord, UserRepository } from './user-repository.js';
 
 export interface SessionUser {
@@ -16,8 +17,11 @@ export interface SessionUser {
   role: Role;
   /** The effective role: what the web uses to choose a screen. */
   mode: Role;
+  /** The player the app is shown for: the user's own, or the one an admin is looking at it as. */
   playerName: string | null;
   canSwitchView: boolean;
+  /** The name of the player an admin is looking at the app as, when not their own. */
+  viewingAs: string | null;
 }
 
 /** What a view switch answers: a new access token; the refresh cookie stays as it is. */
@@ -44,7 +48,8 @@ export class AuthService {
     private readonly lockout: LockoutPolicy,
     private readonly clock: Clock,
     private readonly config: AuthConfig,
-    private readonly conn: Database.Database
+    private readonly conn: Database.Database,
+    private readonly viewLog: ViewAsLogRepository
   ) {}
 
   async login(rawUsername: string, password: string): Promise<Session> {
@@ -90,37 +95,49 @@ export class AuthService {
     const user = this.users.byId(row.userId);
     if (!user || !user.active) throw new HttpError(401, NOT_AUTHORISED);
 
-    return this.issueSession(user, row.view, now, row.id);
+    return this.issueSession(user, row.view, now, row.id, row.actingAs);
   }
 
   /**
-   * An admin looks at the app as the player they are, or goes back. The choice is kept on the
-   * session's refresh token, so a reload, a refresh and a rotation keep it and a new login starts
-   * in the admin view.
+   * An admin looks at the app as a player, or goes back to the admin view. With no `playerId`
+   * the player is the admin's own; with one it is that player, who may have no account at all.
+   * The choice is kept on the session's refresh token, so a reload, a refresh and a rotation
+   * keep it and a new login starts in the admin view. Looking at another player is logged.
    */
   async switchView(
     userId: number,
     view: View,
-    token: string | undefined
+    token: string | undefined,
+    playerId?: number
   ): Promise<ViewSwitch> {
     const now = this.clock.now();
     const user = this.users.byId(userId);
     if (!user || !user.active) throw new HttpError(401, NOT_AUTHORISED);
     if (user.role !== 'admin') throw new HttpError(403, 'Prohibido');
-    if (view === 'regular' && user.playerId === null) {
-      throw new HttpError(403, 'No tienes un jugador asociado');
-    }
+    const actingAs = this.otherPlayer(user, view, playerId);
     const row = await this.liveRow(token ?? '', now);
     if (row.userId !== user.id) throw new HttpError(401, NOT_AUTHORISED);
 
-    this.refreshTokens.setView(row.id, view);
+    this.conn
+      .transaction(() => {
+        this.refreshTokens.setView(row.id, view, actingAs);
+        if (actingAs !== null) {
+          this.viewLog.record(
+            user.id,
+            actingAs,
+            this.players.nameOf(actingAs) ?? '',
+            now
+          );
+        }
+      })
+      .immediate();
     return {
       accessToken: await this.tokens.issueAccess(
-        { userId: user.id, role: user.role, view },
+        { userId: user.id, role: user.role, view, actingAs },
         now
       ),
       expiresIn: this.config.accessSeconds,
-      user: this.sessionUser(user, view),
+      user: this.sessionUser(user, view, actingAs),
     };
   }
 
@@ -136,17 +153,44 @@ export class AuthService {
   }
 
   /** The user a session belongs to, as the web shows it. */
-  sessionUser(user: UserRecord, view: View): SessionUser {
+  sessionUser(
+    user: UserRecord,
+    view: View,
+    actingAs: number | null = null
+  ): SessionUser {
+    const viewingAs =
+      actingAs === null ? null : (this.players.nameOf(actingAs) ?? null);
     return {
       username: user.username,
       role: user.role,
       mode: new EffectiveRole(user.role, view).value(),
       playerName:
-        user.playerId === null
+        viewingAs ??
+        (user.playerId === null
           ? null
-          : (this.players.nameOf(user.playerId) ?? null),
+          : (this.players.nameOf(user.playerId) ?? null)),
       canSwitchView: user.role === 'admin' && user.playerId !== null,
+      viewingAs,
     };
+  }
+
+  /** The other player an admin asks to look at the app as, checked; null for their own view. */
+  private otherPlayer(
+    user: UserRecord,
+    view: View,
+    playerId: number | undefined
+  ): number | null {
+    if (view === 'admin') return null;
+    if (playerId === undefined || playerId === user.playerId) {
+      if (user.playerId === null) {
+        throw new HttpError(403, 'No tienes un jugador asociado');
+      }
+      return null;
+    }
+    if (this.players.nameOf(playerId) === undefined) {
+      throw new HttpError(404, 'No existe el jugador');
+    }
+    return playerId;
   }
 
   private async liveRow(token: string, now: Date) {
@@ -170,10 +214,11 @@ export class AuthService {
     user: UserRecord,
     view: View,
     now: Date,
-    replacing?: number
+    replacing?: number,
+    actingAs: number | null = null
   ): Promise<Session> {
     const accessToken = await this.tokens.issueAccess(
-      { userId: user.id, role: user.role, view },
+      { userId: user.id, role: user.role, view, actingAs },
       now
     );
     const refresh = await this.tokens.issueRefresh(user.id, now);
@@ -189,6 +234,7 @@ export class AuthService {
           userId: user.id,
           tokenHash: this.tokens.hashOf(refresh.token),
           view,
+          actingAs,
           expiresAt: refresh.expiresAt,
         });
       })
@@ -197,7 +243,7 @@ export class AuthService {
       accessToken,
       expiresIn: this.config.accessSeconds,
       refreshToken: refresh.token,
-      user: this.sessionUser(user, view),
+      user: this.sessionUser(user, view, actingAs),
     };
   }
 

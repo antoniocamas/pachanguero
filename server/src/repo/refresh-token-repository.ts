@@ -6,6 +6,8 @@ export interface RefreshTokenRow {
   userId: number;
   tokenHash: string;
   view: View;
+  /** The player an admin looks at the app as, when not their own. */
+  actingAs: number | null;
   expiresAt: Date;
   revoked: boolean;
 }
@@ -15,6 +17,7 @@ interface Row {
   user_id: number;
   token_hash: string;
   view: View;
+  acting_as: number | null;
   expires_at: string;
   revoked: number;
 }
@@ -23,6 +26,7 @@ export interface NewRefreshToken {
   userId: number;
   tokenHash: string;
   view: View;
+  actingAs?: number | null;
   expiresAt: Date;
 }
 
@@ -33,12 +37,13 @@ export class RefreshTokenRepository {
   insert(token: NewRefreshToken): void {
     this.conn
       .prepare(
-        'INSERT INTO refresh_tokens (user_id, token_hash, view, expires_at) VALUES (?, ?, ?, ?)'
+        'INSERT INTO refresh_tokens (user_id, token_hash, view, acting_as, expires_at) VALUES (?, ?, ?, ?, ?)'
       )
       .run(
         token.userId,
         token.tokenHash,
         token.view,
+        token.actingAs ?? null,
         token.expiresAt.toISOString()
       );
   }
@@ -46,7 +51,7 @@ export class RefreshTokenRepository {
   findByHash(tokenHash: string): RefreshTokenRow | undefined {
     const row = this.conn
       .prepare(
-        `SELECT id, user_id, token_hash, view, expires_at, revoked
+        `SELECT id, user_id, token_hash, view, acting_as, expires_at, revoked
            FROM refresh_tokens WHERE token_hash = ?`
       )
       .get(tokenHash) as Row | undefined;
@@ -72,10 +77,10 @@ export class RefreshTokenRepository {
       .run(userId).changes;
   }
 
-  setView(id: number, view: View): void {
+  setView(id: number, view: View, actingAs: number | null = null): void {
     this.conn
-      .prepare('UPDATE refresh_tokens SET view = ? WHERE id = ?')
-      .run(view, id);
+      .prepare('UPDATE refresh_tokens SET view = ?, acting_as = ? WHERE id = ?')
+      .run(view, actingAs, id);
   }
 
   /** Drops tokens that expired and revoked ones older than a day, so rotation cannot grow the table forever. */
@@ -95,6 +100,7 @@ export class RefreshTokenRepository {
       userId: row.user_id,
       tokenHash: row.token_hash,
       view: row.view,
+      actingAs: row.acting_as,
       expiresAt: new Date(row.expires_at),
       revoked: row.revoked === 1,
     };

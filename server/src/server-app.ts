@@ -10,6 +10,7 @@ import { PasswordPolicy } from './domain/password-policy.js';
 import { db } from './db/index.js';
 import type { AuthConfig } from './repo/auth-config.js';
 import { AuthService } from './repo/auth-service.js';
+import { ViewAsLogRepository } from './repo/view-as-log-repository.js';
 import { ContactRepository } from './repo/contact-repository.js';
 import { ContactService } from './repo/contact-service.js';
 import { OwnDataService } from './repo/own-data-service.js';
@@ -61,7 +62,8 @@ export class ServerApp {
       new LockoutPolicy(),
       clock,
       config,
-      db()
+      db(),
+      new ViewAsLogRepository(db())
     );
     this.authenticate = new Authenticate(this.tokens, clock);
     const cookies = new CookieJar();

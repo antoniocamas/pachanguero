@@ -173,7 +173,7 @@ de contacto.
 
 Desde qué rol se está usando la aplicación: la de administrador o la de jugador.
 Un administrador que también es jugador puede ver la aplicación como la ve su
-jugador («Ver como jugador») y volver («Volver a administrador»).
+jugador («Ver como jugador») y volver («Volver a administrador»); también puede ver la aplicación como cualquier otro jugador («Ver como otro jugador»), para resolver problemas, y queda registrado.
 
 ## Copia de seguridad
 

@@ -3,9 +3,18 @@ export interface SessionUser {
   role: 'admin' | 'regular';
   /** The effective role: which screen to show. */
   mode: 'admin' | 'regular';
+  /** The player the app is shown for: the user's own, or the one an admin is looking at it as. */
   playerName: string | null;
   canSwitchView: boolean;
+  /** The player an admin is looking at the app as, when not their own. */
+  viewingAs: string | null;
 }
+
+/** Looks at the app as the admin's own player, as another one (`playerId`), or goes back to admin. */
+export type SwitchView = (
+  view: 'admin' | 'regular',
+  playerId?: number
+) => Promise<void>;
 
 /** A non-2xx answer: the status, the server's own message and any extra fields it sent. */
 export class ApiError extends Error {
@@ -25,8 +34,11 @@ export interface SessionClient {
   /** Starts from the refresh cookie after a page load: the user, or null when there is no session. */
   restore(): Promise<SessionUser | null>;
   logout(): Promise<void>;
-  /** Asks the server for the other view of an admin; keeps the new token and answers the updated user. */
-  switchView(view: 'admin' | 'regular'): Promise<SessionUser>;
+  /** Asks the server for another view of an admin; keeps the new token and answers the updated user. */
+  switchView(
+    view: 'admin' | 'regular',
+    playerId?: number
+  ): Promise<SessionUser>;
   /** Called once when a session ends because it could not be refreshed. */
   onExpired(listener: () => void): () => void;
 }
@@ -129,11 +141,13 @@ export function createSessionClient(fetchImpl: typeof fetch): SessionClient {
 
     restore: refresh,
 
-    async switchView(view) {
+    async switchView(view, playerId) {
       return begin(
         await request<SessionAnswer>('/auth/view', {
           method: 'POST',
-          body: JSON.stringify({ view }),
+          body: JSON.stringify(
+            playerId === undefined ? { view } : { view, player: playerId }
+          ),
         })
       );
     },

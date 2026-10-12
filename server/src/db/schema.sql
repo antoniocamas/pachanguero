@@ -231,11 +231,21 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
   user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   token_hash TEXT    NOT NULL UNIQUE,
   view       TEXT    NOT NULL DEFAULT 'admin' CHECK (view IN ('admin','regular')),
+  acting_as  INTEGER REFERENCES players(id) ON DELETE SET NULL, -- the player an admin is looking at the app as, if not their own
   expires_at TEXT    NOT NULL,               -- ISO-8601 UTC
   revoked    INTEGER NOT NULL DEFAULT 0 CHECK (revoked IN (0,1)),
   created_at TEXT    NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON refresh_tokens(user_id);
+
+-- Every time an admin starts looking at the app as another player. The name is kept as it was.
+CREATE TABLE IF NOT EXISTS view_as_log (
+  id            INTEGER PRIMARY KEY,
+  admin_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  player_id     INTEGER NOT NULL,
+  player_name   TEXT    NOT NULL,
+  started_at    TEXT    NOT NULL                    -- ISO-8601 UTC
+);
 
 -- Optional contact data a player keeps about themselves; a row exists only while one value is set.
 CREATE TABLE IF NOT EXISTS player_contacts (

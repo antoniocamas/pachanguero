@@ -17,6 +17,16 @@ export interface BackupWriter {
   create(): string;
 }
 
+/** What the operator's `views` needs: the latest times an admin looked at the app as a player. */
+export interface ViewLogReader {
+  recent(limit: number): {
+    at: Date;
+    admin: string;
+    playerId: number;
+    playerName: string;
+  }[];
+}
+
 const USAGE = `Uso: pachanguero-admin <comando> [opciones]
 
 Comandos:
@@ -29,6 +39,7 @@ Comandos:
   promote    --username <nombre>
   demote     --username <nombre>
   link       --username <nombre> --player <id|nombre>
+  views
   backup
 
 Las contraseñas se piden por teclado (o por la entrada estándar), nunca como argumento.`;
@@ -39,7 +50,8 @@ export class UserCli {
     private readonly admin: UserAdminService,
     private readonly prompt: PasswordPrompt,
     private readonly io: CliIo,
-    private readonly backups: BackupWriter
+    private readonly backups: BackupWriter,
+    private readonly viewLog: ViewLogReader
   ) {}
 
   async run(argv: string[]): Promise<number> {
@@ -84,6 +96,8 @@ export class UserCli {
           );
         case 'link':
           return this.link(rest);
+        case 'views':
+          return this.views();
         case 'backup':
           return this.backup(rest);
         default:
@@ -145,6 +159,20 @@ export class UserCli {
     if (!player) throw new UsageError('Falta --player');
     this.admin.link(username, player);
     this.io.out(`✓ "${username}" asociado al jugador ${player}`);
+    return 0;
+  }
+
+  private views(): number {
+    const entries = this.viewLog.recent(50);
+    if (entries.length === 0) {
+      this.io.out('Nadie ha visto la aplicación como otro jugador');
+      return 0;
+    }
+    for (const e of entries) {
+      this.io.out(
+        `${e.at.toISOString()}  ${e.admin} vio como ${e.playerName} (jugador ${e.playerId})`
+      );
+    }
     return 0;
   }
 

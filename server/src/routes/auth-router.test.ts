@@ -35,6 +35,7 @@ describe('login, refresh and logout', () => {
         mode: 'admin',
         playerName: 'Antonio',
         canSwitchView: true,
+        viewingAs: null,
       });
       const claims = await app.server.tokens.verifyAccess(
         reply.body.accessToken,
@@ -61,6 +62,7 @@ describe('login, refresh and logout', () => {
         mode: 'regular',
         playerName: 'Carlos García',
         canSwitchView: false,
+        viewingAs: null,
       });
     });
 

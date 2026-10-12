@@ -6,6 +6,8 @@ export interface AccessClaims {
   userId: number;
   role: Role;
   view: View;
+  /** The player an admin looks at the app as, when it is not their own. */
+  actingAs?: number | null;
 }
 
 export interface RefreshClaims {
@@ -33,7 +35,12 @@ export class TokenService {
 
   issueAccess(claims: AccessClaims, now: Date): Promise<string> {
     return this.sign(
-      { role: claims.role, view: claims.view, type: 'access' },
+      {
+        role: claims.role,
+        view: claims.view,
+        type: 'access',
+        ...(claims.actingAs ? { act: claims.actingAs } : {}),
+      },
       claims.userId,
       now,
       this.accessSeconds
@@ -66,7 +73,11 @@ export class TokenService {
     ) {
       throw new InvalidTokenError();
     }
-    return { userId: this.userIdOf(payload), role, view };
+    const actingAs =
+      Number.isInteger(payload.act) && (payload.act as number) > 0
+        ? (payload.act as number)
+        : null;
+    return { userId: this.userIdOf(payload), role, view, actingAs };
   }
 
   async verifyRefresh(token: string, now: Date): Promise<RefreshClaims> {

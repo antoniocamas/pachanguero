@@ -7,7 +7,7 @@ import { PlayerReportPage } from './PlayerReportPage';
 import { Manage } from './Manage';
 import { AccountPanel } from '../components/AccountPanel';
 import { NewSeasonPrompt } from '../components/NewSeasonPrompt';
-import type { SessionUser } from '../lib/sessionClient';
+import type { SessionUser, SwitchView } from '../lib/sessionClient';
 
 type Tab = 'game' | 'standings' | 'debts' | 'player' | 'manage';
 
@@ -18,7 +18,7 @@ export function AdminShell({
 }: {
   user: SessionUser;
   onLogout: () => Promise<void>;
-  onSwitchView: (view: 'admin' | 'regular') => Promise<void>;
+  onSwitchView: SwitchView;
 }) {
   const [tab, setTab] = useState<Tab>('game');
   const [seasons, setSeasons] = useState<Season[]>([]);
