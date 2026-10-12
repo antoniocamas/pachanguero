@@ -2,13 +2,14 @@
 
 ## Identity
 
-Pachanguero replaces the `Futbol_Miercoles` spreadsheet + Apps Script for a Wednesday 7-a-side football group: sign-ups, payments, and selecting the 14 who play when more than 14 sign up. The README and all docs are in Spanish; user-facing strings in the app are Spanish too. Write UI copy in Spanish.
+Pachanguero replaces the `Futbol_Miercoles` spreadsheet + Apps Script for a Wednesday 7-a-side football group: sign-ups, payments, and selecting the 14 who play when more than 14 sign up. The README and all docs are in Spanish; user-facing strings in the app are Spanish too. Write UI copy in Spanish. The app has a login and two roles: an admin (the organiser, who sees everything) and a regular user (a player, who sees only their own data); accounts are created by the operator's command line, never by registration.
 
 ## Commands
 
 ```bash
 npm install          # workspaces: server + web
-npm run dev          # API on :8787 (tsx watch), web on :5173 (vite, proxies /api)
+npm run dev          # API on :8787 (tsx watch), web on :5173 (vite, proxies /api); the API needs JWT_SECRET (32+ characters) in its environment
+npm run admin --workspace=server -- <command>   # operator tool: create, list, reset-pwd, unlock, activate, deactivate, promote, demote (passwords are asked for, never an argument)
 npm run seed         # import the 2024/2025 season from data/seed/*.csv (-- --reset to wipe first)
 npm test             # domain/route tests (vitest, server workspace) and the web lib/ tests (vitest, web workspace)
 npm run test:e2e     # full-stack browser tests (playwright, e2e workspace); specs share one database, see docs/test-strategy.md
@@ -62,7 +63,9 @@ npm workspaces, both ESM (TS imports use `.js` extensions). Data flow is strictl
 server/src/domain/    classes: PointsCalculator, SeniorityCurve, ConvocatoriaBuilder,
                       ExclusionHistory, SeasonCalendar, ScheduleResolver, NameMatcher,
                       CandidateLineParser, TeamListParser, GameLifecycle, PlayedDerivation,
-                      DebtLedger, GuestSlotAllocator, ...
+                      DebtLedger, GuestSlotAllocator, ... and the access rules:
+                      PasswordPolicy, UsernamePolicy, LockoutPolicy, PasswordHasher (scrypt),
+                      TokenService (the only code that knows the JWT library), EffectiveRole.
                       (+ all tests). Knows nothing of SQLite or HTTP. THE rules live here.
 server/src/db/        better-sqlite3 singleton; SchemaMigrator runs schema.sql on open and
                       keeps the file's version in `PRAGMA user_version`. A new file gets
@@ -79,10 +82,24 @@ server/src/repo/      repository/service classes; converts snake_case rows to do
                       ConvocatoriaService/ConvocatoriaEditService, GameLifecycleService,
                       PaymentService, TeamAssignmentService/TeamPasteService,
                       GameViewService, ConvocatoriaHistoryConverter, ...
-server/src/routes/    Express router; route() wrapper turns throws into 400s
-server/src/index.ts   mounts /api, then serves web/dist if it exists (single port for the Pi)
-web/src/              React 19 + Vite, no router/state lib: App.tsx holds three tabs
-                      (GameDay, Standings, Manage) and refreshes by refetching everything.
+                      Identity: UserRepository, RefreshTokenRepository, AuthService (login,
+                      refresh rotation, logout), UserAdminService (what the operator can do to
+                      accounts), AuthConfig (the settings; no JWT_SECRET, no server).
+server/src/routes/    Express router; route() wrapper turns throws into 400s. `api.ts` is the
+                      organiser's router and is unchanged by access control: ApiRoutes mounts
+                      it behind Authenticate and requireEffective('admin'), after the public
+                      AuthRouter and the session and own-data routers, so a route added to
+                      api.ts is admin-only without anyone remembering to say so.
+server/src/cli/       the `pachanguero-admin` command line (UserCli, TtyPasswordPrompt); a thin
+                      shell over UserAdminService
+server/src/server-app.ts  builds the sign-in and guard classes and mounts /api, then serves
+                      web/dist if it exists (single port for the Pi); index.ts only reads the
+                      environment and listens
+web/src/              React 19 + Vite, no router/state lib: App.tsx chooses the login, or
+                      the admin shell (pages/AdminShell.tsx: five tabs - GameDay, Standings,
+                      Debts, Jugador, Manage - refreshing by refetching everything). The session
+                      lives in lib/sessionClient.ts (access token in memory, silent refresh) behind
+                      api.ts's call().
                       GameDay is the lifecycle screen: GameBar keeps the state, counters and
                       next step in view, and one PlayersTable follows the game's state
                       (OpenView, LineView, PlayedView, ReadOnlyView). pages/ are the tabs,

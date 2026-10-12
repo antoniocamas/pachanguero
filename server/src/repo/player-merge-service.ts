@@ -1,6 +1,7 @@
 import type Database from 'better-sqlite3';
 import type { AliasRepository } from './alias-repository.js';
 import type { PlayerRepository } from './player-repository.js';
+import type { UserRepository } from './user-repository.js';
 
 /** Every column that holds a player id, and so moves with a merge. */
 const REFERENCES: readonly [table: string, column: string][] = [
@@ -43,6 +44,7 @@ export class PlayerMergeService {
   constructor(
     private readonly players: PlayerRepository,
     private readonly aliases: AliasRepository,
+    private readonly users: UserRepository,
     private readonly conn: Database.Database
   ) {}
 
@@ -53,6 +55,7 @@ export class PlayerMergeService {
     if (!into) throw new Error(`Unknown player: ${intoId}`);
     if (!from) throw new Error(`Unknown player: ${fromId}`);
     this.refuseSharedGames(intoId, fromId, into, from);
+    this.refuseTwoAccounts(intoId, fromId, into, from);
 
     try {
       this.conn.transaction(() => {
@@ -69,6 +72,8 @@ export class PlayerMergeService {
           this.aliases.add(intoId, alias);
         }
         this.aliases.add(intoId, from);
+        // The account follows the person, before the absorbed player row goes.
+        this.users.movePlayer(fromId, intoId);
         // Cascades whatever was left (the absorbed player's own seasons rows).
         this.conn.prepare('DELETE FROM players WHERE id = ?').run(fromId);
       })();
@@ -97,6 +102,21 @@ export class PlayerMergeService {
         `No se puede fundir ${from} con ${into}: aparecen los dos en ${shared
           .map(g => g.playedOn)
           .join(', ')}`
+      );
+    }
+  }
+
+  private refuseTwoAccounts(
+    intoId: number,
+    fromId: number,
+    into: string,
+    from: string
+  ): void {
+    const a = this.users.byPlayer(intoId);
+    const b = this.users.byPlayer(fromId);
+    if (a && b) {
+      throw new Error(
+        `No se puede fundir ${from} con ${into}: los dos tienen usuario (${a.username}, ${b.username})`
       );
     }
   }

@@ -6,10 +6,17 @@ import { Debts } from './Debts';
 import { PlayerReportPage } from './PlayerReportPage';
 import { Manage } from './Manage';
 import { NewSeasonPrompt } from '../components/NewSeasonPrompt';
+import type { SessionUser } from '../lib/sessionClient';
 
 type Tab = 'game' | 'standings' | 'debts' | 'player' | 'manage';
 
-export function AdminShell() {
+export function AdminShell({
+  user,
+  onLogout,
+}: {
+  user: SessionUser;
+  onLogout: () => Promise<void>;
+}) {
   const [tab, setTab] = useState<Tab>('game');
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [season, setSeason] = useState<Season | null>(null);
@@ -73,6 +80,13 @@ export function AdminShell() {
         <h1>
           <span aria-hidden>⚽</span> Pachanguero
           <span className="season">{season?.name ?? '—'}</span>
+          <button
+            className="btn link top-action"
+            title={user.username}
+            onClick={() => void onLogout()}
+          >
+            Salir
+          </button>
         </h1>
       </header>
 

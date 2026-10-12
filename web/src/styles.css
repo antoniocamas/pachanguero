@@ -901,3 +901,36 @@ td .chip.oscuros {
 b.stat-good {
   color: var(--accent);
 }
+
+/* ------------------------------------------------------------------ login */
+
+.login {
+  max-width: 360px;
+  margin: 0 auto;
+  padding: 64px 16px 16px;
+}
+.login h1 {
+  text-align: center;
+  font-size: 24px;
+  margin: 0 0 4px;
+}
+.login p.sub {
+  text-align: center;
+  color: var(--muted);
+  margin: 0 0 28px;
+}
+.ok {
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  border: 1px solid var(--accent);
+  color: #d4f7dc;
+  border-radius: 9px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  font-size: 14px;
+}
+/* The header is --top-h tall and the game bar sticks below it: keep the action inside that. */
+header.top .top-action {
+  margin-left: 12px;
+  padding: 0 4px;
+  font-size: 13px;
+}

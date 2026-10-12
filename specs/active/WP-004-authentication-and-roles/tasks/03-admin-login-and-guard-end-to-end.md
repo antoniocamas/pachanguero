@@ -85,27 +85,27 @@ cases are in each element's Test Methodology; this task implements all of them:
 
 ## Definition of Done
 
-- [ ] `jose` is installed at an exact version and `npm audit` shows no advisory for it, or the finding
+- [x] `jose` is installed at an exact version and `npm audit` shows no advisory for it, or the finding
       has been reported to the author.
-- [ ] Every case in the Test Methodology of F1, F2, F3, F4, F8 and F13 exists and passes
+- [x] Every case in the Test Methodology of F1, F2, F3, F4, F8 and F13 exists and passes
       (`npm test`, `npm run test:e2e`).
-- [ ] `GET /api/...` without a token answers 401 on every existing route, 403 for a regular user and
+- [x] `GET /api/...` without a token answers 401 on every existing route, 403 for a regular user and
       404 for an unknown path as an admin (route-sweep test).
-- [ ] Manual Test Plan above done and its outcome reported.
-- [ ] The `JWT_SECRET` rule: the server refuses to start without a secret of at least 32
+- [x] Manual Test Plan above done and its outcome reported.
+- [x] The `JWT_SECRET` rule: the server refuses to start without a secret of at least 32
       characters (test). Until task 05 changes the `dev` script to read `.env`, pass the secret in the
       environment when running `npm run dev`.
-- [ ] **Graduation:** UC-004-01-S1…S7, UC-004-02-S1…S8, UC-004-03-S1…S5, UC-004-11-S2 and
+- [x] **Graduation:** UC-004-01-S1…S7, UC-004-02-S1…S8, UC-004-03-S1…S5, UC-004-11-S2 and
       UC-004-04-S1…S4, S6…S13 are hard requirements → the route, repository, CLI, `lib/` and E2E tests
       named above; UC-004-04's non-behavioural rules → `user-admin-service.test.ts`.
-- [ ] **Hard requirements:** each scenario named in Graduation has a test whose title says what it
+- [x] **Hard requirements:** each scenario named in Graduation has a test whose title says what it
       asserts, with no work-package identifier in the code; this line is the record of which test
       carries which scenario.
-- [ ] **Documentation:** `docs/test-strategy.md` (E2E section: specs log in through the fixture, no
+- [x] **Documentation:** `docs/test-strategy.md` (E2E section: specs log in through the fixture, no
       authentication-off switch; integration section: the shared test app, the bare admin router, the
       route-sweep). `AGENTS.md` (Commands: `npm run admin --workspace=server -- <command>` and
       `JWT_SECRET` from `.env`; Architecture list: the new domain, identity, routing, CLI and web
       places, and `App` choosing login or shell; Identity line: two roles and a login).
-- [ ] **Tests:** `npm test` and `npm run test:e2e`.
-- [ ] **Regression:** both commands above on the whole repository.
-- [ ] **Code checks:** `npm run lint` and `npm run format:check` pass on every touched file.
+- [x] **Tests:** `npm test` and `npm run test:e2e`.
+- [x] **Regression:** both commands above on the whole repository.
+- [x] **Code checks:** `npm run lint` and `npm run format:check` pass on every touched file.

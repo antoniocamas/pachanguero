@@ -58,6 +58,16 @@ Performance claims belong here too: `server/src/repo/debt-query-cost.test.ts` se
 games with every share paid and asserts through `EXPLAIN QUERY PLAN` that reading debt searches
 `share_debts` by its indexes and never touches `participations`.
 
+Tests of anything behind the login use the shared test application,
+`server/src/routes/auth-test-support.ts` (`AuthTestApp`): the real server on a throwaway
+database, a clock the test moves by hand (`ManualClock`), real tokens from the login or from
+`tokenFor(role)`, and `createUser`/`login`/`request` helpers. Start it before anything imports
+the composition root, since the database path is read at that import. There is no switch that
+turns authentication off. `api.test.ts` is the exception: it mounts the bare organiser router,
+which sits behind the guard, and so needs no token. `api-routes.test.ts` is the guard's own test:
+it lists every route of every router and checks that each is public, session, own-data or
+organiser, and that a path nobody declared is refused.
+
 **Run:** same as unit tests — `vitest run` in `server/`, same `npm test` command, same pre-commit
 gate. (There is no dedicated integration script yet; add `server/src/routes/*.test.ts` files and
 they run alongside the domain suite.)
@@ -75,6 +85,17 @@ first-season journey) has to run before any that create data, which today means 
 test of the file that holds the others, and the spec files are ordered by name after it
 (`the-game-screen.spec.ts` runs after `season-and-player.spec.ts`). The suite therefore runs on a
 single worker.
+
+Every spec but `login.spec.ts` imports `test` and `expect` from `e2e/tests/auth.fixture.ts`
+instead of `@playwright/test`. The fixture acts as an admin created by the operator's own tool:
+`e2e/support/seed-admin.ts` (the Playwright `globalSetup`, run once the servers are up) runs the
+`admin` command against the same database, sending the made-up password on standard input. The
+`request` it provides carries that admin's access token, for setup calls made straight to the
+API, and the `page` it provides is logged in before the test starts through the same login the
+screen uses, so the browser context holds the refresh cookie and the app restores the session on
+load. Each test logs in on its own: a refresh rotates the cookie, so a cookie snapshot shared by
+several contexts would present a token that is already revoked. `login.spec.ts` uses the plain
+test, since it is about the login itself.
 
 The game screen has a spec of its own that walks one game through every state and reads the state
 and next action from the screen; then, for each state, at a desktop (1280 × 800) and a phone

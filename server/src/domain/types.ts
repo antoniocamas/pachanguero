@@ -108,3 +108,9 @@ export type Capability =
  */
 export type MemberKey =
   { playerId: number } | { hostPlayerId: number; ordinal: number };
+
+/** What an account may do: an organiser runs the app; a regular user sees their own data. */
+export type Role = 'admin' | 'regular';
+
+/** Which side of the app an admin is looking at: their own, or a regular player's. */
+export type View = 'admin' | 'regular';

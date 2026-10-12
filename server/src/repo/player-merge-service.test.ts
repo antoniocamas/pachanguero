@@ -6,6 +6,7 @@ import { GameRepository } from './game-repository.js';
 import { ParticipationRepository } from './participation-repository.js';
 import { PlayerMergeService } from './player-merge-service.js';
 import { PlayerRepository } from './player-repository.js';
+import { UserRepository } from './user-repository.js';
 import { SeasonRepository } from './season-repository.js';
 
 describe('PlayerMergeService', () => {
@@ -13,6 +14,7 @@ describe('PlayerMergeService', () => {
   let players: PlayerRepository;
   let aliases: AliasRepository;
   let participations: ParticipationRepository;
+  let users: UserRepository;
   let merge: PlayerMergeService;
   let seasonId: number;
   let santi: number;
@@ -25,7 +27,8 @@ describe('PlayerMergeService', () => {
     aliases = new AliasRepository(conn);
     participations = new ParticipationRepository(conn);
     games = new GameRepository(conn);
-    merge = new PlayerMergeService(players, aliases, conn);
+    users = new UserRepository(conn);
+    merge = new PlayerMergeService(players, aliases, users, conn);
     seasonId = new SeasonRepository(conn).create({ name: '2025/2026' }).id;
     santi = players.add(seasonId, 'Santi Zuaraz', 2).id;
     santo = players.add(seasonId, 'Santo', 5).id;
@@ -81,5 +84,40 @@ describe('PlayerMergeService', () => {
   it('rejects the same player twice and unknown players', () => {
     expect(() => merge.merge(santi, santi)).toThrow(/different/);
     expect(() => merge.merge(santi, 999)).toThrow(/Unknown/);
+  });
+
+  describe('players with an account', () => {
+    const account = (username: string, playerId: number) =>
+      users.create({ username, passwordHash: 'h', role: 'regular', playerId });
+
+    it("moves the absorbed player's account to the survivor", () => {
+      const user = account('santo', santo);
+
+      merge.merge(santi, santo);
+
+      expect(users.byId(user.id)?.playerId).toBe(santi);
+      expect(users.byPlayer(santi)?.username).toBe('santo');
+      expect(conn.pragma('foreign_key_check')).toEqual([]);
+    });
+
+    it("keeps the survivor's own account when only the survivor has one", () => {
+      const user = account('santi', santi);
+
+      merge.merge(santi, santo);
+
+      expect(users.byId(user.id)?.playerId).toBe(santi);
+      expect(conn.pragma('foreign_key_check')).toEqual([]);
+    });
+
+    it('refuses when both have an account, naming both and changing nothing', () => {
+      account('santi', santi);
+      account('santo', santo);
+
+      expect(() => merge.merge(santi, santo)).toThrow(
+        /los dos tienen usuario \(santi, santo\)/
+      );
+      expect(players.nameOf(santo)).toBe('Santo');
+      expect(users.byPlayer(santo)?.username).toBe('santo');
+    });
   });
 });

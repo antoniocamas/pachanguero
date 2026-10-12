@@ -42,12 +42,21 @@ import { GameViewService } from './game-view-service.js';
 import { PlayedDerivation } from '../domain/played-derivation.js';
 import { PlayedOutcomeEffect } from './played-outcome-effect.js';
 import { ConvocatoriaService } from './convocatoria-service.js';
+import { UserRepository } from './user-repository.js';
+import { RefreshTokenRepository } from './refresh-token-repository.js';
 
 export const seasons = new SeasonRepository(db());
 export const players = new PlayerRepository(db());
 export const aliases = new AliasRepository(db());
 export const playerEdit = new PlayerEditService(players, aliases, db());
-export const playerMerge = new PlayerMergeService(players, aliases, db());
+export const users = new UserRepository(db());
+export const refreshTokens = new RefreshTokenRepository(db());
+export const playerMerge = new PlayerMergeService(
+  players,
+  aliases,
+  users,
+  db()
+);
 export const playerRegistrar = new PlayerRegistrar(players, aliases);
 export const games = new GameRepository(db());
 export const schedule = new ScheduleRepository(db());

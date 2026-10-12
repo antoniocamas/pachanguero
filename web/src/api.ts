@@ -1,3 +1,5 @@
+import { createSessionClient } from './lib/sessionClient';
+
 export interface Season {
   id: number;
   name: string;
@@ -278,21 +280,20 @@ export type TeamResolveResult =
 
 export type GameAction = 'play' | 'reopen' | 'cancel' | 'uncancel';
 
-async function call<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`/api${path}`, {
-    headers: { 'Content-Type': 'application/json' },
-    ...init,
-  });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(body.error ?? `HTTP ${res.status}`);
-  }
-  return res.json() as Promise<T>;
+const sessionClient = createSessionClient((input, init) => fetch(input, init));
+
+function call<T>(path: string, init?: RequestInit): Promise<T> {
+  return sessionClient.request<T>(path, init);
 }
 
 const body = (data: unknown) => JSON.stringify(data);
 
 export const api = {
+  login: (username: string, password: string) =>
+    sessionClient.login(username, password),
+  restore: () => sessionClient.restore(),
+  logout: () => sessionClient.logout(),
+  onExpired: (listener: () => void) => sessionClient.onExpired(listener),
   seasons: () => call<Season[]>('/seasons'),
   createSeason: (data: { name: string }) =>
     call<Season>('/seasons', { method: 'POST', body: body(data) }),

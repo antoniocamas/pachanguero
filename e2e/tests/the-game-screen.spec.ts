@@ -1,9 +1,5 @@
-import {
-  test,
-  expect,
-  type APIRequestContext,
-  type Page,
-} from '@playwright/test';
+import type { APIRequestContext, Page } from '@playwright/test';
+import { test, expect } from './auth.fixture';
 
 // The specs of this directory share one database and `season-and-player` needs
 // it empty at its first test, so this one is named to run after it. It uses

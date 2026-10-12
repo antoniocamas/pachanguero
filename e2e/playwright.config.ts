@@ -1,6 +1,7 @@
 import { defineConfig } from '@playwright/test';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { E2E_JWT_SECRET } from './support/credentials';
 
 const here = dirname(fileURLToPath(import.meta.url));
 // Not the dev ports (8787/5173): a manual `npm run dev` can stay up while the
@@ -8,9 +9,13 @@ const here = dirname(fileURLToPath(import.meta.url));
 const apiPort = 8788;
 const webPort = 5174;
 const testDb = join(here, '.tmp/e2e.db');
+// Read by the setup that creates the end-to-end admin, which must use the same database.
+process.env.E2E_DB = testDb;
 
 export default defineConfig({
   testDir: './tests',
+  // Runs once the servers are up: creates the admin the specs log in as.
+  globalSetup: './support/seed-admin.ts',
   fullyParallel: false,
   // The specs share one database, so they run one after the other.
   workers: 1,
@@ -29,7 +34,11 @@ export default defineConfig({
     {
       command: `mkdir -p ${dirname(testDb)} && rm -f ${testDb} ${testDb}-wal ${testDb}-shm && npm run dev --workspace=server`,
       cwd: join(here, '..'),
-      env: { PACHANGUERO_DB: testDb, PORT: String(apiPort) },
+      env: {
+        PACHANGUERO_DB: testDb,
+        PORT: String(apiPort),
+        JWT_SECRET: E2E_JWT_SECRET,
+      },
       url: `http://localhost:${apiPort}/api/seasons`,
       reuseExistingServer: false,
       timeout: 20_000,

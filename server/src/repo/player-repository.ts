@@ -61,6 +61,17 @@ export class PlayerRepository {
       .run(introducedBy, playerId);
   }
 
+  /**
+   * Every player with exactly this name, ignoring case (SQLite folds only ASCII, so the
+   * comparison is done here): there can be more than one.
+   */
+  findByName(name: string): { id: number; name: string }[] {
+    const wanted = name.trim().toLocaleLowerCase('es');
+    return this.listAll()
+      .filter(p => p.name.toLocaleLowerCase('es') === wanted)
+      .sort((a, b) => a.id - b.id);
+  }
+
   nameOf(playerId: number): string | undefined {
     const row = this.conn
       .prepare('SELECT name FROM players WHERE id = ?')

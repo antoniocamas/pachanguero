@@ -165,6 +165,16 @@ describe('SchemaMigrator', () => {
     expect(tables(legacy)).toEqual(tables(fresh));
   });
 
+  it('adds the account tables, empty, to a file written before they existed', () => {
+    const conn = legacyDatabase();
+    migrator(conn).run();
+    for (const table of ['users', 'refresh_tokens']) {
+      expect(conn.prepare(`SELECT COUNT(*) AS c FROM ${table}`).get()).toEqual({
+        c: 0,
+      });
+    }
+  });
+
   it('starting the same file twice makes one backup and no more', () => {
     const first = legacyDatabase();
     migrator(first).run();

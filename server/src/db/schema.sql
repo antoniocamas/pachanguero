@@ -204,3 +204,33 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_payments_player
   ON payments(game_id, beneficiary_player_id) WHERE beneficiary_player_id IS NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS uq_payments_guest
   ON payments(game_id, holder_player_id, guest_ordinal) WHERE guest_ordinal IS NOT NULL;
+
+-- Login accounts, separate from players: a username is not a player's name. A regular
+-- user is tied to exactly one player; an admin may or may not be. players.id has no
+-- ON DELETE action here, so a player with an account cannot be deleted by accident.
+CREATE TABLE IF NOT EXISTS users (
+  id              INTEGER PRIMARY KEY,
+  username        TEXT    NOT NULL UNIQUE,   -- stored lower-case
+  password_hash   TEXT    NOT NULL,
+  role            TEXT    NOT NULL CHECK (role IN ('admin','regular')),
+  player_id       INTEGER UNIQUE REFERENCES players(id),
+  active          INTEGER NOT NULL DEFAULT 1 CHECK (active IN (0,1)),
+  failed_attempts INTEGER NOT NULL DEFAULT 0,
+  locked_until    TEXT,                      -- ISO-8601 UTC
+  last_login      TEXT,                      -- ISO-8601 UTC
+  created_at      TEXT    NOT NULL DEFAULT (datetime('now')),
+  CHECK (role = 'admin' OR player_id IS NOT NULL)
+);
+
+-- One row per refresh token handed out; only its SHA-256 is stored. A token is used
+-- once: rotating it revokes the row and inserts the next.
+CREATE TABLE IF NOT EXISTS refresh_tokens (
+  id         INTEGER PRIMARY KEY,
+  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token_hash TEXT    NOT NULL UNIQUE,
+  view       TEXT    NOT NULL DEFAULT 'admin' CHECK (view IN ('admin','regular')),
+  expires_at TEXT    NOT NULL,               -- ISO-8601 UTC
+  revoked    INTEGER NOT NULL DEFAULT 0 CHECK (revoked IN (0,1)),
+  created_at TEXT    NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON refresh_tokens(user_id);

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './auth.fixture';
 
 test('creates the first season and adds a player to the roster', async ({
   page,

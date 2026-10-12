@@ -94,4 +94,21 @@ describe('PlayerRepository', () => {
     const [row] = players.list(seasonId);
     expect(row.seasons).toBe(4);
   });
+
+  describe('findByName', () => {
+    it('finds a player by exact name, ignoring case', () => {
+      const ana = players.add(seasonId, 'Ana López', 1);
+      expect(players.findByName('ana lópez')).toEqual([
+        { id: ana.id, name: 'Ana López' },
+      ]);
+      expect(players.findByName('  Ana López ')).toHaveLength(1);
+    });
+
+    it('finds nothing for a part of a name, and every match when names differ only in case', () => {
+      players.add(seasonId, 'Ana López', 1);
+      expect(players.findByName('Ana')).toEqual([]);
+      players.register('ANA LÓPEZ');
+      expect(players.findByName('ana lópez')).toHaveLength(2);
+    });
+  });
 });
