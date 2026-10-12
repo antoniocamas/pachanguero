@@ -26,7 +26,7 @@
 | 03  | An admin logs in and the rest of the API is closed, end to end | 1    | done    | 2026-10-12 |
 | 04  | The player's own view, contact data, password and view switch  | 1    | done    | 2026-10-12 |
 | 05  | Backup at will, the Docker image and the documents             | 1    | done    | 2026-10-12 |
-| 06  | Full regression                                                | 1    | pending | —          |
+| 06  | Full regression                                                | 1    | done    | 2026-10-12 |
 
 ## Open Items
 

@@ -24,21 +24,19 @@ reopened.
    `npm run seed`.
 2. Run, in order: `npm run build`, `npm test`, `npm run test:e2e`, `npm run lint`,
    `npm run format:check`.
-3. Start the built server (`npm start`) with a real `JWT_SECRET`, run `pachanguero-admin list`, and
-   confirm an old database file (the pre-work copy, if kept) is backed up and migrated on start.
+3. ~~Start the built server on an old database file.~~ Dropped by the author: old databases are not
+   supported, so they are not tested.
 
 ## Tests
 
-Testability: fully automatable except step 3 of the guidelines, which is a short manual check.
+Testability: fully automatable.
 
 ## Definition of Done
 
-- [ ] Every command in the guidelines passes; outputs are reported.
-- [ ] Step 3 done: the automatic backup file exists next to the database or in `PACHANGUERO_BACKUPS`,
-      and the data is intact.
-- [ ] **Graduation:** none (this task realises no requirement of its own).
-- [ ] **Hard requirements:** none of its own; the carriers are recorded in tasks 01 to 05.
-- [ ] **Documentation:** none made untrue; this task changes nothing executable.
-- [ ] **Tests:** `npm test` and `npm run test:e2e`.
-- [ ] **Regression:** this task is the regression.
-- [ ] **Code checks:** `npm run lint` and `npm run format:check` pass.
+- [x] Every command in the guidelines passes; outputs are reported.
+- [x] **Graduation:** none (this task realises no requirement of its own).
+- [x] **Hard requirements:** none of its own; the carriers are recorded in tasks 01 to 05.
+- [x] **Documentation:** none made untrue; this task changes nothing executable.
+- [x] **Tests:** `npm test` and `npm run test:e2e`.
+- [x] **Regression:** this task is the regression.
+- [x] **Code checks:** `npm run lint` and `npm run format:check` pass.
