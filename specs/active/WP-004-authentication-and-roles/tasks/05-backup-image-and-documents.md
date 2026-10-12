@@ -34,7 +34,10 @@ is out of scope: no compose or Kubernetes files, no registry, no TLS.
 3. **F14** — only what tasks 01, 03 and 04 did not already change: review `AGENTS.md` and
    `docs/test-strategy.md` against the code and complete them (the domain-invariants bullet),
    `README.md` (configuration table, backup paragraph replaced, "Usuarios y acceso" section, one
-   sentence about `JWT_SECRET` under the deployment section), `docs/domain-model/glossary.md` and
+   sentence about `JWT_SECRET` under the deployment section, and how to try the app by hand: `npm run seed`
+   with `PACHANGUERO_DB` set to a throwaway database also creates `admin`, `jefe` and `jugador` with the
+   password `Pachanguero-dev-1`, and creates none when the variable is unset because the database may be a real
+   one), `docs/domain-model/glossary.md` and
    `README.md`, the two new Spanish documents `docs/domain-model/usuarios-y-roles.md` and
    `docs/backup_and_restore.md`, and one comment line in `deploy/pachanguero.service`. No document may
    name this work package or its identifiers. Spanish for README and domain documents, English for
@@ -79,6 +82,8 @@ Testability: F10 fully automatable; F11 partly; F14 not (HLD 2.10).
       the passages they break: `README.md`, `docs/backup_and_restore.md` (new),
       `docs/domain-model/usuarios-y-roles.md` (new), `docs/domain-model/glossary.md`,
       `docs/domain-model/README.md` (index row), `AGENTS.md` (domain invariant), `deploy/pachanguero.service`.
+      The seed's test accounts (when they are created, why never on the default database, their names and
+      password) are documented in `README.md` (Spanish); the `AGENTS.md` Commands line already says it.
 - [ ] **Tests:** `npm test` and `npm run format:check`.
 - [ ] **Regression:** `npm test`; the closing regression task 06 runs the E2E.
 - [ ] **Code checks:** `npm run lint` and `npm run format:check` pass on every touched file.

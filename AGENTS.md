@@ -10,8 +10,7 @@ Pachanguero replaces the `Futbol_Miercoles` spreadsheet + Apps Script for a Wedn
 npm install          # workspaces: server + web
 npm run dev          # API on :8787 (tsx watch), web on :5173 (vite, proxies /api); the API needs JWT_SECRET (32+ characters) in its environment
 npm run admin --workspace=server -- <command>   # operator tool: create, list, reset-pwd, unlock, activate, deactivate, promote, demote (passwords are asked for, never an argument)
-npm run seed         # import the 2024/2025 season from data/seed/*.csv (-- --reset to wipe first)
-npm run seed --workspace=server -- --with-users   # same, plus an admin, an admin-player and a regular user (password in the output); needs PACHANGUERO_DB set to a throwaway database
+npm run seed         # import the 2024/2025 season from data/seed/*.csv (-- --reset to wipe first); with PACHANGUERO_DB set to a throwaway database it also creates `admin` (no player), `jefe` (admin and player) and `jugador` (regular), all with the password `Pachanguero-dev-1` (`DevAccountSeeder.PASSWORD`)
 npm test             # domain/route tests (vitest, server workspace) and the web lib/ tests (vitest, web workspace)
 npm run test:e2e     # full-stack browser tests (playwright, e2e workspace); specs share one database, see docs/test-strategy.md
 npm run build        # tsc for both workspaces; also copies schema.sql into server/dist/db

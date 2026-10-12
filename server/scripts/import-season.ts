@@ -12,11 +12,12 @@
  * game date and flagged in the note, so they are never mistaken for real
  * settlement dates.
  *
- * Usage: npm run seed [-- --season "2024/2025" --reset --with-users]
+ * Usage: npm run seed [-- --season "2024/2025" --reset]
  *
- * `--with-users` also creates login accounts for trying the app by hand (an admin, an admin who
- * is a player, a regular user), all with one made-up password. It refuses to run unless
- * PACHANGUERO_DB names the database, so it can never add them to the default one by accident.
+ * With PACHANGUERO_DB set to a throwaway database it also creates login accounts for trying
+ * the app by hand (an admin, an admin who is a player, a regular user), all with one made-up
+ * password (`Pachanguero-dev-1`, DevAccountSeeder.PASSWORD). Without it the database is the default one, which may be a real one: no accounts
+ * with a known password are ever added there.
  */
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -52,7 +53,6 @@ const flag = (name: string, fallback?: string) => {
 };
 const SEASON = flag('season', '2024/2025')!;
 const RESET = args.includes('--reset');
-const WITH_USERS = args.includes('--with-users');
 
 function parseCsv(file: string): string[][] {
   return readFileSync(join(seedDir, file), 'utf8')
@@ -312,11 +312,9 @@ async function seedAccounts() {
   if (created.length === 0) console.log('  none created: they already exist');
 }
 
-if (WITH_USERS && !process.env.PACHANGUERO_DB) {
-  console.error(
-    '--with-users needs PACHANGUERO_DB set to a throwaway database: it adds accounts with a known password.'
-  );
-  process.exit(1);
-}
 main();
-if (WITH_USERS) await seedAccounts();
+if (process.env.PACHANGUERO_DB) await seedAccounts();
+else
+  console.log(
+    '\nNo accounts created: PACHANGUERO_DB is not set, so this may be a real database.'
+  );
