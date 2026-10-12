@@ -1,0 +1,22 @@
+@startuml
+actor Organiser as org
+participant "ebpoc.py\n(commands)" as cli
+participant "poc/local/\n(key, state, data)" as store
+participant "Enable Banking API" as eb
+participant "Revolut app" as rev
+
+org -> cli: aspsps / auth
+cli -> store: read key
+cli -> eb: GET /aspsps, POST /auth
+eb --> cli: url
+cli --> org: url
+org -> rev: approve
+org -> cli: session <pasted redirect URL>
+cli -> eb: POST /sessions
+cli -> store: save session, accounts
+org -> cli: fetch
+cli -> eb: GET /accounts/{uid}/transactions (loop on continuation_key)
+cli -> store: append new (hash, entry_reference)
+org -> cli: recognise / match / limits
+cli -> store: read transactions, write reports
+@enduml

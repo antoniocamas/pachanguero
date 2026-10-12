@@ -1,0 +1,16 @@
+# Pachanguero today: what a detected Bizum would meet (Q-09 to Q-13)
+
+## Q-09 Tools for the PoC script
+Installed: Node 26.8.2, Python 3.14.4 with `pyjwt` and `requests` importable, `cryptography`, OpenSSL 3.5.5. The server workspace already depends on `jose` 6.2.12 (JWT, RS256 capable). So the guide's Python skeleton runs as is with no installation; a Node script could use built-in `fetch` plus `jose`. Nothing needs installing. Keys and data must stay out of git: `.gitignore` already lists `.env`, `*.db`, but nothing for a `.pem` or capture folder, so the PoC needs its own ignored folder (`inference`; a gitignore change needs the author's call).
+
+## Q-10 How a payment is recorded
+A share is a `share_debts` row (game, `holder_player_id`, `beneficiary_player_id` or `guest_ordinal`, `amount_cents`) until settled, then a `payments` row (same keys plus `payer_player_id`, `amount_cents`, `paid_on`); see `server/src/db/schema.sql`. `PaymentService.pay` takes `shares`, `payerPlayerId`, an optional `amountCents` (single share only) and `paidOn`, and allows only the holder or the beneficiary as payer. The share price is per season (`SeasonRepository.shareCents`, `price_cents` default 5600 per game). A detected Bizum would supply payer (matched player), amount and `paid_on` (the date the money arrived, per the project invariant); the bank-side `entry_reference` has no column today, so a future design needs somewhere to keep it for idempotency. The PoC stays read-only and out of this.
+
+## Q-11 Name matching
+`NameMatcher` (`server/src/domain/name-matcher.ts`) matches a stripped name against `players.name` and `player_aliases` with case/accent-insensitive Spanish collation, never guessing: `matched`, `ambiguous` or `unresolved`. `NameStripper` removes WhatsApp decoration (invisible characters, list markers, emoji). It is reusable as it is for a Bizum sender string, but exact full-name equality only; whether Bizum names (probably the sender's name as registered with their bank, possibly abbreviated or uppercase) match these names is `unknown` → experiment E-11 with the real senders. Players have no phone number column, though Bizum is phone-based (`inference`: a phone alias would only help if Revolut exposes it).
+
+## Q-12 Variant inventory
+Besides a plain one-share Bizum from the beneficiary: one Bizum paying several shares or a guest's share (holder pays for beneficiaries, supported by `PaymentService`); a payer who is neither holder nor beneficiary (rejected by the service); amount different from the share (single-share adjustment allowed only); a payment before the game is `played` (`pay` capability needs the played state); payments for several games in one Bizum; refunds and Bizums sent out by the organiser; Bizums unrelated to football; the same Bizum seen twice (pending then booked, or re-authorised session). Which of these occur in practice is the PoC's data to say (E-12).
+
+## Q-13 Doc map
+Documents the future production work will extend: `docs/domain-model/glossary.md` (Deuda, Pago), `docs/domain-model/ciclo-del-partido.md` (payment capability), `docs/users-and-roles.md` and `docs/commands.md` (a new operator command and its settings), `AGENTS.md` (architecture and invariants if a bank reader is added). The PoC itself changes none of them; its outputs are the two guides in this work package.

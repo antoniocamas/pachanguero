@@ -18,3 +18,5 @@ e2e/.tmp/
 e2e/test-results/
 e2e/playwright-report/
 specs/.update-command.json
+# Enable Banking PoC: private key, sessions and raw (personal) payloads
+specs/active/WP-005-*/poc/local*/

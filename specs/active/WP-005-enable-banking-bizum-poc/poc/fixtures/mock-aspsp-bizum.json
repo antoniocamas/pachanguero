@@ -1,0 +1,823 @@
+{
+  "accounts": [
+    {
+      "info": {
+        "name": "Cuenta de Prueba",
+        "cash_account_type": "CACC",
+        "currency": "EUR",
+        "usage": "PRIV",
+        "bic_fi": "BNKAFRPPXXX",
+        "psu_status": "Account Holder"
+      },
+      "transactions": [
+        {
+          "entry_reference": "SYN-0001",
+          "merchant_category_code": null,
+          "transaction_amount": {
+            "currency": "EUR",
+            "amount": "4.00"
+          },
+          "creditor": {
+            "name": null,
+            "postal_address": null,
+            "organisation_id": null,
+            "private_id": null
+          },
+          "creditor_account": null,
+          "debtor": {
+            "name": null,
+            "postal_address": null,
+            "organisation_id": null,
+            "private_id": null
+          },
+          "debtor_account": null,
+          "bank_transaction_code": {
+            "description": null,
+            "code": "TOPUP",
+            "sub_code": null
+          },
+          "credit_debit_indicator": "CRDT",
+          "status": "BOOK",
+          "booking_date": "2026-09-01",
+          "value_date": "2026-09-01",
+          "transaction_date": null,
+          "balance_after_transaction": null,
+          "reference_number": null,
+          "remittance_information": [
+            "cancha",
+            "Bizum payment from: Ana B.C."
+          ]
+        },
+        {
+          "entry_reference": "SYN-0002",
+          "merchant_category_code": null,
+          "transaction_amount": {
+            "currency": "EUR",
+            "amount": "4.00"
+          },
+          "creditor": {
+            "name": null,
+            "postal_address": null,
+            "organisation_id": null,
+            "private_id": null
+          },
+          "creditor_account": null,
+          "debtor": {
+            "name": null,
+            "postal_address": null,
+            "organisation_id": null,
+            "private_id": null
+          },
+          "debtor_account": null,
+          "bank_transaction_code": {
+            "description": null,
+            "code": "TOPUP",
+            "sub_code": null
+          },
+          "credit_debit_indicator": "CRDT",
+          "status": "BOOK",
+          "booking_date": "2026-09-02",
+          "value_date": "2026-09-02",
+          "transaction_date": null,
+          "balance_after_transaction": null,
+          "reference_number": null,
+          "remittance_information": [
+            "cancha",
+            "Bizum payment from: Luis P.G."
+          ]
+        },
+        {
+          "entry_reference": "SYN-0003",
+          "merchant_category_code": null,
+          "transaction_amount": {
+            "currency": "EUR",
+            "amount": "4.00"
+          },
+          "creditor": {
+            "name": null,
+            "postal_address": null,
+            "organisation_id": null,
+            "private_id": null
+          },
+          "creditor_account": null,
+          "debtor": {
+            "name": null,
+            "postal_address": null,
+            "organisation_id": null,
+            "private_id": null
+          },
+          "debtor_account": null,
+          "bank_transaction_code": {
+            "description": null,
+            "code": "TOPUP",
+            "sub_code": null
+          },
+          "credit_debit_indicator": "CRDT",
+          "status": "BOOK",
+          "booking_date": "2026-09-03",
+          "value_date": "2026-09-03",
+          "transaction_date": null,
+          "balance_after_transaction": null,
+          "reference_number": null,
+          "remittance_information": [
+            "cancha",
+            "Bizum payment from: Marta R.S."
+          ]
+        },
+        {
+          "entry_reference": "SYN-0004",
+          "merchant_category_code": null,
+          "transaction_amount": {
+            "currency": "EUR",
+            "amount": "4.00"
+          },
+          "creditor": {
+            "name": null,
+            "postal_address": null,
+            "organisation_id": null,
+            "private_id": null
+          },
+          "creditor_account": null,
+          "debtor": {
+            "name": null,
+            "postal_address": null,
+            "organisation_id": null,
+            "private_id": null
+          },
+          "debtor_account": null,
+          "bank_transaction_code": {
+            "description": null,
+            "code": "TOPUP",
+            "sub_code": null
+          },
+          "credit_debit_indicator": "CRDT",
+          "status": "BOOK",
+          "booking_date": "2026-09-04",
+          "value_date": "2026-09-04",
+          "transaction_date": null,
+          "balance_after_transaction": null,
+          "reference_number": null,
+          "remittance_information": [
+            "cancha",
+            "Bizum payment from: Pedro L.M."
+          ]
+        },
+        {
+          "entry_reference": "SYN-0005",
+          "merchant_category_code": null,
+          "transaction_amount": {
+            "currency": "EUR",
+            "amount": "4.00"
+          },
+          "creditor": {
+            "name": null,
+            "postal_address": null,
+            "organisation_id": null,
+            "private_id": null
+          },
+          "creditor_account": null,
+          "debtor": {
+            "name": null,
+            "postal_address": null,
+            "organisation_id": null,
+            "private_id": null
+          },
+          "debtor_account": null,
+          "bank_transaction_code": {
+            "description": null,
+            "code": "TOPUP",
+            "sub_code": null
+          },
+          "credit_debit_indicator": "CRDT",
+          "status": "BOOK",
+          "booking_date": "2026-09-05",
+          "value_date": "2026-09-05",
+          "transaction_date": null,
+          "balance_after_transaction": null,
+          "reference_number": null,
+          "remittance_information": [
+            "cancha",
+            "Bizum payment from: +34600000001"
+          ]
+        },
+        {
+          "entry_reference": "SYN-0006",
+          "merchant_category_code": null,
+          "transaction_amount": {
+            "currency": "EUR",
+            "amount": "4.00"
+          },
+          "creditor": {
+            "name": null,
+            "postal_address": null,
+            "organisation_id": null,
+            "private_id": null
+          },
+          "creditor_account": null,
+          "debtor": {
+            "name": null,
+            "postal_address": null,
+            "organisation_id": null,
+            "private_id": null
+          },
+          "debtor_account": null,
+          "bank_transaction_code": {
+            "description": null,
+            "code": "TOPUP",
+            "sub_code": null
+          },
+          "credit_debit_indicator": "CRDT",
+          "status": "BOOK",
+          "booking_date": "2026-09-06",
+          "value_date": "2026-09-06",
+          "transaction_date": null,
+          "balance_after_transaction": null,
+          "reference_number": null,
+          "remittance_information": [
+            "cancha",
+            "Bizum payment from: Ana B.C."
+          ]
+        },
+        {
+          "entry_reference": "SYN-0007",
+          "merchant_category_code": null,
+          "transaction_amount": {
+            "currency": "EUR",
+            "amount": "4.00"
+          },
+          "creditor": {
+            "name": null,
+            "postal_address": null,
+            "organisation_id": null,
+            "private_id": null
+          },
+          "creditor_account": null,
+          "debtor": {
+            "name": null,
+            "postal_address": null,
+            "organisation_id": null,
+            "private_id": null
+          },
+          "debtor_account": null,
+          "bank_transaction_code": {
+            "description": null,
+            "code": "TOPUP",
+            "sub_code": null
+          },
+          "credit_debit_indicator": "CRDT",
+          "status": "BOOK",
+          "booking_date": "2026-09-07",
+          "value_date": "2026-09-07",
+          "transaction_date": null,
+          "balance_after_transaction": null,
+          "reference_number": null,
+          "remittance_information": [
+            "cancha",
+            "Bizum payment from: Luis P.G."
+          ]
+        },
+        {
+          "entry_reference": "SYN-0008",
+          "merchant_category_code": null,
+          "transaction_amount": {
+            "currency": "EUR",
+            "amount": "4.00"
+          },
+          "creditor": {
+            "name": null,
+            "postal_address": null,
+            "organisation_id": null,
+            "private_id": null
+          },
+          "creditor_account": null,
+          "debtor": {
+            "name": null,
+            "postal_address": null,
+            "organisation_id": null,
+            "private_id": null
+          },
+          "debtor_account": null,
+          "bank_transaction_code": {
+            "description": null,
+            "code": "TOPUP",
+            "sub_code": null
+          },
+          "credit_debit_indicator": "CRDT",
+          "status": "BOOK",
+          "booking_date": "2026-09-08",
+          "value_date": "2026-09-08",
+          "transaction_date": null,
+          "balance_after_transaction": null,
+          "reference_number": null,
+          "remittance_information": [
+            "cancha",
+            "Bizum payment from: Marta R.S."
+          ]
+        },
+        {
+          "entry_reference": "SYN-0009",
+          "merchant_category_code": null,
+          "transaction_amount": {
+            "currency": "EUR",
+            "amount": "4.00"
+          },
+          "creditor": {
+            "name": null,
+            "postal_address": null,
+            "organisation_id": null,
+            "private_id": null
+          },
+          "creditor_account": null,
+          "debtor": {
+            "name": null,
+            "postal_address": null,
+            "organisation_id": null,
+            "private_id": null
+          },
+          "debtor_account": null,
+          "bank_transaction_code": {
+            "description": null,
+            "code": "TOPUP",
+            "sub_code": null
+          },
+          "credit_debit_indicator": "CRDT",
+          "status": "BOOK",
+          "booking_date": "2026-09-09",
+          "value_date": "2026-09-09",
+          "transaction_date": null,
+          "balance_after_transaction": null,
+          "reference_number": null,
+          "remittance_information": [
+            "cancha",
+            "Bizum payment from: Pedro L.M."
+          ]
+        },
+        {
+          "entry_reference": "SYN-0010",
+          "merchant_category_code": null,
+          "transaction_amount": {
+            "currency": "EUR",
+            "amount": "4.00"
+          },
+          "creditor": {
+            "name": null,
+            "postal_address": null,
+            "organisation_id": null,
+            "private_id": null
+          },
+          "creditor_account": null,
+          "debtor": {
+            "name": null,
+            "postal_address": null,
+            "organisation_id": null,
+            "private_id": null
+          },
+          "debtor_account": null,
+          "bank_transaction_code": {
+            "description": null,
+            "code": "TOPUP",
+            "sub_code": null
+          },
+          "credit_debit_indicator": "CRDT",
+          "status": "BOOK",
+          "booking_date": "2026-09-10",
+          "value_date": "2026-09-10",
+          "transaction_date": null,
+          "balance_after_transaction": null,
+          "reference_number": null,
+          "remittance_information": [
+            "cancha",
+            "Bizum payment from: +34600000001"
+          ]
+        },
+        {
+          "entry_reference": "SYN-0011",
+          "merchant_category_code": null,
+          "transaction_amount": {
+            "currency": "EUR",
+            "amount": "4.00"
+          },
+          "creditor": {
+            "name": null,
+            "postal_address": null,
+            "organisation_id": null,
+            "private_id": null
+          },
+          "creditor_account": null,
+          "debtor": {
+            "name": null,
+            "postal_address": null,
+            "organisation_id": null,
+            "private_id": null
+          },
+          "debtor_account": null,
+          "bank_transaction_code": {
+            "description": null,
+            "code": "TOPUP",
+            "sub_code": null
+          },
+          "credit_debit_indicator": "CRDT",
+          "status": "BOOK",
+          "booking_date": "2026-09-11",
+          "value_date": "2026-09-11",
+          "transaction_date": null,
+          "balance_after_transaction": null,
+          "reference_number": null,
+          "remittance_information": [
+            "cancha",
+            "Bizum payment from: Ana B.C."
+          ]
+        },
+        {
+          "entry_reference": "SYN-0012",
+          "merchant_category_code": null,
+          "transaction_amount": {
+            "currency": "EUR",
+            "amount": "4.00"
+          },
+          "creditor": {
+            "name": null,
+            "postal_address": null,
+            "organisation_id": null,
+            "private_id": null
+          },
+          "creditor_account": null,
+          "debtor": {
+            "name": null,
+            "postal_address": null,
+            "organisation_id": null,
+            "private_id": null
+          },
+          "debtor_account": null,
+          "bank_transaction_code": {
+            "description": null,
+            "code": "TOPUP",
+            "sub_code": null
+          },
+          "credit_debit_indicator": "CRDT",
+          "status": "BOOK",
+          "booking_date": "2026-09-12",
+          "value_date": "2026-09-12",
+          "transaction_date": null,
+          "balance_after_transaction": null,
+          "reference_number": null,
+          "remittance_information": [
+            "cancha",
+            "Bizum payment from: Luis P.G."
+          ]
+        },
+        {
+          "entry_reference": "SYN-0013",
+          "merchant_category_code": null,
+          "transaction_amount": {
+            "currency": "EUR",
+            "amount": "4.00"
+          },
+          "creditor": {
+            "name": null,
+            "postal_address": null,
+            "organisation_id": null,
+            "private_id": null
+          },
+          "creditor_account": null,
+          "debtor": {
+            "name": null,
+            "postal_address": null,
+            "organisation_id": null,
+            "private_id": null
+          },
+          "debtor_account": null,
+          "bank_transaction_code": {
+            "description": null,
+            "code": "TOPUP",
+            "sub_code": null
+          },
+          "credit_debit_indicator": "CRDT",
+          "status": "BOOK",
+          "booking_date": "2026-09-13",
+          "value_date": "2026-09-13",
+          "transaction_date": null,
+          "balance_after_transaction": null,
+          "reference_number": null,
+          "remittance_information": [
+            "cancha",
+            "Bizum payment from: Marta R.S."
+          ]
+        },
+        {
+          "entry_reference": "SYN-0014",
+          "merchant_category_code": null,
+          "transaction_amount": {
+            "currency": "EUR",
+            "amount": "4.00"
+          },
+          "creditor": {
+            "name": null,
+            "postal_address": null,
+            "organisation_id": null,
+            "private_id": null
+          },
+          "creditor_account": null,
+          "debtor": {
+            "name": null,
+            "postal_address": null,
+            "organisation_id": null,
+            "private_id": null
+          },
+          "debtor_account": null,
+          "bank_transaction_code": {
+            "description": null,
+            "code": "TOPUP",
+            "sub_code": null
+          },
+          "credit_debit_indicator": "CRDT",
+          "status": "BOOK",
+          "booking_date": "2026-09-14",
+          "value_date": "2026-09-14",
+          "transaction_date": null,
+          "balance_after_transaction": null,
+          "reference_number": null,
+          "remittance_information": [
+            "cancha",
+            "Bizum payment from: Pedro L.M."
+          ]
+        },
+        {
+          "entry_reference": "SYN-0015",
+          "merchant_category_code": null,
+          "transaction_amount": {
+            "currency": "EUR",
+            "amount": "12.00"
+          },
+          "creditor": {
+            "name": null,
+            "postal_address": null,
+            "organisation_id": null,
+            "private_id": null
+          },
+          "creditor_account": null,
+          "debtor": {
+            "name": null,
+            "postal_address": null,
+            "organisation_id": null,
+            "private_id": null
+          },
+          "debtor_account": null,
+          "bank_transaction_code": {
+            "description": null,
+            "code": "TOPUP",
+            "sub_code": null
+          },
+          "credit_debit_indicator": "CRDT",
+          "status": "BOOK",
+          "booking_date": "2026-09-16",
+          "value_date": "2026-09-16",
+          "transaction_date": null,
+          "balance_after_transaction": null,
+          "reference_number": null,
+          "remittance_information": [
+            "tres partidos",
+            "Bizum payment from: Ana B.C."
+          ]
+        },
+        {
+          "entry_reference": "SYN-0016",
+          "merchant_category_code": null,
+          "transaction_amount": {
+            "currency": "EUR",
+            "amount": "4.00"
+          },
+          "creditor": {
+            "name": null,
+            "postal_address": null,
+            "organisation_id": null,
+            "private_id": null
+          },
+          "creditor_account": null,
+          "debtor": {
+            "name": null,
+            "postal_address": null,
+            "organisation_id": null,
+            "private_id": null
+          },
+          "debtor_account": null,
+          "bank_transaction_code": {
+            "description": null,
+            "code": "TOPUP",
+            "sub_code": null
+          },
+          "credit_debit_indicator": "CRDT",
+          "status": "BOOK",
+          "booking_date": "2026-09-17",
+          "value_date": "2026-09-17",
+          "transaction_date": null,
+          "balance_after_transaction": null,
+          "reference_number": null,
+          "remittance_information": [
+            "otra vez",
+            "Bizum payment from: Ana B.C."
+          ]
+        },
+        {
+          "entry_reference": "SYN-0017",
+          "merchant_category_code": null,
+          "transaction_amount": {
+            "currency": "EUR",
+            "amount": "4.00"
+          },
+          "creditor": {
+            "name": null,
+            "postal_address": null,
+            "organisation_id": null,
+            "private_id": null
+          },
+          "creditor_account": null,
+          "debtor": {
+            "name": null,
+            "postal_address": null,
+            "organisation_id": null,
+            "private_id": null
+          },
+          "debtor_account": null,
+          "bank_transaction_code": {
+            "description": null,
+            "code": "TOPUP",
+            "sub_code": null
+          },
+          "credit_debit_indicator": "CRDT",
+          "status": "BOOK",
+          "booking_date": "2026-09-17",
+          "value_date": "2026-09-17",
+          "transaction_date": null,
+          "balance_after_transaction": null,
+          "reference_number": null,
+          "remittance_information": [
+            "otra vez",
+            "Bizum payment from: Ana B.C."
+          ]
+        },
+        {
+          "entry_reference": "SYN-0018",
+          "merchant_category_code": null,
+          "transaction_amount": {
+            "currency": "EUR",
+            "amount": "4.00"
+          },
+          "creditor": {
+            "name": null,
+            "postal_address": null,
+            "organisation_id": null,
+            "private_id": null
+          },
+          "creditor_account": null,
+          "debtor": {
+            "name": null,
+            "postal_address": null,
+            "organisation_id": null,
+            "private_id": null
+          },
+          "debtor_account": null,
+          "bank_transaction_code": {
+            "description": null,
+            "code": "TOPUP",
+            "sub_code": null
+          },
+          "credit_debit_indicator": "CRDT",
+          "status": "PDNG",
+          "booking_date": "2026-09-18",
+          "value_date": "2026-09-18",
+          "transaction_date": null,
+          "balance_after_transaction": null,
+          "reference_number": null,
+          "remittance_information": [
+            "cancha",
+            "Bizum payment from: Luis P.G."
+          ]
+        },
+        {
+          "entry_reference": "SYN-0019",
+          "merchant_category_code": null,
+          "transaction_amount": {
+            "currency": "EUR",
+            "amount": "25.00"
+          },
+          "creditor": {
+            "name": null,
+            "postal_address": null,
+            "organisation_id": null,
+            "private_id": null
+          },
+          "creditor_account": null,
+          "debtor": {
+            "name": null,
+            "postal_address": null,
+            "organisation_id": null,
+            "private_id": null
+          },
+          "debtor_account": null,
+          "bank_transaction_code": {
+            "description": null,
+            "code": "TOPUP",
+            "sub_code": null
+          },
+          "credit_debit_indicator": "CRDT",
+          "status": "BOOK",
+          "booking_date": "2026-09-19",
+          "value_date": "2026-09-19",
+          "transaction_date": null,
+          "balance_after_transaction": null,
+          "reference_number": null,
+          "remittance_information": [
+            "Dinero de Persona Inventada"
+          ]
+        },
+        {
+          "entry_reference": "SYN-0020",
+          "merchant_category_code": null,
+          "transaction_amount": {
+            "currency": "EUR",
+            "amount": "4.00"
+          },
+          "creditor": {
+            "name": null,
+            "postal_address": null,
+            "organisation_id": null,
+            "private_id": null
+          },
+          "creditor_account": null,
+          "debtor": {
+            "name": null,
+            "postal_address": null,
+            "organisation_id": null,
+            "private_id": null
+          },
+          "debtor_account": null,
+          "bank_transaction_code": {
+            "description": null,
+            "code": "CARD_PAYMENT",
+            "sub_code": null
+          },
+          "credit_debit_indicator": "DBIT",
+          "status": "BOOK",
+          "booking_date": "2026-09-20",
+          "value_date": "2026-09-20",
+          "transaction_date": null,
+          "balance_after_transaction": null,
+          "reference_number": null,
+          "remittance_information": [
+            "cancha",
+            "Bizum payment to: Ana B.C."
+          ]
+        },
+        {
+          "entry_reference": "SYN-0021",
+          "merchant_category_code": null,
+          "transaction_amount": {
+            "currency": "EUR",
+            "amount": "2.60"
+          },
+          "creditor": {
+            "name": null,
+            "postal_address": null,
+            "organisation_id": null,
+            "private_id": null
+          },
+          "creditor_account": null,
+          "debtor": {
+            "name": null,
+            "postal_address": null,
+            "organisation_id": null,
+            "private_id": null
+          },
+          "debtor_account": null,
+          "bank_transaction_code": {
+            "description": null,
+            "code": "TOPUP",
+            "sub_code": null
+          },
+          "credit_debit_indicator": "CRDT",
+          "status": "BOOK",
+          "booking_date": "2026-09-21",
+          "value_date": "2026-09-21",
+          "transaction_date": null,
+          "balance_after_transaction": null,
+          "reference_number": null,
+          "remittance_information": [
+            "resto",
+            "Bizum payment from: Marta R.S."
+          ]
+        }
+      ],
+      "balances": [
+        {
+          "name": "Booked balance",
+          "balance_amount": {
+            "currency": "EUR",
+            "amount": "100.00"
+          },
+          "balance_type": "CLBD"
+        }
+      ]
+    }
+  ]
+}
