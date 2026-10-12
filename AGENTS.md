@@ -2,14 +2,16 @@
 
 ## Identity
 
-Pachanguero replaces the `Futbol_Miercoles` spreadsheet + Apps Script for a Wednesday 7-a-side football group: sign-ups, payments, and selecting the 14 who play when more than 14 sign up. The README and all docs are in Spanish; user-facing strings in the app are Spanish too. Write UI copy in Spanish. The app has a login and two roles: an admin (the organiser, who sees everything) and a regular user (a player, who sees only their own data); accounts are created by the operator's command line, never by registration.
+Pachanguero replaces the `Futbol_Miercoles` spreadsheet + Apps Script for a Wednesday 7-a-side football group: sign-ups, payments, and selecting the 14 who play when more than 14 sign up. The README, `AGENTS.md` and every document outside `docs/domain-model/` are in English; only the domain vocabulary stays Spanish (convocatoria, mercy seat, jugón, the game states…). `docs/domain-model/` is written in Spanish, and user-facing strings in the app are Spanish too. Write UI copy in Spanish. The app has a login and two roles: an admin (the organiser, who sees everything) and a regular user (a player, who sees only their own data); accounts are created by the operator's command line, never by registration (rules: `docs/users-and-roles.md`).
 
 ## Commands
 
+All commands, the settings and the `.env` file are described in `docs/commands.md`; the essentials:
+
 ```bash
 npm install          # workspaces: server + web
-npm run dev          # API on :8787 (tsx watch), web on :5173 (vite, proxies /api); the API needs JWT_SECRET (32+ characters) in its environment
-npm run admin --workspace=server -- <command>   # operator tool: create, list, reset-pwd, unlock, activate, deactivate, promote, demote (passwords are asked for, never an argument)
+npm run dev          # API on :8787 (tsx watch), web on :5173 (vite, proxies /api); the API needs `JWT_SECRET` (32+ characters): copy `.env.example` to `.env` (git-ignored; the server and the admin tool read it on their own, and `--env-file <path>` picks another; variables already in the environment win; `npm run seed` does not read it) and put a real one in it
+npm run admin --workspace=server -- <command>   # operator tool: create, list, reset-pwd, unlock, activate, deactivate, promote, demote, link, backup (passwords are asked for, never an argument)
 npm run seed         # import the 2024/2025 season from data/seed/*.csv (-- --reset to wipe first); with PACHANGUERO_DB set to a throwaway database it also creates `admin` (no player), `jefe` (admin and player) and `jugador` (regular), all with the password `Pachanguero-dev-1` (`DevAccountSeeder.PASSWORD`)
 npm test             # domain/route tests (vitest, server workspace) and the web lib/ tests (vitest, web workspace)
 npm run test:e2e     # full-stack browser tests (playwright, e2e workspace); specs share one database, see docs/test-strategy.md
@@ -132,6 +134,7 @@ web/src/              React 19 + Vite, no router/state lib: App.tsx chooses the 
 - **Weekly schedule rows are versioned (create-only)**, so earlier weeks keep resolving as they did.
 - **A convocatoria is stored when created and stamped when confirmed**: it keeps `rules_json` plus every entry with the points it saw and the outcome the selection chose, so past selections stay auditable after late payments change current standings. Confirming only stamps `confirmed_at`; recreating recomputes and asks before discarding hand corrections. Hand corrections (`ConvocatoriaEditService`) change only an entry's `playing`, never its `outcome`, points or position; anonymous plus-ones are entries too, named by host and ordinal. Seeded played games get a confirmed convocatoria with `source = 'history'` (`ConvocatoriaHistoryConverter`).
 - **Rules are per-season** (columns on `seasons`, editable from Ajustes), so history is never rewritten when rules change.
+- **A player sees only their own data, and the server decides.** The two roles and the admin's "Ver como jugador" view switch are in `docs/users-and-roles.md`. The player's routes (`OwnRouter`) take no player id: the player comes from the token, and every disclosure rule is in `OwnDisclosure`. A route added to `api.ts` is admin-only; accounts exist only through `pachanguero-admin`.
 - **Money is integer cents** (`price_cents`, `paid_cents`).
 - Ties in the convocatoria sort break by name (`es` locale) so results are deterministic.
 

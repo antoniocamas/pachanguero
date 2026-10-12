@@ -326,6 +326,54 @@ describe('UserAdminService', () => {
       );
     });
 
+    it('links an account with no player to a player, by name or by id, ending its sessions', async () => {
+      const second = (
+        await admin.create({
+          username: 'second',
+          password: GOOD,
+          role: 'admin',
+        })
+      ).id;
+      await admin.create({ username: 'third', password: GOOD, role: 'admin' });
+      tokens.insert({
+        userId: second,
+        tokenHash: 's1',
+        view: 'admin',
+        expiresAt: new Date('2027-01-01'),
+      });
+
+      admin.link('second', 'Ana López');
+      admin.link('third', String(players.register('Beto Ruiz').id));
+
+      expect(users.byId(second)!.playerId).toBe(
+        players.findByName('Ana López')[0].id
+      );
+      expect(users.byUsername('third')!.playerId).toBe(
+        players.findByName('Beto Ruiz')[0].id
+      );
+      expect(tokens.findByHash('s1')!.revoked).toBe(true);
+    });
+
+    it('refuses to link an account that has a player, a player who has an account or an unknown name, changing nothing', async () => {
+      await admin.create({ username: 'second', password: GOOD, role: 'admin' });
+      const before = rowCounts();
+
+      expect(await refused(() => admin.link('carlos', 'Ana López'))).toContain(
+        'ya tiene un jugador: Carlos García'
+      );
+      expect(
+        await refused(() => admin.link('second', 'Carlos García'))
+      ).toContain('ya tiene el usuario "carlos"');
+      expect(await refused(() => admin.link('second', 'Nadie'))).toContain(
+        'No existe el jugador'
+      );
+      expect(await refused(() => admin.link('nobody', 'Ana López'))).toContain(
+        'No existe el usuario'
+      );
+      expect(users.byUsername('second')!.playerId).toBeNull();
+      expect(rowCounts()).toEqual(before);
+    });
+
     it('never deactivates or demotes the only active admin, and does once there are two', async () => {
       expect(await refused(() => admin.deactivate('boss'))).toContain(
         'administrador'

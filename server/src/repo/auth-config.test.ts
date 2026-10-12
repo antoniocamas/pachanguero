@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { AuthConfig } from './auth-config.js';
 
@@ -57,5 +60,41 @@ describe('AuthConfig', () => {
       AuthConfig.fromEnv({ JWT_SECRET: SECRET, COOKIE_SECURE: 'true' })
         .cookieSecure
     ).toBe(true);
+  });
+});
+
+describe('.env.example', () => {
+  const example = readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), '../../../.env.example'),
+    'utf8'
+  );
+  // A setting is listed when it appears as `KEY=` at the start of a line, commented out or not.
+  const listed = [...example.matchAll(/^#?\s*([A-Z][A-Z0-9_]*)=/gm)].map(
+    m => m[1]
+  );
+  const values = Object.fromEntries(
+    [...example.matchAll(/^([A-Z][A-Z0-9_]*)=(.*)$/gm)].map(m => [m[1], m[2]])
+  );
+
+  it('lists every setting the code reads from the environment', () => {
+    const sources = [
+      '../repo/auth-config.ts',
+      '../db/index.ts',
+      '../index.ts',
+    ].map(file =>
+      readFileSync(join(dirname(fileURLToPath(import.meta.url)), file), 'utf8')
+    );
+    const read = new Set(
+      sources.flatMap(text =>
+        [...text.matchAll(/\benv\.([A-Z][A-Z0-9_]*)/g)].map(m => m[1])
+      )
+    );
+    read.delete('NODE_ENV');
+    expect([...read].sort()).not.toHaveLength(0);
+    expect(listed).toEqual(expect.arrayContaining([...read]));
+  });
+
+  it('does not start a server when copied unedited', () => {
+    expect(() => AuthConfig.fromEnv(values)).toThrow('JWT_SECRET');
   });
 });

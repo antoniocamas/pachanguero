@@ -143,6 +143,12 @@ export class UserRepository {
     this.conn.prepare('UPDATE users SET role = ? WHERE id = ?').run(role, id);
   }
 
+  setPlayer(id: number, playerId: number): void {
+    this.conn
+      .prepare('UPDATE users SET player_id = ? WHERE id = ?')
+      .run(playerId, id);
+  }
+
   /** Points the account of an absorbed player at the player that took their place. */
   movePlayer(fromPlayerId: number, intoPlayerId: number): void {
     this.conn

@@ -145,6 +145,30 @@ export class UserAdminService {
     });
   }
 
+  /**
+   * Gives an account that has no player its player, who is then the one it sees as its own.
+   * Their sessions end, so the next sign-in carries the player.
+   */
+  link(rawUsername: string, player: string): void {
+    const playerId = this.resolvePlayer(player);
+    this.write(() => {
+      const user = this.existing(rawUsername);
+      if (user.playerId !== null) {
+        throw new UserAdminError(
+          `"${user.username}" ya tiene un jugador: ${this.players.nameOf(user.playerId)}`
+        );
+      }
+      const taken = this.users.byPlayer(playerId);
+      if (taken) {
+        throw new UserAdminError(
+          `${this.players.nameOf(playerId)} ya tiene el usuario "${taken.username}"`
+        );
+      }
+      this.users.setPlayer(user.id, playerId);
+      this.refreshTokens.revokeAllFor(user.id);
+    });
+  }
+
   list(): AccountSummary[] {
     const now = this.clock.now().getTime();
     return this.users.list().map(user => ({

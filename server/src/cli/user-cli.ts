@@ -12,6 +12,11 @@ export interface CliIo {
   err(text: string): void;
 }
 
+/** What the operator's `backup` needs: one consistent copy of the live database, and where it went. */
+export interface BackupWriter {
+  create(): string;
+}
+
 const USAGE = `Uso: pachanguero-admin <comando> [opciones]
 
 Comandos:
@@ -23,6 +28,8 @@ Comandos:
   deactivate --username <nombre>
   promote    --username <nombre>
   demote     --username <nombre>
+  link       --username <nombre> --player <id|nombre>
+  backup
 
 Las contraseñas se piden por teclado (o por la entrada estándar), nunca como argumento.`;
 
@@ -31,7 +38,8 @@ export class UserCli {
   constructor(
     private readonly admin: UserAdminService,
     private readonly prompt: PasswordPrompt,
-    private readonly io: CliIo
+    private readonly io: CliIo,
+    private readonly backups: BackupWriter
   ) {}
 
   async run(argv: string[]): Promise<number> {
@@ -74,6 +82,10 @@ export class UserCli {
             name => this.admin.demote(name),
             'Ahora es usuario normal'
           );
+        case 'link':
+          return this.link(rest);
+        case 'backup':
+          return this.backup(rest);
         default:
           return this.usage(
             command ? `Comando desconocido: ${command}` : undefined
@@ -122,6 +134,29 @@ export class UserCli {
       `✓ Contraseña cambiada para "${username}"; sus sesiones se han cerrado`
     );
     return 0;
+  }
+
+  private link(args: string[]): number {
+    const { username, player } = this.options(args, {
+      username: { type: 'string' },
+      player: { type: 'string' },
+    });
+    if (!username) throw new UsageError('Falta --username');
+    if (!player) throw new UsageError('Falta --player');
+    this.admin.link(username, player);
+    this.io.out(`✓ "${username}" asociado al jugador ${player}`);
+    return 0;
+  }
+
+  private backup(args: string[]): number {
+    this.options(args, {});
+    try {
+      this.io.out(`✓ ${this.backups.create()}`);
+      return 0;
+    } catch (error) {
+      this.io.err(`✗ No se pudo crear la copia: ${(error as Error).message}`);
+      return 1;
+    }
   }
 
   private list(): number {

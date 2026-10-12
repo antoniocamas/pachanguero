@@ -150,3 +150,33 @@ una `D` lo pone a cero, pero el script implementado le resta 2. Ver
 
 Número de temporadas que llevas jugando. Se traduce a puntos mediante una curva
 de rendimientos decrecientes documentada en [`points.md`](points.md).
+
+## Usuario
+
+Una cuenta para entrar en la aplicación. No es lo mismo que el **jugador**: el
+jugador es quien juega y tiene puntos y deudas; el usuario es quien inicia
+sesión. Un usuario normal pertenece a un jugador, y su nombre de usuario no es el
+nombre del jugador. Solo el operador crea usuarios. Ver
+[`users-and-roles.md`](../users-and-roles.md).
+
+## Administrador
+
+El rol del organizador: ve y hace todo. Un administrador puede ser además un
+jugador.
+
+## Jugador (usuario normal)
+
+El rol de quien juega: solo ve sus propias deudas, pagos, estadísticas y datos
+de contacto.
+
+## Vista
+
+Desde qué rol se está usando la aplicación: la de administrador o la de jugador.
+Un administrador que también es jugador puede ver la aplicación como la ve su
+jugador («Ver como jugador») y volver («Volver a administrador»).
+
+## Copia de seguridad
+
+Un fichero con una copia consistente de toda la base de datos, usuarios
+incluidos. Se hace a mano con `pachanguero-admin backup` y sola antes de cambiar
+la estructura de la base de datos. Ver [`../backup_and_restore.md`](../backup_and_restore.md).

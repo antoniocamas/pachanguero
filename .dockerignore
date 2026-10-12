@@ -1,0 +1,13 @@
+.git
+node_modules
+**/node_modules
+**/dist
+data
+.env
+*.db
+*.db-wal
+*.db-shm
+specs
+e2e/.tmp
+e2e/test-results
+e2e/playwright-report

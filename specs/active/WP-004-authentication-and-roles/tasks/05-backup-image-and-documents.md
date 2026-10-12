@@ -70,20 +70,20 @@ Testability: F10 fully automatable; F11 partly; F14 not (HLD 2.10).
 
 ## Definition of Done
 
-- [ ] Backup cases pass; the Manual Test Plan above is done and its outcome reported (steps 1 to 5
+- [x] Backup cases pass; the Manual Test Plan above is done and its outcome reported (steps 1 to 5
       need a Docker daemon: say so if absent).
-- [ ] Every command and setting named in the documents exists and runs as written; no document still
+- [x] Every command and setting named in the documents exists and runs as written; no document still
       says the old thing listed in §4 of the design.
-- [ ] **Graduation:** UC-004-10-S1, S2, S3 are hard requirements → the backup cases in
+- [x] **Graduation:** UC-004-10-S1, S2, S3 are hard requirements → the backup cases in
       `user-cli.test.ts`; UC-004-10-S4 is a hard requirement → `docs/backup_and_restore.md`.
-- [ ] **Hard requirements:** each scenario with a test has a test whose title says what it asserts, with
+- [x] **Hard requirements:** each scenario with a test has a test whose title says what it asserts, with
       no work-package identifier in the code; this line is the record.
-- [ ] **Documentation:** all of §4 of the design lands here or in tasks 01, 03 and 04, which carry
+- [x] **Documentation:** all of §4 of the design lands here or in tasks 01, 03 and 04, which carry
       the passages they break: `README.md`, `docs/backup_and_restore.md` (new),
       `docs/domain-model/usuarios-y-roles.md` (new), `docs/domain-model/glossary.md`,
       `docs/domain-model/README.md` (index row), `AGENTS.md` (domain invariant), `deploy/pachanguero.service`.
       The seed's test accounts (when they are created, why never on the default database, their names and
       password) are documented in `README.md` (Spanish); the `AGENTS.md` Commands line already says it.
-- [ ] **Tests:** `npm test` and `npm run format:check`.
-- [ ] **Regression:** `npm test`; the closing regression task 06 runs the E2E.
-- [ ] **Code checks:** `npm run lint` and `npm run format:check` pass on every touched file.
+- [x] **Tests:** `npm test` and `npm run format:check`.
+- [x] **Regression:** `npm test`; the closing regression task 06 runs the E2E.
+- [x] **Code checks:** `npm run lint` and `npm run format:check` pass on every touched file.
