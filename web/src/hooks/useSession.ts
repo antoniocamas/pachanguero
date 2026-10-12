@@ -36,5 +36,10 @@ export function useSession() {
     setState({ status: 'anonymous' });
   }, []);
 
-  return { state, login, logout };
+  const switchView = useCallback(async (view: 'admin' | 'regular') => {
+    const user = await api.switchView(view);
+    setState({ status: 'authenticated', user });
+  }, []);
+
+  return { state, login, logout, switchView };
 }

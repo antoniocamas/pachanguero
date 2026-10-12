@@ -68,4 +68,26 @@ describe('Debt read cost', () => {
     expect(plan).toContain('SEARCH d USING INDEX idx_share_debts_game');
     expect(plan).not.toMatch(/SCAN (share_debts|d)\s*$/m);
   });
+
+  it("reads a player's own debts through the holder and beneficiary indexes, never a full scan", () => {
+    const plan = planOf(
+      `SELECT d.id FROM share_debts d JOIN games g ON g.id = d.game_id
+        WHERE d.holder_player_id = @p OR d.beneficiary_player_id = @p`,
+      { p: 1 }
+    );
+    expect(plan).toContain('idx_share_debts_holder');
+    expect(plan).toContain('idx_share_debts_beneficiary');
+    expect(plan).not.toMatch(/SCAN (share_debts|d)\s*$/m);
+  });
+
+  it("reads a player's own payments through the payer and beneficiary indexes, never a full scan", () => {
+    const plan = planOf(
+      `SELECT p.id FROM payments p JOIN games g ON g.id = p.game_id
+        WHERE p.payer_player_id = @p OR p.beneficiary_player_id = @p`,
+      { p: 1 }
+    );
+    expect(plan).toContain('idx_payments_payer');
+    expect(plan).toContain('idx_payments_beneficiary');
+    expect(plan).not.toMatch(/SCAN (payments|p)\s*$/m);
+  });
 });

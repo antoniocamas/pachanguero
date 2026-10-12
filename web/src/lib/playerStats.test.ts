@@ -97,6 +97,14 @@ describe('Puntos card figures', () => {
     expect(figure('Por antigüedad')).toBe('8,09');
   });
 
+  it('omits the standing when the server sent no rank, and keeps the other figures', () => {
+    const own = { ...value, rank: undefined, of: undefined };
+    const labels = points.figures(own).map(f => f.label);
+    expect(labels).not.toContain('Puesto');
+    expect(labels).toContain('Puntos');
+    expect(labels).toContain('Por antigüedad');
+  });
+
   it('shows parts that add up to the total shown', () => {
     const n = (label: string) => Number(figure(label)!.replace(',', '.'));
     expect(

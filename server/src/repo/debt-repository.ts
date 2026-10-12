@@ -22,6 +22,16 @@ export interface OutstandingShare {
   amountCents: number;
 }
 
+const OUTSTANDING_SELECT = `SELECT d.id, d.game_id AS gameId, g.played_on AS playedOn,
+                g.label AS gameLabel, d.holder_player_id AS holderId,
+                h.name AS holderName, d.beneficiary_player_id AS beneficiaryId,
+                b.name AS beneficiaryName, d.guest_ordinal AS guestOrdinal,
+                d.amount_cents AS amountCents
+           FROM share_debts d
+           JOIN games g   ON g.id = d.game_id
+           JOIN players h ON h.id = d.holder_player_id
+           LEFT JOIN players b ON b.id = d.beneficiary_player_id`;
+
 /** Shares still owed. Rows are removed once settled, so reads stay small. */
 export class DebtRepository {
   private readonly members = new ShareRowMember();
@@ -88,19 +98,19 @@ export class DebtRepository {
   /** Every share still owed, oldest game first. */
   outstanding(): OutstandingShare[] {
     return this.conn
+      .prepare(`${OUTSTANDING_SELECT} ORDER BY g.played_on, g.id, d.id`)
+      .all() as OutstandingShare[];
+  }
+
+  /** The shares a player holds or is the beneficiary of, oldest game first. */
+  outstandingFor(playerId: number): OutstandingShare[] {
+    return this.conn
       .prepare(
-        `SELECT d.id, d.game_id AS gameId, g.played_on AS playedOn,
-                g.label AS gameLabel, d.holder_player_id AS holderId,
-                h.name AS holderName, d.beneficiary_player_id AS beneficiaryId,
-                b.name AS beneficiaryName, d.guest_ordinal AS guestOrdinal,
-                d.amount_cents AS amountCents
-           FROM share_debts d
-           JOIN games g   ON g.id = d.game_id
-           JOIN players h ON h.id = d.holder_player_id
-           LEFT JOIN players b ON b.id = d.beneficiary_player_id
+        `${OUTSTANDING_SELECT}
+          WHERE d.holder_player_id = @playerId OR d.beneficiary_player_id = @playerId
           ORDER BY g.played_on, g.id, d.id`
       )
-      .all() as OutstandingShare[];
+      .all({ playerId }) as OutstandingShare[];
   }
 
   /** What each holder owes across the played games of a season. */

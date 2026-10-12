@@ -20,6 +20,9 @@ export interface SessionUser {
   canSwitchView: boolean;
 }
 
+/** What a view switch answers: a new access token; the refresh cookie stays as it is. */
+export type ViewSwitch = Omit<Session, 'refreshToken'>;
+
 export interface Session {
   accessToken: string;
   expiresIn: number;
@@ -88,6 +91,37 @@ export class AuthService {
     if (!user || !user.active) throw new HttpError(401, NOT_AUTHORISED);
 
     return this.issueSession(user, row.view, now, row.id);
+  }
+
+  /**
+   * An admin looks at the app as the player they are, or goes back. The choice is kept on the
+   * session's refresh token, so a reload, a refresh and a rotation keep it and a new login starts
+   * in the admin view.
+   */
+  async switchView(
+    userId: number,
+    view: View,
+    token: string | undefined
+  ): Promise<ViewSwitch> {
+    const now = this.clock.now();
+    const user = this.users.byId(userId);
+    if (!user || !user.active) throw new HttpError(401, NOT_AUTHORISED);
+    if (user.role !== 'admin') throw new HttpError(403, 'Prohibido');
+    if (view === 'regular' && user.playerId === null) {
+      throw new HttpError(403, 'No tienes un jugador asociado');
+    }
+    const row = await this.liveRow(token ?? '', now);
+    if (row.userId !== user.id) throw new HttpError(401, NOT_AUTHORISED);
+
+    this.refreshTokens.setView(row.id, view);
+    return {
+      accessToken: await this.tokens.issueAccess(
+        { userId: user.id, role: user.role, view },
+        now
+      ),
+      expiresIn: this.config.accessSeconds,
+      user: this.sessionUser(user, view),
+    };
   }
 
   /** Never throws: logging out twice, or with a token that is already dead, is fine. */

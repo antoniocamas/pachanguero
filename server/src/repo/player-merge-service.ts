@@ -72,6 +72,7 @@ export class PlayerMergeService {
           this.aliases.add(intoId, alias);
         }
         this.aliases.add(intoId, from);
+        this.mergeContacts(intoId, fromId);
         // The account follows the person, before the absorbed player row goes.
         this.users.movePlayer(fromId, intoId);
         // Cascades whatever was left (the absorbed player's own seasons rows).
@@ -129,6 +130,19 @@ export class PlayerMergeService {
          SELECT season_id, @into, seasons FROM season_players WHERE player_id = @from
          ON CONFLICT (season_id, player_id)
          DO UPDATE SET seasons = MAX(season_players.seasons, excluded.seasons)`
+      )
+      .run({ into: intoId, from: fromId });
+  }
+
+  /** The survivor's own contact values win; the absorbed player's fill the gaps. */
+  private mergeContacts(intoId: number, fromId: number): void {
+    this.conn
+      .prepare(
+        `INSERT INTO player_contacts (player_id, email, phone)
+         SELECT @into, email, phone FROM player_contacts WHERE player_id = @from
+         ON CONFLICT (player_id) DO UPDATE SET
+           email = COALESCE(player_contacts.email, excluded.email),
+           phone = COALESCE(player_contacts.phone, excluded.phone)`
       )
       .run({ into: intoId, from: fromId });
   }

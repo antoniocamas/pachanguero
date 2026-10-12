@@ -120,4 +120,48 @@ describe('PlayerMergeService', () => {
       expect(users.byPlayer(santo)?.username).toBe('santo');
     });
   });
+
+  describe('contact data', () => {
+    const contact = (playerId: number) =>
+      conn
+        .prepare('SELECT email, phone FROM player_contacts WHERE player_id = ?')
+        .get(playerId);
+    const setContact = (
+      playerId: number,
+      email: string | null,
+      phone: string | null
+    ) =>
+      conn
+        .prepare(
+          'INSERT INTO player_contacts (player_id, email, phone) VALUES (?, ?, ?)'
+        )
+        .run(playerId, email, phone);
+
+    it("keeps the survivor's values, fills the gaps from the absorbed player, and leaves no row for them", () => {
+      setContact(santi, 'santi@example.com', null);
+      setContact(santo, 'santo@example.com', '600123456');
+
+      merge.merge(santi, santo);
+
+      expect(contact(santi)).toEqual({
+        email: 'santi@example.com',
+        phone: '600123456',
+      });
+      expect(contact(santo)).toBeUndefined();
+    });
+
+    it('gives the survivor the absorbed contact when they had none', () => {
+      setContact(santo, null, '600123456');
+
+      merge.merge(santi, santo);
+
+      expect(contact(santi)).toEqual({ email: null, phone: '600123456' });
+    });
+
+    it('merges fine when neither has contact data', () => {
+      merge.merge(santi, santo);
+
+      expect(contact(santi)).toBeUndefined();
+    });
+  });
 });

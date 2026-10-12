@@ -12,7 +12,11 @@
  * game date and flagged in the note, so they are never mistaken for real
  * settlement dates.
  *
- * Usage: npm run seed [-- --season "2024/2025" --reset]
+ * Usage: npm run seed [-- --season "2024/2025" --reset --with-users]
+ *
+ * `--with-users` also creates login accounts for trying the app by hand (an admin, an admin who
+ * is a player, a regular user), all with one made-up password. It refuses to run unless
+ * PACHANGUERO_DB names the database, so it can never add them to the default one by accident.
  */
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -30,6 +34,13 @@ import {
   convocatoriaHistoryConverter,
 } from '../src/repo/index.js';
 import type { ExclusionKind } from '../src/domain/types.js';
+import { DevAccountSeeder } from '../src/cli/dev-account-seeder.js';
+import { SystemClock } from '../src/domain/clock.js';
+import { PasswordHasher } from '../src/domain/password-hasher.js';
+import { PasswordPolicy } from '../src/domain/password-policy.js';
+import { UsernamePolicy } from '../src/domain/username-policy.js';
+import { refreshTokens, users } from '../src/repo/index.js';
+import { UserAdminService } from '../src/repo/user-admin-service.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const seedDir = join(here, '../../data/seed');
@@ -41,6 +52,7 @@ const flag = (name: string, fallback?: string) => {
 };
 const SEASON = flag('season', '2024/2025')!;
 const RESET = args.includes('--reset');
+const WITH_USERS = args.includes('--with-users');
 
 function parseCsv(file: string): string[][] {
   return readFileSync(join(seedDir, file), 'utf8')
@@ -274,4 +286,37 @@ function main() {
   });
 }
 
+async function seedAccounts() {
+  const seeder = new DevAccountSeeder(
+    new UserAdminService(
+      users,
+      refreshTokens,
+      players,
+      new PasswordHasher(),
+      new PasswordPolicy(),
+      new UsernamePolicy(),
+      new SystemClock(),
+      db()
+    ),
+    debtRepository,
+    players
+  );
+  const created = await seeder.seed();
+  console.log(
+    `\nAccounts (password ${DevAccountSeeder.PASSWORD}, for trying the app only):`
+  );
+  for (const a of created)
+    console.log(
+      `  ${a.username.padEnd(8)} ${a.role.padEnd(8)} ${a.playerName ?? '-'}`
+    );
+  if (created.length === 0) console.log('  none created: they already exist');
+}
+
+if (WITH_USERS && !process.env.PACHANGUERO_DB) {
+  console.error(
+    '--with-users needs PACHANGUERO_DB set to a throwaway database: it adds accounts with a known password.'
+  );
+  process.exit(1);
+}
 main();
+if (WITH_USERS) await seedAccounts();

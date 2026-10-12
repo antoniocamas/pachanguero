@@ -180,6 +180,7 @@ CREATE TABLE IF NOT EXISTS share_debts (
 );
 CREATE INDEX IF NOT EXISTS idx_share_debts_game   ON share_debts(game_id);
 CREATE INDEX IF NOT EXISTS idx_share_debts_holder ON share_debts(holder_player_id);
+CREATE INDEX IF NOT EXISTS idx_share_debts_beneficiary ON share_debts(beneficiary_player_id);
 CREATE UNIQUE INDEX IF NOT EXISTS uq_share_debts_player
   ON share_debts(game_id, beneficiary_player_id) WHERE beneficiary_player_id IS NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS uq_share_debts_guest
@@ -200,6 +201,7 @@ CREATE TABLE IF NOT EXISTS payments (
 );
 CREATE INDEX IF NOT EXISTS idx_payments_game  ON payments(game_id);
 CREATE INDEX IF NOT EXISTS idx_payments_payer ON payments(payer_player_id);
+CREATE INDEX IF NOT EXISTS idx_payments_beneficiary ON payments(beneficiary_player_id);
 CREATE UNIQUE INDEX IF NOT EXISTS uq_payments_player
   ON payments(game_id, beneficiary_player_id) WHERE beneficiary_player_id IS NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS uq_payments_guest
@@ -234,3 +236,10 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
   created_at TEXT    NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON refresh_tokens(user_id);
+
+-- Optional contact data a player keeps about themselves; a row exists only while one value is set.
+CREATE TABLE IF NOT EXISTS player_contacts (
+  player_id INTEGER PRIMARY KEY REFERENCES players(id) ON DELETE CASCADE,
+  email     TEXT,
+  phone     TEXT
+);

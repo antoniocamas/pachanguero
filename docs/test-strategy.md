@@ -97,6 +97,13 @@ load. Each test logs in on its own: a refresh rotates the cookie, so a cookie sn
 several contexts would present a token that is already revoked. `login.spec.ts` uses the plain
 test, since it is about the login itself.
 
+The player's own view has a spec of its own (`the-own-view.spec.ts`, ordered after the others for
+the same reason). It prepares two players and two played games through the admin `request`, creates
+the accounts with `e2e/support/accounts.ts` (the same operator command, with `--player`), and then
+logs in as each account in a fresh browser context at a 375 px viewport: the three own screens and
+no organiser tab, contact data surviving a reload, the password change ending the session, and an
+admin's switch to the player view and back across a reload.
+
 The game screen has a spec of its own that walks one game through every state and reads the state
 and next action from the screen; then, for each state, at a desktop (1280 × 800) and a phone
 (390 × 844) viewport, checks what is visible (the bar staying in view, the columns, no horizontal

@@ -11,6 +11,7 @@ npm install          # workspaces: server + web
 npm run dev          # API on :8787 (tsx watch), web on :5173 (vite, proxies /api); the API needs JWT_SECRET (32+ characters) in its environment
 npm run admin --workspace=server -- <command>   # operator tool: create, list, reset-pwd, unlock, activate, deactivate, promote, demote (passwords are asked for, never an argument)
 npm run seed         # import the 2024/2025 season from data/seed/*.csv (-- --reset to wipe first)
+npm run seed --workspace=server -- --with-users   # same, plus an admin, an admin-player and a regular user (password in the output); needs PACHANGUERO_DB set to a throwaway database
 npm test             # domain/route tests (vitest, server workspace) and the web lib/ tests (vitest, web workspace)
 npm run test:e2e     # full-stack browser tests (playwright, e2e workspace); specs share one database, see docs/test-strategy.md
 npm run build        # tsc for both workspaces; also copies schema.sql into server/dist/db
@@ -65,7 +66,9 @@ server/src/domain/    classes: PointsCalculator, SeniorityCurve, ConvocatoriaBui
                       CandidateLineParser, TeamListParser, GameLifecycle, PlayedDerivation,
                       DebtLedger, GuestSlotAllocator, ... and the access rules:
                       PasswordPolicy, UsernamePolicy, LockoutPolicy, PasswordHasher (scrypt),
-                      TokenService (the only code that knows the JWT library), EffectiveRole.
+                      TokenService (the only code that knows the JWT library), EffectiveRole; and
+                      the player's own view: OwnDisclosure (every privacy rule of what a player
+                      may be told), ContactValidator.
                       (+ all tests). Knows nothing of SQLite or HTTP. THE rules live here.
 server/src/db/        better-sqlite3 singleton; SchemaMigrator runs schema.sql on open and
                       keeps the file's version in `PRAGMA user_version`. A new file gets
@@ -83,13 +86,19 @@ server/src/repo/      repository/service classes; converts snake_case rows to do
                       PaymentService, TeamAssignmentService/TeamPasteService,
                       GameViewService, ConvocatoriaHistoryConverter, ...
                       Identity: UserRepository, RefreshTokenRepository, AuthService (login,
-                      refresh rotation, logout), UserAdminService (what the operator can do to
-                      accounts), AuthConfig (the settings; no JWT_SECRET, no server).
+                      refresh rotation, logout, switchView), UserAdminService (what the operator can
+                      do to accounts), PasswordChangeService, AuthConfig (the settings; no
+                      JWT_SECRET, no server). The player's own data: OwnDataService (debts,
+                      payments, report through OwnDisclosure), ContactService/ContactRepository.
 server/src/routes/    Express router; route() wrapper turns throws into 400s. `api.ts` is the
                       organiser's router and is unchanged by access control: ApiRoutes mounts
                       it behind Authenticate and requireEffective('admin'), after the public
                       AuthRouter and the session and own-data routers, so a route added to
-                      api.ts is admin-only without anyone remembering to say so.
+                      api.ts is admin-only without anyone remembering to say so. SessionRouter holds what
+                      any signed-in user may call (password change, the admin's view switch);
+                      OwnRouter, under /me and for a user acting as a regular one, answers only
+                      about the caller's own player (OwnPlayer reads it from the token; no route
+                      takes a player id) and is where the disclosure rules are applied.
 server/src/cli/       the `pachanguero-admin` command line (UserCli, TtyPasswordPrompt); a thin
                       shell over UserAdminService
 server/src/server-app.ts  builds the sign-in and guard classes and mounts /api, then serves
@@ -97,7 +106,11 @@ server/src/server-app.ts  builds the sign-in and guard classes and mounts /api, 
                       environment and listens
 web/src/              React 19 + Vite, no router/state lib: App.tsx chooses the login, or
                       the admin shell (pages/AdminShell.tsx: five tabs - GameDay, Standings,
-                      Debts, Jugador, Manage - refreshing by refetching everything). The session
+                      Debts, Jugador, Manage - refreshing by refetching everything), or the
+                      player's own view (pages/OwnView.tsx: Deudas, Pagos, Estadísticas,
+                      Ajustes; also what an admin sees after "Ver como jugador"). Both shells
+                      take {user, onLogout, onSwitchView}. AccountPanel (password, view switch)
+                      is shared: the player's Ajustes and the admin's "Mi cuenta". The session
                       lives in lib/sessionClient.ts (access token in memory, silent refresh) behind
                       api.ts's call().
                       GameDay is the lifecycle screen: GameBar keeps the state, counters and

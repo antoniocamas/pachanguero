@@ -25,6 +25,8 @@ export interface SessionClient {
   /** Starts from the refresh cookie after a page load: the user, or null when there is no session. */
   restore(): Promise<SessionUser | null>;
   logout(): Promise<void>;
+  /** Asks the server for the other view of an admin; keeps the new token and answers the updated user. */
+  switchView(view: 'admin' | 'regular'): Promise<SessionUser>;
   /** Called once when a session ends because it could not be refreshed. */
   onExpired(listener: () => void): () => void;
 }
@@ -104,16 +106,18 @@ export function createSessionClient(fetchImpl: typeof fetch): SessionClient {
     listeners.forEach(listener => listener());
   };
 
+  const request = async <T>(path: string, init?: RequestInit): Promise<T> => {
+    const first = await send(path, init);
+    if (first.status !== 401) return settle<T>(first);
+    if (!(await refresh())) {
+      expire();
+      throw await failure(first);
+    }
+    return settle<T>(await send(path, init));
+  };
+
   return {
-    async request<T>(path: string, init?: RequestInit): Promise<T> {
-      const first = await send(path, init);
-      if (first.status !== 401) return settle<T>(first);
-      if (!(await refresh())) {
-        expire();
-        throw await failure(first);
-      }
-      return settle<T>(await send(path, init));
-    },
+    request,
 
     async login(username, password) {
       const res = await send('/auth/login', {
@@ -124,6 +128,15 @@ export function createSessionClient(fetchImpl: typeof fetch): SessionClient {
     },
 
     restore: refresh,
+
+    async switchView(view) {
+      return begin(
+        await request<SessionAnswer>('/auth/view', {
+          method: 'POST',
+          body: JSON.stringify({ view }),
+        })
+      );
+    },
 
     async logout() {
       try {

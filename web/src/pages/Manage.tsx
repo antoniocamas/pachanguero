@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import type { Player, Season } from '../api';
 import { PlayersSection } from '../components/PlayersSection';
 import { RulesSection } from '../components/RulesSection';
@@ -9,6 +9,7 @@ const SECTIONS = [
   { key: 'players', label: 'Jugones' },
   { key: 'rules', label: 'Reglas' },
   { key: 'season', label: 'Temporada' },
+  { key: 'account', label: 'Mi cuenta' },
 ] as const;
 
 /** Players and season rules, one section at a time. Not the everyday screen — set up and forget. */
@@ -18,12 +19,15 @@ export function Manage({
   players,
   onChanged,
   onSelectSeason,
+  account,
 }: {
   season: Season;
   seasons: Season[];
   players: Player[];
   onChanged: () => void;
   onSelectSeason: (season: Season) => void;
+  /** The signed-in user's own account settings; Manage knows nothing of users. */
+  account: ReactNode;
 }) {
   const [section, setSection] =
     useState<(typeof SECTIONS)[number]['key']>('players');
@@ -59,6 +63,8 @@ export function Manage({
         />
       ) : section === 'rules' ? (
         <RulesSection season={season} guard={guard} />
+      ) : section === 'account' ? (
+        account
       ) : (
         <SeasonSection
           season={season}

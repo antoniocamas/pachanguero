@@ -122,14 +122,16 @@ export type PaymentValue =
   | {
       status: 'paid';
       amountCents: number;
-      payerId: number;
-      payerName: string;
+      /** Absent in a player's own report, which carries no ids. */
+      payerId?: number;
+      /** Absent when the payer is neither the player nor the one who answers for the share. */
+      payerName?: string;
       paidOn: string;
     }
   | {
       status: 'owed';
       amountCents: number;
-      holderId: number;
+      holderId?: number;
       holderName: string;
     }
   | { status: 'none' };
@@ -153,6 +155,46 @@ export interface PlayerReport {
   /** By statistic key; null where the player has no part in the season. */
   seasonStats: Record<string, unknown>;
   summary: { gamesPlayed: number } & Record<string, unknown>;
+}
+
+/** A line of what a player owes: a share they hold, for themselves or for a guest. */
+export interface OwnDebtRow {
+  gameId: number;
+  playedOn: string;
+  label: string | null;
+  amountCents: number;
+  kind: 'own' | 'guest';
+}
+
+/** A share another player holds for this one. */
+export interface HeldRow {
+  gameId: number;
+  playedOn: string;
+  label: string | null;
+  amountCents: number;
+  holderName: string;
+}
+
+export interface OwnDebts {
+  owedCents: number;
+  mine: OwnDebtRow[];
+  heldByHost: HeldRow[];
+}
+
+export interface OwnPaymentRow {
+  gameId: number;
+  playedOn: string;
+  label: string | null;
+  amountCents: number;
+  paidOn: string;
+  kind: 'own' | 'guest';
+  /** Null when the player paid; a name when the one who answers for the share paid it. */
+  paidBy: { name: string } | 'other' | null;
+}
+
+export interface Contact {
+  email: string | null;
+  phone: string | null;
 }
 
 /** A share settled: who paid it, how much and when. */
@@ -294,6 +336,20 @@ export const api = {
   restore: () => sessionClient.restore(),
   logout: () => sessionClient.logout(),
   onExpired: (listener: () => void) => sessionClient.onExpired(listener),
+  switchView: (view: 'admin' | 'regular') => sessionClient.switchView(view),
+
+  ownDebts: () => call<OwnDebts>('/me/debts'),
+  ownPayments: () => call<OwnPaymentRow[]>('/me/payments'),
+  ownReport: () => call<PlayerReport>('/me/report'),
+  contact: () => call<Contact>('/me/contact'),
+  /** Only the keys given change; an empty text clears a value. */
+  saveContact: (patch: Partial<Contact>) =>
+    call<Contact>('/me/contact', { method: 'PATCH', body: body(patch) }),
+  changePassword: (current: string, next: string, confirm: string) =>
+    call<void>('/me/password', {
+      method: 'PUT',
+      body: body({ current, next, confirm }),
+    }),
   seasons: () => call<Season[]>('/seasons'),
   createSeason: (data: { name: string }) =>
     call<Season>('/seasons', { method: 'POST', body: body(data) }),

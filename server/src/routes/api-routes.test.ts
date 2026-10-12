@@ -203,15 +203,24 @@ describe('who may call what', () => {
   });
 
   describe('classification', () => {
-    it('holds exactly the public routes, and no session or own routes yet', () => {
+    it('holds exactly the public routes, the session routes and the own routes', () => {
       const lister = new RouteLister();
       expect(lister.list(app.routes.publicRouter)).toEqual([
         'POST /auth/login',
         'POST /auth/logout',
         'POST /auth/refresh',
       ]);
-      expect(lister.list(app.routes.sessionRouter)).toEqual([]);
-      expect(lister.list(app.routes.ownRouter)).toEqual([]);
+      expect(lister.list(app.routes.sessionRouter)).toEqual([
+        'POST /auth/view',
+        'PUT /me/password',
+      ]);
+      expect(lister.list(app.routes.ownRouter)).toEqual([
+        'GET /contact',
+        'GET /debts',
+        'GET /payments',
+        'GET /report',
+        'PATCH /contact',
+      ]);
     });
 
     it('mounts the existing organiser router itself, so a route added there is admin-only', async () => {

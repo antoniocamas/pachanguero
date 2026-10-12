@@ -5,6 +5,7 @@ import { Standings } from './Standings';
 import { Debts } from './Debts';
 import { PlayerReportPage } from './PlayerReportPage';
 import { Manage } from './Manage';
+import { AccountPanel } from '../components/AccountPanel';
 import { NewSeasonPrompt } from '../components/NewSeasonPrompt';
 import type { SessionUser } from '../lib/sessionClient';
 
@@ -13,9 +14,11 @@ type Tab = 'game' | 'standings' | 'debts' | 'player' | 'manage';
 export function AdminShell({
   user,
   onLogout,
+  onSwitchView,
 }: {
   user: SessionUser;
   onLogout: () => Promise<void>;
+  onSwitchView: (view: 'admin' | 'regular') => Promise<void>;
 }) {
   const [tab, setTab] = useState<Tab>('game');
   const [seasons, setSeasons] = useState<Season[]>([]);
@@ -133,6 +136,13 @@ export function AdminShell({
           players={players}
           onChanged={refresh}
           onSelectSeason={setSeason}
+          account={
+            <AccountPanel
+              user={user}
+              onLogout={onLogout}
+              onSwitchView={onSwitchView}
+            />
+          }
         />
       )}
 

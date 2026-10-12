@@ -63,19 +63,21 @@ Methodology:
 
 ## Definition of Done
 
-- [ ] Every case in the Test Methodology of F5, F6, F7 and F9 exists and passes (`npm test`,
+- [x] Every case in the Test Methodology of F5, F6, F7 and F9 exists and passes (`npm test`,
       `npm run test:e2e`).
-- [ ] A regular user's session cannot reach any organiser route or another player's data (two-player
+- [x] A regular user's session cannot reach any organiser route or another player's data (two-player
       route tests).
-- [ ] Manual Test Plan done and its outcome reported.
-- [ ] **Graduation:** UC-004-05-S1…S6, UC-004-06-S1…S5, UC-004-07-S1…S6, UC-004-08-S1…S6,
+- [x] Manual Test Plan done and its outcome reported. (Done by the implementor at 375 px with
+      screenshots of every tab and state; the author's own pass with several users is deferred to a
+      follow-up task, by the author's ruling.)
+- [x] **Graduation:** UC-004-05-S1…S6, UC-004-06-S1…S5, UC-004-07-S1…S6, UC-004-08-S1…S6,
       UC-004-09-S1…S5, UC-004-11-S1, S3…S9 and UC-004-03-S6 are hard requirements → the route, unit,
       `lib/` and E2E tests named above.
-- [ ] **Hard requirements:** each scenario named in Graduation has a test whose title says what it
+- [x] **Hard requirements:** each scenario named in Graduation has a test whose title says what it
       asserts, with no work-package identifier in the code; this line is the record of which test
       carries which scenario.
-- [ ] **Documentation:** `AGENTS.md` Architecture list: the own-data classes and routes, and `App`'s
+- [x] **Documentation:** `AGENTS.md` Architecture list: the own-data classes and routes, and `App`'s
       third shell (player's own view). The new roles document is written by task 05.
-- [ ] **Tests:** `npm test` and `npm run test:e2e`.
-- [ ] **Regression:** both commands above on the whole repository.
-- [ ] **Code checks:** `npm run lint` and `npm run format:check` pass on every touched file.
+- [x] **Tests:** `npm test` and `npm run test:e2e`.
+- [x] **Regression:** both commands above on the whole repository.
+- [x] **Code checks:** `npm run lint` and `npm run format:check` pass on every touched file.

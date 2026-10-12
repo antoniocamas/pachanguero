@@ -66,7 +66,8 @@ header.top h1 {
   gap: 8px;
 }
 
-header.top .season {
+header.top .season,
+header.top .who {
   margin-left: auto;
   font-size: 13px;
   font-weight: 450;
@@ -160,6 +161,19 @@ nav.tabs button[aria-current='true'] {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.row .name small {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+}
+.row .amount {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.row.total {
+  background: var(--surface-2);
+  font-weight: 650;
 }
 .row .pos {
   width: 22px;
@@ -319,8 +333,47 @@ label.field span {
   color: var(--muted);
   font-size: 14px;
 }
+.empty .big {
+  display: block;
+  font-size: 28px;
+  margin-bottom: 6px;
+}
 .muted {
   color: var(--muted);
+}
+.card > p.note {
+  margin: 0;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.note-below {
+  font-size: 12px;
+  padding: 0 2px;
+}
+.hint {
+  font-size: 12px;
+  margin: 10px 0 0;
+}
+
+/* ------------------------------------------------------------ account forms */
+
+.form {
+  padding: 14px;
+}
+input.invalid {
+  border-color: var(--danger);
+}
+label.field small {
+  display: block;
+  color: var(--danger);
+  font-size: 12px;
+  margin-top: 4px;
+}
+ul.rules {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  font-size: 13px;
 }
 .err {
   background: color-mix(in srgb, var(--danger) 15%, transparent);
@@ -882,6 +935,14 @@ td .chip.oscuros {
 
 .debtor-line {
   flex-wrap: wrap;
+}
+/* A line with a name and a few tags: the name gets a line of its own, the tags wrap below. */
+.row.report-line .name {
+  flex-basis: 100%;
+}
+/* The player's own lists: a long date or tag wraps instead of being cut. */
+.row.wrap .name {
+  white-space: normal;
 }
 
 .tag.stat-good {

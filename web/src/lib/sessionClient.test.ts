@@ -223,4 +223,82 @@ describe('the session client', () => {
     const f = fakeFetch({ '/x': [() => new Response(null, { status: 204 })] });
     expect(await createSessionClient(f.impl).request('/x')).toBeUndefined();
   });
+
+  describe('switching view', () => {
+    const player: SessionUser = {
+      ...user,
+      mode: 'regular',
+      playerName: 'Antonio',
+      canSwitchView: true,
+    };
+
+    it('stores the new token, sends it from then on, and answers the updated user', async () => {
+      const f = fakeFetch({
+        '/auth/login': [() => session('old')],
+        '/auth/view': [
+          () =>
+            json(200, {
+              accessToken: 'regular',
+              expiresIn: 1800,
+              user: player,
+            }),
+        ],
+        '/me/debts': [() => json(200, {})],
+      });
+      const client = createSessionClient(f.impl);
+      await client.login('boss', 'pw');
+
+      expect(await client.switchView('regular')).toEqual(player);
+      await client.request('/me/debts');
+
+      expect(f.calls.map(c => [c.path, c.auth])).toEqual([
+        ['/auth/login', null],
+        ['/auth/view', 'Bearer old'],
+        ['/me/debts', 'Bearer regular'],
+      ]);
+    });
+
+    it('goes through the normal refresh when the token has expired', async () => {
+      const f = fakeFetch({
+        '/auth/login': [() => session('old')],
+        '/auth/refresh': [() => session('fresh')],
+        '/auth/view': [
+          () => json(401, { error: 'No autorizado' }),
+          () =>
+            json(200, {
+              accessToken: 'regular',
+              expiresIn: 1800,
+              user: player,
+            }),
+        ],
+      });
+      const client = createSessionClient(f.impl);
+      await client.login('boss', 'pw');
+
+      expect(await client.switchView('regular')).toEqual(player);
+      expect(f.count('/auth/refresh')).toBe(1);
+      expect(
+        f.calls.filter(c => c.path === '/auth/view').map(c => c.auth)
+      ).toEqual(['Bearer old', 'Bearer fresh']);
+    });
+
+    it('rejects with the server message and keeps the current token when the switch is refused', async () => {
+      const f = fakeFetch({
+        '/auth/login': [() => session('old')],
+        '/auth/view': [
+          () => json(403, { error: 'No tienes un jugador asociado' }),
+        ],
+        '/seasons': [() => json(200, [])],
+      });
+      const client = createSessionClient(f.impl);
+      await client.login('boss', 'pw');
+
+      await expect(client.switchView('regular')).rejects.toThrow(
+        'No tienes un jugador asociado'
+      );
+      await client.request('/seasons');
+
+      expect(f.calls.at(-1)?.auth).toBe('Bearer old');
+    });
+  });
 });

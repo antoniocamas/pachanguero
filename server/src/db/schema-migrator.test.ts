@@ -175,6 +175,18 @@ describe('SchemaMigrator', () => {
     }
   });
 
+  it('adds the contact table, empty, to a migrated file and to one already at the latest version', () => {
+    const conn = legacyDatabase();
+    migrator(conn).run();
+    const contacts = () =>
+      conn.prepare('SELECT COUNT(*) AS c FROM player_contacts').get();
+    expect(contacts()).toEqual({ c: 0 });
+
+    conn.exec('DROP TABLE player_contacts');
+    migrator(conn).run();
+    expect(contacts()).toEqual({ c: 0 });
+  });
+
   it('starting the same file twice makes one backup and no more', () => {
     const first = legacyDatabase();
     migrator(first).run();

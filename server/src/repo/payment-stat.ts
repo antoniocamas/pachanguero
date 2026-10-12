@@ -7,6 +7,8 @@ export type PaymentValue =
       amountCents: number;
       payerId: number;
       payerName: string;
+      /** Who answered for the share; the payer, unless someone paid it for them. */
+      holderId: number;
       paidOn: string;
     }
   | {
@@ -49,7 +51,7 @@ export class PaymentStat implements PlayerGameStat {
       .prepare(
         `SELECT p.game_id AS gameId, p.amount_cents AS amountCents,
                 p.payer_player_id AS payerId, q.name AS payerName,
-                p.paid_on AS paidOn
+                p.holder_player_id AS holderId, p.paid_on AS paidOn
            FROM payments p JOIN players q ON q.id = p.payer_player_id
           WHERE p.beneficiary_player_id = ?`
       )
@@ -58,6 +60,7 @@ export class PaymentStat implements PlayerGameStat {
       amountCents: number;
       payerId: number;
       payerName: string;
+      holderId: number;
       paidOn: string;
     }>;
     for (const { gameId, ...rest } of paid)

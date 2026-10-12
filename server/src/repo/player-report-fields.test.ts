@@ -284,6 +284,7 @@ describe('player report: every field, current season only', () => {
         amountCents: 400,
         payerId: s.playerId,
         payerName: 'Ana',
+        holderId: s.playerId,
         paidOn: '2026-03-01',
       });
       expect(now[5].stats.payment).toEqual({

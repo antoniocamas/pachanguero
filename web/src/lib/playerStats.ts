@@ -98,12 +98,15 @@ const points: PlayerSeasonStatView = {
       exclusions: number;
       seniority: number;
       gamesPlayed: number;
-      rank: number;
-      of: number;
+      /** Absent in a player's own report: the standing is the organiser's. */
+      rank?: number;
+      of?: number;
     };
     return [
       { label: 'Puntos', value: points1(v.points) },
-      { label: 'Puesto', value: `${v.rank} de ${v.of}` },
+      ...(v.rank === undefined
+        ? []
+        : [{ label: 'Puesto', value: `${v.rank} de ${v.of}` }]),
       { label: 'Partidos jugados', value: String(v.gamesPlayed) },
       { label: 'Por partidos pagados', value: String(v.paidGames) },
       { label: 'Por quedar fuera', value: String(v.exclusions) },

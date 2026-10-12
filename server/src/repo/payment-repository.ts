@@ -9,6 +9,20 @@ export interface PaymentRow extends ShareRow {
   paid_on: string;
 }
 
+/** A settled share with the game and the payer's name a player's own list needs. */
+export interface PaidShare {
+  gameId: number;
+  playedOn: string;
+  gameLabel: string | null;
+  holderId: number;
+  payerId: number;
+  payerName: string;
+  /** The player the share is for; null for an anonymous plus-one. */
+  beneficiaryId: number | null;
+  amountCents: number;
+  paidOn: string;
+}
+
 /** Shares settled: who paid each, how much and when. Append-only except for undo. */
 export class PaymentRepository {
   private readonly members = new ShareRowMember();
@@ -72,6 +86,23 @@ export class PaymentRepository {
         payment.paidOn
       );
     return this.find(Number(info.lastInsertRowid))!;
+  }
+
+  /** What a player paid or had paid for them, most recent first. */
+  paidFor(playerId: number): PaidShare[] {
+    return this.conn
+      .prepare(
+        `SELECT p.game_id AS gameId, g.played_on AS playedOn, g.label AS gameLabel,
+                p.holder_player_id AS holderId, p.payer_player_id AS payerId,
+                q.name AS payerName, p.beneficiary_player_id AS beneficiaryId,
+                p.amount_cents AS amountCents, p.paid_on AS paidOn
+           FROM payments p
+           JOIN games g   ON g.id = p.game_id
+           JOIN players q ON q.id = p.payer_player_id
+          WHERE p.payer_player_id = @playerId OR p.beneficiary_player_id = @playerId
+          ORDER BY p.paid_on DESC, p.id DESC`
+      )
+      .all({ playerId }) as PaidShare[];
   }
 
   delete(paymentId: number): void {
