@@ -453,3 +453,39 @@ Then <result>
 | 4.00 | 40.00 (10 shares) | it is not kept: too much to be a game payment |
 
 `author decision`: 12.00, being just 3 shares, is reasonable to queue; 40.00 is too much; the limit is 7 shares, so up to 7 shares waits and more than 7 is not kept (`study/author-decisions.md`: unmatched or uncertain Bizums wait in a list).
+
+### UC-006-11 — Debts are not carried from one season to another
+
+**Actor:** the system. **Goal:** a Bizum only ever pays debts of the season it was booked in, so money of a new season never silently settles an old season's debt. **Graduation:** hard requirement (proposed). **Rests on:** Q-02, Q-09. `author decision`: debts are not carried from one season to another; a Bizum with no debt in its own season waits (`study/author-decisions.md`, UC-006-03-S2).
+
+**The Bizum's season** is the one containing its booking date (`SeasonCalendar`, 1 Sept–31 Aug; `verified — source`: AGENTS.md, "The season is derived"). `verified — source`: `DebtRepository.outstandingFor` returns a player's open debts across all seasons, ordered by game date (`server/src/repo/debt-repository.ts:106`), and `PaymentService.pay` takes the share of the game's own season; so the restriction is new behaviour of the automatic settlement, not of manual payment.
+
+#### UC-006-11-S1 — Only debts of the Bizum's own season are paid (outline)
+
+Given "Luis Pérez" has open debts of one share, 4.00 EUR each, on the played games of <games>
+When the system processes a Bizum of 4.00 EUR from him, booked on <booked>
+Then <result>
+
+| games | booked | result |
+| ----- | ------ | ------ |
+| 2026-06-10 (season 2025/26) | 2026-10-12 | it settles nothing and the Bizum waits in the organiser's list |
+| 2026-06-10 (season 2025/26), 2026-10-07 (season 2026/27) | 2026-10-12 | it settles the debt of 2026-10-07; the one of 2026-06-10 stays open |
+| 2026-06-10 (season 2025/26) | 2026-08-31 | it settles the debt of 2026-06-10: the Bizum belongs to that season |
+
+#### UC-006-11-S2 — A Bizum larger than the season's open debts waits, whatever other seasons hold
+
+Given "Luis Pérez" has one open debt of 4.00 EUR on the played game of 2026-10-07 and one on 2026-06-10 (season 2025/26)
+When the system processes a Bizum of 8.00 EUR from him booked on 2026-10-12
+Then it settles nothing and the Bizum waits in the organiser's list
+
+`inferred` from S1 and UC-006-03-S7: the amount counts against the Bizum's season only, so 2 shares exceed its 1 open debt.
+
+#### UC-006-11-S3 — The organiser can still settle an old-season debt by hand
+
+Given "Luis Pérez" has an open debt on the played game of 2026-06-10 (season 2025/26) and a waiting Bizum of 4.00 EUR booked on 2026-10-12
+When the organiser settles that debt from the waiting Bizum
+Then the debt is paid with the method "Bizum", the link to that Bizum and the date 2026-10-12
+
+`inferred`: the restriction binds only the automatic settlement; the pairing of a waiting Bizum by hand is UC-006-05, which owns the screen.
+
+**Settled** by the author, 2026-10-16.
