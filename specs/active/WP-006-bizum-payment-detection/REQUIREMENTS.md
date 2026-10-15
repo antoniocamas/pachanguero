@@ -164,13 +164,26 @@ Then the session is closed at the bank, the stored session is deleted, the feed 
 
 Needed because consent otherwise lingers at the bank for up to 180 days and there is no other way to stop the feed: it has no on/off switch (UC-006-09). `verified — document`: `DELETE /sessions/{id}` closes a session and later calls fail with `CLOSED_SESSION` (guide §7). `author decision`: add it only if needed; judged needed, for that reason. The confirmation is a step in the page, not a browser dialog.
 
+#### UC-006-01-S14 — The organiser edits the words that keep or discard a Bizum (outline)
+
+Given the Banco panel shows the word lists of the rules R1 and R5 of UC-006-03, with the include words "pachanga", "futbol", "fútbol" and "fubol" and no exclude words
+When the organiser adds the word <word> to the list <list>
+Then the panel shows it in that list and the rules use it from the next Bizum processed on; Bizums already processed are not re-evaluated
+
+| word | list |
+| ---- | ---- |
+| `partido` | include |
+| `cena` | exclude |
+
+`author decision`: the lists are edited by the organiser in the Banco panel and kept in the database; the include words above are the initial ones and the exclude list starts empty. A word can be removed too. A list change never brings back a Bizum already discarded (UC-006-02-S3).
+
 **Decided by the author:** the panel is under Manage; the 14-day banner threshold; "currency to read" is kept in the database and edited in the panel; the address registered at Enable Banking is `<public URL>/api/bank/callback` and the setting is `PACHANGUERO_PUBLIC_URL`; "Desconectar" is wanted (S13; confirmed in a comment on the artifact, 2026-10-15); the session is stored in the database, which is backed up (confirmed in a comment, 2026-10-15).
 
 **Settled** by the author, 2026-10-15.
 
 ### UC-006-02 — The system reads the account on a schedule and keeps the Bizums that may be Pachanguero's
 
-**Actor:** the system. **Goal:** every incoming Bizum that matches a player or is dubious is kept once and within a day, with nobody asking; Bizums clearly unrelated to Pachanguero are not kept; nothing is processed twice. **Graduation:** hard requirement (proposed). **Rests on:** Q-09, Q-10, Q-11 (carried forward). It works whenever the connection works (UC-006-01), the account is chosen and the start date is set (UC-006-09); it has no switch (`author decision`: it is always automatic; disconnecting is what stops it). Judging a Bizum matched, dubious or clearly unrelated is UC-006-03.
+**Actor:** the system. **Goal:** every incoming Bizum that matches a player or is dubious is kept once and within a day, with nobody asking; Bizums the rules discard are not kept; nothing is processed twice. **Graduation:** hard requirement (proposed). **Rests on:** Q-09, Q-10, Q-11 (carried forward). It works whenever the connection works (UC-006-01), the account is chosen and the start date is set (UC-006-09); it has no switch (`author decision`: it is always automatic; disconnecting is what stops it). Judging a Bizum settled, waiting or discarded is UC-006-03 (the ordered rules R1–R7).
 
 #### UC-006-02-S1 — A Bizum judged matched or dubious is kept (outline)
 
@@ -198,7 +211,7 @@ Then nothing of it is kept: no sender, message or amount
 | an incoming top-up "Dinero de ..." that is not a Bizum |
 | an incoming Bizum still pending |
 | an incoming Bizum booked on 2026-08-31 |
-| an incoming Bizum that the matching judges clearly unrelated to Pachanguero |
+| an incoming Bizum that rule R1, R2 or R6 of UC-006-03 discards |
 
 Non-behavioural, on the Then: the senders and messages of Bizums that are not the organiser's football business, which can concern the organiser's private life (`study/author-decisions.md`), are other people's data and are not kept. `verified — document`: 34 outgoing Bizums and 59 non-Bizum top-ups existed in the real data; a pending Bizum is skipped and never occurred in it (guide §5, §6; how Revolut shows a pending Bizum is `not determined`).
 
@@ -212,10 +225,10 @@ Then the entry is not evaluated again and nothing about it changes
 | ------- | -------- |
 | matched and settled | on its next scheduled read |
 | dubious and waiting | on its next scheduled read |
-| clearly unrelated and not kept | on its next scheduled read |
+| discarded and not kept | on its next scheduled read |
 | not a Bizum | on its next scheduled read |
 | matched and settled | after the bank connection was renewed |
-| clearly unrelated and not kept | after the bank connection was renewed |
+| discarded and not kept | after the bank connection was renewed |
 
 `verified — document`: a repeated read, also through a new session, added nothing; an entry is told apart by the bank's own identification, never by its content (guide §5, §7). `author decision`: avoid processing the same Bizums over and over. A waiting Bizum is re-evaluated only by UC-006-10, never by being read again.
 
@@ -269,9 +282,6 @@ When 24 hours pass
 Then the Bizum has been processed
 
 `author decision`: a delay of up to a day is acceptable (`VISION.md` §4). If the server was stopped meanwhile, it is processed on the first read after the server starts.
-
-**Owed for this use case:**
-- **Decision, in UC-006-03:** what makes a Bizum "clearly unrelated"; the last row of S2 depends on it.
 
 ### UC-006-09 — The organiser sets the start date
 
@@ -364,7 +374,21 @@ Then each of them shows the method "Otro" and no link to a Bizum
 
 ### UC-006-03 — The system settles a Bizum from a known sender
 
-**Actor:** the system. **Goal:** a Bizum whose sender is a known player pays that player's open debts, nearest game first, with nobody acting, and is never settled wrongly. **Graduation:** hard requirement (proposed). **Rests on:** Q-02, Q-04, Q-05, Q-10. A Bizum that cannot be settled with certainty waits (UC-006-04); how a sender becomes known by the organiser's pairing is UC-006-05. The "share" is the season's, set by the admin and read from the database (`verified — source`: `SeasonRepository.shareCents`, `server/src/repo/season-repository.ts`); examples use shares of 4.00 and 5.00 to show it is not fixed.
+**Actor:** the system. **Goal:** every incoming Bizum is judged by one ordered list of rules (settled, waiting or discarded) and a Bizum whose sender is a known player pays that player's open debts, nearest game first, with nobody acting, and is never settled wrongly. **Graduation:** hard requirement (proposed). **Rests on:** Q-02, Q-04, Q-05, Q-10. The rules below are an `author decision` (2026-10-16). A Bizum that cannot be settled with certainty waits (UC-006-04); how a sender becomes known by the organiser's pairing is UC-006-05. The "share" is the season's, set by the admin and read from the database (`verified — source`: `SeasonRepository.shareCents`, `server/src/repo/season-repository.ts`); examples use shares of 4.00 and 5.00 to show it is not fixed.
+
+**The rules.** Written like a firewall: evaluated in this order, and the first rule that matches decides; no later rule is looked at. *Share* is the share of the season containing the Bizum's booking date; *n* is the amount divided by the share; *d* is the number of open debts the sender-player has on played games of that season (UC-006-11). *Include words* and *exclude words* are two lists the organiser edits (UC-006-01-S14); a subject matches a list when it contains one of its words, ignoring upper and lower case (whether accents are ignored is `assumed`, for the design: the initial list holds "futbol" and "fútbol" both).
+
+| # | If the Bizum … | Action |
+| - | -------------- | ------ |
+| R1 | has a subject containing an exclude word | **Discard** |
+| R2 | is more than 7 shares (n > 7) | **Discard** |
+| R3 | has a sender that is exactly one player, n is whole (1 to 7) and d ≥ n | **Settle** n debts, nearest first |
+| R4 | has a sender that is exactly one player, n is whole (1 to 7) and d < n | **Wait** |
+| R5 | has a subject containing an include word | **Wait** |
+| R6 | has an amount that is not a whole number of shares | **Discard** |
+| R7 | is anything else (a whole number of shares, sender unknown or ambiguous) | **Wait** |
+
+"Discard" means nothing of the Bizum is kept (UC-006-02-S2). "Wait" means it is kept and listed for the organiser (UC-006-04). Nothing else decides: the subject plays no part in R3, R4, R6 and R7, an include word does not rescue more than 7 shares (R2 comes first), and a sender's name alone never settles. `author decision`: all of the above. Consequence, accepted: a discarded Bizum cannot be recovered, and changing a list later does not bring it back.
 
 #### UC-006-03-S1 — A sender is recognised as a player (outline)
 
@@ -394,7 +418,7 @@ Then it settles the debts of <settled>
 | 4.00 | 2026-09-30, 2026-10-07 | 8.00 | 2026-10-12 | 2026-10-07 and 2026-09-30 |
 | 5.00 | 2026-09-30, 2026-10-07 | 5.00 | 2026-10-06 | 2026-09-30 |
 
-`author decision`: when a player has several open debts, a Bizum pays the one of the nearest game first, read as the most recent played game on or before the booking date, then further back for more shares (`study/author-decisions.md`). This differs from the existing debts ordering, oldest first (`DebtRepository.outstandingFor`; study). The third row shows a game after the booking date is not touched. The amount must be a whole number of the share of the games' season; otherwise S4. `author decision`: the sender is very important but not enough; settling also needs the amount to be a number of shares, a debt it pays, and/or the subject; the name alone never settles. `author decision`: the subject is never a reason to discard a Bizum; it can be used to be sure that a Bizum is for Pachanguero, by key words such as "pachanga", "fubol" and "fútbol" (the system has no language model, so only key words). `author decision`: an amount of 7 shares or less that is not matched is dubious. `author decision`: debts are not carried from one season to another.
+`author decision`: when a player has several open debts, a Bizum pays the one of the nearest game first, read as the most recent played game on or before the booking date, then further back for more shares (`study/author-decisions.md`). This differs from the existing debts ordering, oldest first (`DebtRepository.outstandingFor`; study). The third row shows a game after the booking date is not touched. The amount must be a whole number of the share of the games' season; otherwise S4 (R5, R6). `author decision`: the sender is very important but not enough; settling also needs the amount to be a whole number of shares that the sender's open debts cover (R3); the name alone never settles. The key words are plain lists, because the system has no language model. `author decision`: debts are not carried from one season to another.
 
 #### UC-006-03-S3 — A host's Bizum settles the shares the host holds (outline)
 
@@ -409,19 +433,20 @@ Then it settles <settled>
 
 `verified — source`: a host holds the debts of plus-ones and may pay them (`share_debts.holder_player_id`; study Q-10). `author decision`: of the host's shares of one game, her own goes first.
 
-#### UC-006-03-S4 — An amount that is not whole shares settles nothing (outline)
+#### UC-006-03-S4 — An amount that is not whole shares is discarded unless the subject names Pachanguero (outline)
 
 Given "Luis Pérez" has open debts of one share, 4.00 EUR, on two played games
-When the system processes a Bizum of <amount> EUR from him
-Then it settles nothing and the Bizum waits for the organiser
+When the system processes a Bizum of <amount> EUR from him with the subject <subject>
+Then <result>
 
-| amount |
-| ------ |
-| 4.50 |
-| 2.00 |
-| 6.00 |
+| amount | subject | result |
+| ------ | ------- | ------ |
+| 4.50 | (empty) | it is discarded (R6) |
+| 2.00 | `cena` | it is discarded (R1, the exclude word, before anything else) |
+| 6.00 | `partido de la pachanga` | it settles nothing and waits in the organiser's list (R5) |
+| 2.00 | `fútbol` | it settles nothing and waits in the organiser's list (R5) |
 
-`author decision`: what cannot be settled with certainty waits, never a guess (`VISION.md` §4). `verified — document`: 29 of 412 real Bizums were other amounts and 5 were below a share (guide §2; `study/matching-and-data.md` Q-10). A payment can only adjust the amount of a single share (`verified — source`: `PaymentService.pay`).
+`author decision`: the rules of UC-006-03, which replace the earlier "everything uncertain waits" for amounts that are not whole shares. Row 2 assumes `cena` is in the exclude list. `verified — document`: 29 of 412 real Bizums were other amounts and 5 were below a share (guide §2; `study/matching-and-data.md` Q-10). A payment can only adjust the amount of a single share (`verified — source`: `PaymentService.pay`).
 
 #### UC-006-03-S5 — A settled Bizum leaves a payment that says how it was paid
 
@@ -449,10 +474,28 @@ Then <result>
 | ----- | ------ | ------ |
 | 4.00 | 12.00 (3 shares) | it settles nothing and waits in the organiser's list |
 | 4.00 | 28.00 (7 shares) | it settles nothing and waits in the organiser's list |
-| 4.00 | 32.00 (8 shares) | it is not kept: too much to be a game payment |
-| 4.00 | 40.00 (10 shares) | it is not kept: too much to be a game payment |
+| 4.00 | 32.00 (8 shares) | it is discarded (R2): too much to be a game payment |
+| 4.00 | 40.00 (10 shares) | it is discarded (R2): too much to be a game payment |
 
-`author decision`: 12.00, being just 3 shares, is reasonable to queue; 40.00 is too much; the limit is 7 shares, so up to 7 shares waits and more than 7 is not kept (`study/author-decisions.md`: unmatched or uncertain Bizums wait in a list).
+`author decision`: the limit is 7 shares: up to 7 shares with fewer open debts than shares waits (R4), more than 7 is discarded (R2), whoever the sender and whatever the subject.
+
+#### UC-006-03-S8 — The first matching rule decides (outline)
+
+Given the share is 4.00 EUR, "Luis Pérez" is the only player a sender <sender> fits and has 2 open debts, and the include word "pachanga" and the exclude word "cena" are listed
+When the system processes a Bizum of <amount> EUR from <sender> with the subject <subject>
+Then rule <rule> decides and the Bizum is <result>
+
+| sender | amount | subject | rule | result |
+| ------ | ------ | ------- | ---- | ------ |
+| `Luis P.R.` | 4.00 | `cena pachanga` | R1 | discarded: R1 comes before R3 |
+| `Luis P.R.` | 32.00 | `pachanga` | R2 | discarded: an include word does not rescue 8 shares |
+| `Luis P.R.` | 8.00 | `pachanga` | R3 | settled: 2 debts |
+| `Luis P.R.` | 12.00 | (empty) | R4 | waiting: 3 shares, 2 debts |
+| `Marta G.L.` | 4.50 | `pachanga` | R5 | waiting |
+| `Marta G.L.` | 4.50 | (empty) | R6 | discarded |
+| `Marta G.L.` | 8.00 | (empty) | R7 | waiting: sender fits no player |
+
+`inferred` from the rule table: one row per rule shows each rule is reachable and the order matters (row 1 and row 2 would differ if reordered). Row 7 assumes `Marta G.L.` fits no player.
 
 ### UC-006-11 — Debts are not carried from one season to another
 
@@ -479,13 +522,5 @@ When the system processes a Bizum of 8.00 EUR from him booked on 2026-10-12
 Then it settles nothing and the Bizum waits in the organiser's list
 
 `inferred` from S1 and UC-006-03-S7: the amount counts against the Bizum's season only, so 2 shares exceed its 1 open debt.
-
-#### UC-006-11-S3 — The organiser can still settle an old-season debt by hand
-
-Given "Luis Pérez" has an open debt on the played game of 2026-06-10 (season 2025/26) and a waiting Bizum of 4.00 EUR booked on 2026-10-12
-When the organiser settles that debt from the waiting Bizum
-Then the debt is paid with the method "Bizum", the link to that Bizum and the date 2026-10-12
-
-`inferred`: the restriction binds only the automatic settlement; the pairing of a waiting Bizum by hand is UC-006-05, which owns the screen.
 
 **Settled** by the author, 2026-10-16.
