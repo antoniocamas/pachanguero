@@ -316,7 +316,7 @@ Then the payment exists with that method and no link to a bank Bizum, the debt i
 | 4.00 | Efectivo |
 | 5.00 | Otro |
 
-`verified — document`: the methods are cash, Bizum or other (`VISION.md` §3); whether the organiser may record "Bizum" by hand is owed. `author decision`: the form preselects "Efectivo". The share is the season's share, which the admin sets (`verified — source`: `SeasonRepository.shareCents`, `server/src/repo/season-repository.ts`).
+`verified — document`: the methods are cash, Bizum or other (`VISION.md` §3); `author decision`: the organiser can record a manual payment as "Bizum". `author decision`: the form preselects "Efectivo". The share is the season's share, which the admin sets (`verified — source`: `SeasonRepository.shareCents`, `server/src/repo/season-repository.ts`).
 
 #### UC-006-08-S2 — The rules of payment do not change (outline)
 
@@ -362,5 +362,94 @@ Then each of them shows the method "Otro" and no link to a Bizum
 
 `verified — source`: all 67 are 4.00 EUR, paid 2026-10-07 to 2026-10-09; the 519 imported participations are not payments and stay untouched (study Q-03). `author decision`: the method is "Otro".
 
-**Owed for this use case:**
-- **Decision:** may the organiser record a manual payment as "Bizum" with no link to a bank Bizum? Proposed yes, shown as entered by hand, because without the bank the organiser still receives Bizums.
+### UC-006-03 — The system settles a Bizum from a known sender
+
+**Actor:** the system. **Goal:** a Bizum whose sender is a known player pays that player's open debts, nearest game first, with nobody acting, and is never settled wrongly. **Graduation:** hard requirement (proposed). **Rests on:** Q-02, Q-04, Q-05, Q-10. A Bizum that cannot be settled with certainty waits (UC-006-04); how a sender becomes known by the organiser's pairing is UC-006-05. The "share" is the season's, set by the admin and read from the database (`verified — source`: `SeasonRepository.shareCents`, `server/src/repo/season-repository.ts`); examples use shares of 4.00 and 5.00 to show it is not fixed.
+
+#### UC-006-03-S1 — A sender is recognised as a player (outline)
+
+Given the system holds <knowledge>
+When the system processes a Bizum from sender <sender>
+Then the payer is <payer>
+
+| knowledge | sender | payer |
+| --------- | ------ | ----- |
+| the organiser paired `Luis P.R.` with the player "Luis Pérez" | `Luis P.R.` | "Luis Pérez" |
+| no pairing, and the only player whose name fits is "Marta" | `Marta G.L.` | "Marta" |
+| the player "Luis Pérez" has the phone `+34600000000` | `+34600000000` | "Luis Pérez" |
+| the organiser paired `Marta G.L.` with "Marta García" and with "Marta Gómez" | `Marta G.L.` | nobody: two players fit |
+| no player is linked to `+34611111111` | `+34611111111` | nobody |
+
+`verified — source`: `NameMatcher` never guesses, a name that fits two players is reported ambiguous (`server/src/domain/name-matcher.ts`); `player_aliases` holds 5 rows and `player_contacts` holds a phone column with no rows (study Q-05), so a stored phone is new data. `verified — document`: senders are an abbreviated name or, in 5%, a phone number (guide §6). `author decision`: a sender is also recognised from the players' names alone, without a pairing, when exactly one player fits; if a new player with the same first name enters (a second "Marta"), the sender then fits two players and the author expects this to need revisiting.
+
+#### UC-006-03-S2 — A Bizum of whole shares settles the nearest open debts first (outline)
+
+Given "Luis Pérez" has open debts of one share, <share> EUR each, on the played games of <games>
+When the system processes a Bizum of <amount> EUR from him, booked on <booked>
+Then it settles the debts of <settled>
+
+| share | games | amount | booked | settled |
+| ----- | ----- | ------ | ------ | ------- |
+| 4.00 | 2026-09-30, 2026-10-07 | 4.00 | 2026-10-12 | 2026-10-07 |
+| 4.00 | 2026-09-30, 2026-10-07 | 8.00 | 2026-10-12 | 2026-10-07 and 2026-09-30 |
+| 5.00 | 2026-09-30, 2026-10-07 | 5.00 | 2026-10-06 | 2026-09-30 |
+
+`author decision`: when a player has several open debts, a Bizum pays the one of the nearest game first, read as the most recent played game on or before the booking date, then further back for more shares (`study/author-decisions.md`). This differs from the existing debts ordering, oldest first (`DebtRepository.outstandingFor`; study). The third row shows a game after the booking date is not touched. The amount must be a whole number of the share of the games' season; otherwise S4. `author decision`: the sender is very important but not enough; settling also needs the amount to be a number of shares, a debt it pays, and/or the subject; the name alone never settles. `author decision`: the subject is never a reason to discard a Bizum; it can be used to be sure that a Bizum is for Pachanguero, by key words such as "pachanga", "fubol" and "fútbol" (the system has no language model, so only key words). `author decision`: an amount of 7 shares or less that is not matched is dubious. `author decision`: debts are not carried from one season to another.
+
+#### UC-006-03-S3 — A host's Bizum settles the shares the host holds (outline)
+
+Given "Marta García" holds, as host, an open debt of one share (4.00) for herself and one for a plus-one on the played game of 2026-10-07
+When the system processes a Bizum of <amount> EUR from her booked on 2026-10-12
+Then it settles <settled>
+
+| amount | settled |
+| ------ | ------- |
+| 4.00 | one share of that game: hers, as the nearest first |
+| 8.00 | both shares of that game |
+
+`verified — source`: a host holds the debts of plus-ones and may pay them (`share_debts.holder_player_id`; study Q-10). `author decision`: of the host's shares of one game, her own goes first.
+
+#### UC-006-03-S4 — An amount that is not whole shares settles nothing (outline)
+
+Given "Luis Pérez" has open debts of one share, 4.00 EUR, on two played games
+When the system processes a Bizum of <amount> EUR from him
+Then it settles nothing and the Bizum waits for the organiser
+
+| amount |
+| ------ |
+| 4.50 |
+| 2.00 |
+| 6.00 |
+
+`author decision`: what cannot be settled with certainty waits, never a guess (`VISION.md` §4). `verified — document`: 29 of 412 real Bizums were other amounts and 5 were below a share (guide §2; `study/matching-and-data.md` Q-10). A payment can only adjust the amount of a single share (`verified — source`: `PaymentService.pay`).
+
+#### UC-006-03-S5 — A settled Bizum leaves a payment that says how it was paid
+
+Given a Bizum of 4.00 EUR booked on 2026-10-12 settles one debt
+When the system settles it
+Then the payment shows the method "Bizum", the link to that Bizum, and the date 2026-10-12, when the money arrived
+
+`author decision`: every Bizum payment carries its method and the link to its Bizum (`VISION.md` §5). `verified — source`: the payment date is when the money arrived, not the game date (`AGENTS.md`).
+
+#### UC-006-03-S6 — Nothing to settle yet
+
+Given "Luis Pérez" has no open debt on a played game
+When the system processes a Bizum of 4.00 EUR from him
+Then it settles nothing and the Bizum waits
+
+`verified — source`: a game must be played to accept a payment (`PaymentService.pay`, `GameLifecycle`); a Bizum often arrives before the organiser marks the game played (study Q-09). The waiting Bizum settles when the debt appears: UC-006-10.
+
+#### UC-006-03-S7 — A Bizum larger than the open debts (outline)
+
+Given "Luis Pérez" has open debts of one share, <share> EUR each, on two played games
+When the system processes a Bizum of <amount> EUR from him
+Then <result>
+
+| share | amount | result |
+| ----- | ------ | ------ |
+| 4.00 | 12.00 (3 shares) | it settles nothing and waits in the organiser's list |
+| 4.00 | 28.00 (7 shares) | it settles nothing and waits in the organiser's list |
+| 4.00 | 32.00 (8 shares) | it is not kept: too much to be a game payment |
+| 4.00 | 40.00 (10 shares) | it is not kept: too much to be a game payment |
+
+`author decision`: 12.00, being just 3 shares, is reasonable to queue; 40.00 is too much; the limit is 7 shares, so up to 7 shares waits and more than 7 is not kept (`study/author-decisions.md`: unmatched or uncertain Bizums wait in a list).
