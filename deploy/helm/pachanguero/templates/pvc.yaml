@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pachanguero-data
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: pachanguero
+  annotations:
+    helm.sh/resource-policy: keep
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: {{ .Values.storage.className }}
+  resources:
+    requests:
+      storage: {{ .Values.storage.dataSize }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pachanguero-backups
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: pachanguero
+  annotations:
+    helm.sh/resource-policy: keep
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: {{ .Values.storage.className }}
+  resources:
+    requests:
+      storage: {{ .Values.storage.backupsSize }}

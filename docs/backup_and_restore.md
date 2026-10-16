@@ -37,8 +37,10 @@ behind and does not change the live database.
 In the folder named by `PACHANGUERO_BACKUPS`. When it is not set, that is
 `backups/` next to the database file (`PACHANGUERO_DB`).
 
-- **They are never deleted automatically**, and never overwritten: two backups in
-  the same second get `-2`, `-3`… Clearing out old ones is up to the operator.
+- **The application never deletes them**, and never overwrites one: two backups in
+  the same second get `-2`, `-3`… Clearing out old ones is up to the operator. (On erebor the
+  `backup` sidecar prunes its daily backups, never the `…-before-migration.db` ones: see
+  [`deployment.md`](deployment.md#data-and-backups).)
 - **Each backup holds the users with their password hashes and the contact
   data**, so it is created readable by its owner only (mode `0600`), in a folder
   with mode `0700`. Treat it like the database: never put it anywhere public.
@@ -61,8 +63,8 @@ docker run -d --init --name pachanguero -p 8787:8787 \
 
 (`--init` makes `docker stop` stop the application at once instead of waiting
 and killing it.) The same goes for a compose file or Kubernetes: two persistent
-volumes, one at `/data` and one at `/backups`. This repository ships no
-deployment files.
+volumes, one at `/data` and one at `/backups`. The Kubernetes deployment to
+`erebor` is in [`deployment.md`](deployment.md).
 
 The container process is the `node` user (uid 1000). If you mount host folders
 instead of named volumes, that user must be able to write to them:

@@ -4,3 +4,4 @@ package-lock.json
 data
 *.db
 specs
+deploy/helm/*/templates

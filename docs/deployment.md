@@ -1,0 +1,88 @@
+# Deployment on erebor
+
+Production: `https://pachanguero.duckdns.org` on `erebor` (k3s, namespace `pachanguero`), behind
+the Caddy on `numenor`. The house network is documented in `home-network-map`
+(`services/pachanguero/info.md`). The chart is in [`deploy/helm/pachanguero`](../deploy/helm/pachanguero)
+(defaults in its `values.yaml`, NodePort 9400); the DuckDNS name and the Caddy site live in
+`machine_setup_numenor` (`docker/duckdns`, `docker/caddy/Caddyfile.enabled`).
+
+## One-time setup
+
+1. Create `pachanguero.duckdns.org` on duckdns.org and add it to the updater, then apply the Caddy site
+   (its block is in `Caddyfile.enabled`): "Adding a site to Caddy" in `machine_setup_numenor/docs/docker_gitops_workflow.md`.
+2. Give `telperion` `helm`, `kubectl` and a kube context named `erebor`: procedure in the
+   `pachanguero-deployment-management` skill (`ai-kit/skills`), section "Refreshing the kubeconfig context".
+3. `cp deploy/helm/pachanguero/values.secrets.yaml.example deploy/helm/pachanguero/values.secrets.yaml`
+   and set `secrets.jwtSecret` (git-ignored and excluded from the chart by `.helmignore`; a symlink to a file
+   outside the repository works).
+4. After the first release, create the first admin:
+   [`commands.md`](commands.md#the-admin-tool) `create … --role admin`, run through the `exec` line of the
+   `pachanguero-deployment-management` skill (`-it`, so the password can be typed).
+
+## Releasing
+
+Bump with `scripts/bump-version.sh <X.Y.Z>` and commit as `Release <X.Y.Z>` (version rules and order:
+[`pachanguero-release`](../ai-kit/skills/pachanguero-release/SKILL.md)); then:
+
+```bash
+./build.sh --push        # builds pachanguero:<package.json version>, pushes it and :latest to 192.168.1.87:30500
+deploy/deploy.sh --tag <version>
+```
+
+- Pass the version as `--tag`. `--restart` is for development only: a deployed version is never re-pushed.
+- `telperion` must trust the registry as insecure (`insecure-registries` in `/etc/docker/daemon.json`).
+- A release that changes the schema migrates the database on start-up, after a
+  `…-before-migration.db` backup ([`backup_and_restore.md`](backup_and_restore.md)).
+- Success: `deploy.sh` exits 0, `get pods` (skill) shows the pod Running with both containers ready, and
+  the Checks below pass.
+- A failed release is rolled back to the previous `--tag`. If it migrated the schema, first restore its
+  `…-before-migration.db` ([procedure](#restoring-a-backup-on-erebor), with `<version>` = the previous
+  tag, the backup copied out first as shown there, and without its last `scale --replicas=1` line),
+  then run `deploy/deploy.sh --tag <previous>`, which starts the pod with the previous image. Check
+  that `get pods` shows it ready; if replicas stayed at 0, run the omitted `scale` line. Data entered
+  since the release is lost.
+
+## Data and backups
+
+- Two PVCs (`data-disk` class), kept when the release is uninstalled: `pachanguero-data` (`/data`)
+  and `pachanguero-backups` (`/backups`).
+- The `backup` sidecar runs `pachanguero-admin backup` daily at `backup.hourUtc` and keeps the last
+  `backup.keep` of them; `…-before-migration.db` files are never pruned.
+- Both volumes are on `erebor`'s disk, so a backup there does not survive losing the disk. Copying
+  `/backups` to `papiros` is not automated yet.
+- Restore: [`backup_and_restore.md`](backup_and_restore.md).
+
+## Restoring a backup on erebor
+
+How to restore a backup, and how a database from another machine becomes production. The generic rules
+are in [`backup_and_restore.md`](backup_and_restore.md#restoring-a-backup); here the application is
+stopped by scaling to 0, and a throwaway pod reaches the data volume. `<version>` is the tag now
+deployed (in a rollback, the previous tag); delete a leftover `restore` pod first.
+
+```bash
+K="kubectl --context erebor -n pachanguero"
+$K scale deploy/pachanguero --replicas=0
+$K wait --for=delete pod -l app=pachanguero --timeout=120s
+$K run restore --image=registry.local:5000/pachanguero:<version> --restart=Never --overrides='{
+  "spec": {"securityContext": {"runAsUser": 1000, "runAsGroup": 1000, "fsGroup": 1000},
+    "containers": [{"name": "restore", "image": "registry.local:5000/pachanguero:<version>",
+      "command": ["sleep", "3600"], "volumeMounts": [{"name": "data", "mountPath": "/data"}]}],
+    "volumes": [{"name": "data", "persistentVolumeClaim": {"claimName": "pachanguero-data"}}]}}'
+$K wait --for=condition=Ready pod/restore
+$K cp <backup>.db restore:/data/restore.db   # a local file
+$K exec restore -- sh -c 'rm -f /data/pachanguero.db-wal /data/pachanguero.db-shm && mv /data/restore.db /data/pachanguero.db'
+$K delete pod restore
+$K scale deploy/pachanguero --replicas=1
+```
+
+A backup that lives on the cluster is first copied out of the running pod, before scaling to 0:
+`$K cp <pod>:/backups/<file>.db <file>.db -c backup` (the sidecar stays up even if the app container
+crash-loops).
+
+The pod runs as uid 1000, so the restored file has the application's owner. Check that you can log in
+and that the data is the expected data. Keep the replaced database until a newer backup exists.
+
+## Checks
+
+Pods, services and logs: the `pachanguero-deployment-management` skill. From outside the house, with the Caddy toggle enabled,
+`curl -I https://pachanguero.duckdns.org` answers `200` over a valid certificate.

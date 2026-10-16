@@ -126,8 +126,8 @@ An admin created without a player can be given one later with `link --username a
 The repository ships a `Dockerfile` (for x86_64) that builds an image with the
 application and the `pachanguero-admin` tool. All configuration comes from the
 environment and there are two volumes: `/data` (the database) and `/backups` (the
-backups). Deployment files (compose, Kubernetes), an image registry and TLS are
-outside the repository.
+backups). The Kubernetes deployment to `erebor` is in [`deployment.md`](deployment.md);
+TLS is done by the proxy in front.
 
 ```bash
 docker build -t pachanguero .
@@ -147,6 +147,9 @@ docker run -d --init --name pachanguero -p 8787:8787 \
   [`backup_and_restore.md`](backup_and_restore.md).
 
 ## Running on the Raspberry Pi
+
+> The production instance runs in k3s on `erebor`, not here: see [`deployment.md`](deployment.md).
+> This section is the plain systemd alternative.
 
 ```bash
 git clone <repo> /opt/pachanguero && cd /opt/pachanguero

@@ -52,7 +52,8 @@ The server serves the SPA and the API on a single port, so a reverse proxy such 
 Caddy only has to forward to one upstream. The steps for the Raspberry Pi (systemd
 unit, `JWT_SECRET`, Caddy) and for the container are in
 [`docs/commands.md`](docs/commands.md); backups and restoring are in
-[`docs/backup_and_restore.md`](docs/backup_and_restore.md).
+[`docs/backup_and_restore.md`](docs/backup_and_restore.md); putting it on the Internet is in
+[`docs/deployment.md`](docs/deployment.md).
 
 ## Users and access
 

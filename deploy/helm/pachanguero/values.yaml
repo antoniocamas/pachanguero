@@ -1,0 +1,33 @@
+# Default values for pachanguero. Secrets go in values.secrets.yaml (git-ignored).
+
+# Name the cluster pulls images from: k3s maps it to the NodePort registry on erebor
+# (/etc/rancher/k3s/registries.yaml). build.sh pushes to 192.168.1.87:30500, the same registry.
+registry: 'registry.local:5000'
+
+image:
+  name: pachanguero
+  tag: '' # empty = the chart's appVersion
+
+service:
+  nodePort: 9400 # where Caddy on numenor connects: 192.168.1.87:9400
+
+storage:
+  className: data-disk
+  dataSize: 1Gi
+  backupsSize: 2Gi
+
+backup:
+  enabled: true
+  hourUtc: 2 # daily at this hour (UTC)
+  keep: 14 # manual backups kept; before-migration backups are never pruned
+
+resources:
+  requests:
+    memory: '64Mi'
+    cpu: '50m'
+  limits:
+    memory: '256Mi'
+    cpu: '500m'
+
+secrets:
+  jwtSecret: '' # required, 32+ characters; set it in values.secrets.yaml
