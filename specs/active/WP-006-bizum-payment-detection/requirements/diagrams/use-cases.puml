@@ -1,0 +1,45 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Organiser\n(admin)" as Org
+actor "Bank\n(Enable Banking)" as Bank
+actor "Player" as Player
+actor "System\n(in-process poller)" as Sys
+
+rectangle "Bizum payment detection" {
+  usecase "UC-006-01\nConnect, check and renew\nthe bank access" as UC01
+  usecase "UC-006-09\nSet the start date" as UC09
+  usecase "UC-006-02\nRead the account on a schedule" as UC02
+  usecase "UC-006-03\nSettle a Bizum by the rules R1-R7" as UC03
+  usecase "UC-006-11\nDebts are not carried\nbetween seasons" as UC11
+  usecase "UC-006-04\nA Bizum waits in the Deudas view" as UC04
+  usecase "UC-006-05\nPair a sender, rule, dismiss" as UC05
+  usecase "UC-006-10\nA waiting Bizum settles\nwhen its debt appears" as UC10
+  usecase "UC-006-08\nRecord a manual payment\nwith its method" as UC08
+  usecase "UC-006-06\nCorrect an automatic payment" as UC06
+  usecase "UC-006-07\nSee how each payment was paid" as UC07
+}
+
+Org --> UC01
+Org --> UC09
+Org --> UC05
+Org --> UC06
+Org --> UC07
+Org --> UC08
+Org --> UC04
+Player --> UC07
+Bank --> UC01
+Sys --> UC02
+Sys --> UC03
+Sys --> UC10
+
+UC02 ..> UC03 : <<include>>
+UC03 ..> UC11 : <<include>>
+UC03 ..> UC04 : <<extend>>\n(waits)
+UC10 ..> UC03 : <<include>>
+UC05 ..> UC03 : <<include>>\n(re-evaluates)
+UC02 ..> UC01 : <<include>>\n(needs a connection)
+UC02 ..> UC09 : <<include>>\n(needs a start date)
+UC06 ..> UC04 : <<extend>>\n(Bizum returns)
+@enduml

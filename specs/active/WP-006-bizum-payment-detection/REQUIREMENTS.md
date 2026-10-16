@@ -2,7 +2,7 @@
 
 ## Use Case Audit
 
-**Component:** the integration of the organiser's Revolut account (read through Enable Banking) with `PaymentService`, the debts and the admin UI.
+**Component:** the integration of the organiser's bank account (read through Enable Banking; Revolut is the only bank implemented in this work package, and the bank is a setting) with `PaymentService`, the debts and the admin UI.
 **Actors:** the operator (command line), the organiser (admin UI), the system (in-process poller).
 
 ### Needs taken from `VISION.md`
@@ -27,31 +27,33 @@ No row is empty.
 
 ### Not covered
 
-Players seeing bank data or sender names; other banks and payment types; outgoing Bizums and refunds (ignored); the 2025/26 history (not in the database); notifications for waiting Bizums (author decision: none); Revolut's real rate limit (Q-11, carried forward — fixes only the polling schedule, set in the design).
+Players seeing bank data or sender names; support for any bank other than Revolut (the design leaves room for it, this work package implements Revolut only) and for payment types other than Bizum; outgoing Bizums and refunds (ignored); the 2025/26 history (not in the database); notifications for waiting Bizums (author decision: none); Revolut's real rate limit (Q-11, carried forward — fixes only the polling schedule, set in the design).
 
 ## Use Cases
 
-Diagram: `requirements/diagrams/use-cases.puml` (drawn when every use case has settled).
+Diagram: [`requirements/diagrams/use-cases.puml`](requirements/diagrams/use-cases.puml).
 
 ### UC-006-01 — The organiser connects, checks and renews the bank access from the admin view
 
-**Actor:** the organiser (admin), and the bank's redirect arriving at the application. **Goal:** the system may read the organiser's Revolut account, and the organiser always sees how long that lasts and can renew it before it ends, without a command line. **Graduation:** hard requirement (proposed). **Rests on:** Q-06, Q-07, WP-005 guide `enable-banking-revolut-integration.md`. **Sketch:** `requirements/examples/banco-panel.html` (not yet built; the copy is Spanish as the app's).
+**Actor:** the organiser (admin), and the bank's redirect arriving at the application. **Goal:** the system may read the organiser's account at the chosen bank, and the organiser always sees how long that lasts and can renew it before it ends, without a command line. **Graduation:** hard requirement (proposed). **Rests on:** Q-06, Q-07, WP-005 guide `enable-banking-revolut-integration.md`. **Sketch:** `requirements/examples/screens.html` frames 1 to 4 (not yet built; the copy is Spanish as the app's).
 
 **Where.** A "Banco" panel in the admin shell, under the Manage tab (`inferred`; placement is for the design). It is part of the admin view only: not shown, and its routes refused, to a player and to an admin who has switched to "Ver como jugador" or "Ver como otro jugador".
 
 **The redirect goes to the application itself.** The bank sends the browser back to `<public URL>/api/bank/callback`; the server completes the authorisation and sends the browser on to the app, which shows the result in the panel. The public URL is a setting (`PACHANGUERO_PUBLIC_URL`) because the deployment is undecided, and it is the address registered as the allowed redirect URL at Enable Banking. Examples use the placeholder `https://pachanguero.example.org`, to be replaced once deployed. The application id and the private key stay in the environment (secrets, like `JWT_SECRET`), never editable in the UI. The operator command line gets no bank commands (`author decision`).
 
+**The bank is a setting** (`author decision`, 2026-10-16). The panel shows which bank is read, chosen from the banks the application supports; in this work package that list holds Revolut alone, which is the default. Everything the bank decides (how an entry is recognised as a Bizum, how the sender and the message are read, the accounts it exposes) belongs to the chosen bank's support, so a future bank is added by implementing that support and listing it, with no change to the rules of UC-006-03 to -07. The button and the messages carry the chosen bank's name (examples use Revolut).
+
 #### UC-006-01-S1 — The panel before any connection
 
 Given no bank access is stored, the application id, the private key and `PACHANGUERO_PUBLIC_URL` are set
 When the organiser opens Manage → Banco
-Then the panel shows the state "Sin conexión", a sentence saying what connecting does (read only the incoming Bizums of the organiser's Revolut account; nothing is ever paid or moved), the consent length (up to 180 days) and a button "Conectar con Revolut"
+Then the panel shows the state "Sin conexión", the chosen bank (Revolut), a sentence saying what connecting does (read only the incoming Bizums of the organiser's account at that bank; nothing is ever paid or moved), the consent length (up to 180 days) and a button "Conectar con <banco>"
 
 #### UC-006-01-S2 — The panel when the setup is incomplete (outline)
 
 Given <missing> is not set
 When the organiser opens Manage → Banco
-Then the button "Conectar con Revolut" is disabled and the panel says which setting is missing, by name and never by value
+Then the button "Conectar con <banco>" is disabled and the panel says which setting is missing, by name and never by value
 
 | missing |
 | ------- |
@@ -62,7 +64,7 @@ Then the button "Conectar con Revolut" is disabled and the panel says which sett
 #### UC-006-01-S3 — Connecting starts
 
 Given the panel is in "Sin conexión" and `PACHANGUERO_PUBLIC_URL` is `https://pachanguero.example.org`
-When the organiser presses "Conectar con Revolut"
+When the organiser presses "Conectar con <banco>"
 Then the server stores a pending authorisation (a unique single-use state and its expiry) and the browser goes to the bank's authorisation page, whose redirect address is `https://pachanguero.example.org/api/bank/callback`
 
 `inferred`: the pending authorisation lives in the database so that the server can complete it when the bank redirects back. The WP-005 guide recommends a desktop browser for the owner's approval in the Revolut app (`verified — document`, guide §4), so the panel says that before the button is pressed.
@@ -79,14 +81,14 @@ Then the server exchanges the code for a session, stores the session id, its `va
 
 Given a pending authorisation with state `s-1`, created 5 minutes ago
 When the browser requests the callback with <query>
-Then the app shows <message> in the panel, stores no session, and the panel offers "Conectar con Revolut" again
+Then the app shows <message> in the panel, stores no session, and the panel offers "Conectar con <banco>" again
 
 | query | message |
 | ----- | ------- |
 | `state=other&code=c-1` (no such pending authorisation) | "No reconocemos esta autorización. Empieza de nuevo." |
 | `state=s-1&code=c-1`, requested a second time after S4 | "Esta autorización ya se usó." |
 | `state=s-1` after the pending authorisation expired | "La autorización caducó. Empieza de nuevo." |
-| `state=s-1&error=access_denied` | "No se aprobó el acceso en Revolut." |
+| `state=s-1&error=access_denied` | "No se aprobó el acceso en <banco>." |
 
 `verified — document`: `EXPIRED_AUTHORIZATION_CODE` and `WRONG_AUTHORIZATION_CODE` exist (guide §9). The shape of the error redirect and the lifetime of a pending authorisation are `assumed`; the lifetime is for the design.
 
@@ -138,7 +140,7 @@ The banner is part of the admin shell, so it is never shown to a player, to an a
 
 Given access stored with a session that was valid yesterday
 When the system's poll receives the bank error <code>
-Then the feed stops polling, the panel shows "Reconexión necesaria" with that reason and the button "Conectar con Revolut", and manual payments keep working as today
+Then the feed stops polling, the panel shows "Reconexión necesaria" with that reason and the button "Conectar con <banco>", and manual payments keep working as today
 
 | code |
 | ---- |
@@ -177,13 +179,27 @@ Then the panel shows it in that list and the rules use it from the next Bizum pr
 
 `author decision`: the lists are edited by the organiser in the Banco panel and kept in the database; the include words above are the initial ones and the exclude list starts empty. A word can be removed too. A list change never brings back a Bizum already discarded (UC-006-02-S3).
 
+#### UC-006-01-S15 — The bank is chosen in the panel (outline)
+
+Given the application supports the banks <supported> and the organiser is <state>
+When the organiser opens Manage → Banco
+Then the panel shows the bank <shown>, and <result>
+
+| supported | state | shown | result |
+| --------- | ----- | ----- | ------ |
+| Revolut | not connected, no bank chosen yet | Revolut, preselected | the button reads "Conectar con Revolut" |
+| Revolut | connected to Revolut | Revolut, not editable | a note says to disconnect before changing the bank |
+| Revolut | not connected, the stored bank is no longer supported | none | the button is disabled and the panel asks for a supported bank to be chosen |
+
+`author decision`: the bank is chosen from a list and only Revolut is implemented in this work package (the list has one entry). `inferred`: the choice is kept in the database like the currency (S7) and cannot change while connected, because the stored session, account choice and read Bizums belong to that bank; the third row guards a database that outlives a removed bank's support.
+
 **Decided by the author:** the panel is under Manage; the 14-day banner threshold; "currency to read" is kept in the database and edited in the panel; the address registered at Enable Banking is `<public URL>/api/bank/callback` and the setting is `PACHANGUERO_PUBLIC_URL`; "Desconectar" is wanted (S13; confirmed in a comment on the artifact, 2026-10-15); the session is stored in the database, which is backed up (confirmed in a comment, 2026-10-15).
 
 **Settled** by the author, 2026-10-15.
 
 ### UC-006-02 — The system reads the account on a schedule and keeps the Bizums that may be Pachanguero's
 
-**Actor:** the system. **Goal:** every incoming Bizum that matches a player or is dubious is kept once and within a day, with nobody asking; Bizums the rules discard are not kept; nothing is processed twice. **Graduation:** hard requirement (proposed). **Rests on:** Q-09, Q-10, Q-11 (carried forward). It works whenever the connection works (UC-006-01), the account is chosen and the start date is set (UC-006-09); it has no switch (`author decision`: it is always automatic; disconnecting is what stops it). Judging a Bizum settled, waiting or discarded is UC-006-03 (the ordered rules R1–R7).
+**Actor:** the system. **Goal:** every incoming Bizum that matches a player or is dubious is kept once and within a day, with nobody asking; Bizums the rules discard are not kept; nothing is processed twice. **Graduation:** hard requirement (proposed). **Rests on:** Q-09, Q-10, Q-11 (carried forward). It works whenever the connection works (UC-006-01), the account is chosen and the start date is set (UC-006-09); it has no switch (`author decision`: it is always automatic; disconnecting is what stops it). Whether an entry is a Bizum, and who sent it and with what message, is read by the chosen bank's support (for Revolut, the rule below); the rest of the work package sees only a Bizum with its amount, booking date, sender, message and the bank's identification. Judging a Bizum settled, waiting or discarded is UC-006-03 (the ordered rules R1–R7).
 
 #### UC-006-02-S1 — A Bizum judged matched or dubious is kept (outline)
 
@@ -689,3 +705,141 @@ Then the one booked on 2026-10-08 settles it, the other stays waiting, and neith
 `author decision` (approved): oldest booking first, so the result is deterministic.
 
 **Settled** by the author, 2026-10-16.
+
+### UC-006-06 — The organiser corrects an automatic payment
+
+**Actor:** the organiser. **Goal:** undo a payment the system made from a Bizum (wrong player, wrong debt, wrong amount of shares) and put the Bizum back in the list where the organiser can decide again. **Graduation:** hard requirement (proposed). **Rests on:** Q-08. `verified — source`: undoing a payment exists and puts the debt back at the standard share (`PaymentService.undo`, `server/src/repo/payment-service.ts`; UC-006-08-S3). The correction is admin only (`inferred` from `AGENTS.md`: a route added to `api.ts` is admin-only).
+
+#### UC-006-06-S1 — Undoing an automatic payment returns the debt and the Bizum
+
+Given the system settled the debt of "Luis Pérez" for the game of 2026-10-07 from a Bizum of 4.00 EUR booked on 2026-10-12
+When the organiser undoes that payment and confirms in the step that follows
+Then the debt is open again as with any undone payment, and the Bizum is listed again in "Bizums en espera" with its original data, like any other waiting Bizum
+
+`author decision` (2026-10-16): the Bizum goes back to the waiting list and is not marked or treated in any special way; the organiser typically deals with it right after undoing. The confirmation is a step in the page, as in UC-006-01-S13.
+
+#### UC-006-06-S2 — A Bizum that paid several shares is undone as a whole
+
+Given a Bizum of 8.00 EUR settled two debts of "Luis Pérez", on 2026-10-07 and 2026-09-30
+When the organiser undoes the payment of 2026-10-07
+Then the confirmation step lists both payments and, once confirmed, both are undone and the Bizum returns to the list
+
+`inferred`: one Bizum, one decision; undoing half would leave a Bizum partly settled with an unexplained share. The organiser can then rule that it pays one share (UC-006-05-S2).
+
+#### UC-006-06-S3 — Undoing a payment that no Bizum made is unchanged
+
+Given a payment recorded by hand with the method "Efectivo" or "Bizum" and no link to a bank Bizum
+When the organiser undoes it
+Then it behaves as in UC-006-08-S3 and no Bizum is listed
+
+**Settled** by the author, 2026-10-16.
+
+### UC-006-07 — The organiser sees how each payment was paid and its Bizum
+
+**Actor:** the organiser, and the player for their own payments. **Goal:** every payment says how it was paid, a Bizum payment can be traced to its Bizum and how it was settled, and a player learns the method only. **Graduation:** hard requirement (proposed). **Rests on:** Q-01, Q-02, Q-03, Q-08. `author decision`: sender names and bank data are admin only (`VISION.md` §3). Where the admin sees a payment (the game's payments, "Deudas", the player's report) the detail appears there; the exact places are for the design (`inferred`).
+
+#### UC-006-07-S1 — The method shows on every payment (outline)
+
+Given a payment <payment>
+When the organiser looks at it
+Then it shows the method <method>
+
+| payment | method |
+| ------- | ------ |
+| recorded by hand as "Efectivo" | Efectivo |
+| recorded by hand as "Otro" | Otro |
+| recorded by hand as "Bizum" | Bizum |
+| made by the system from a Bizum | Bizum |
+| made by the organiser's ruling on a Bizum | Bizum |
+| recorded before this feature (UC-006-08-S5) | Otro |
+
+#### UC-006-07-S2 — A Bizum payment can be traced to its Bizum
+
+Given the system settled a share from a Bizum of 4.50 EUR from `Luis P.R.`, booked on 2026-10-12 with the subject `pachanga`, which the organiser ruled to pay 1 share
+When the organiser opens that payment's detail
+Then it shows the booking date, the sender as the bank shows it, the amount, the subject, the bank's identification of the Bizum, "0.50 EUR sin asignar", and how it was settled: "Automático" or "Por decisión del organizador"
+
+`author decision`: every Bizum payment is fully traceable (`VISION.md` §5, N9). The payment keeps its own date, the day the money arrived (UC-006-03-S5).
+
+#### UC-006-07-S3 — A Bizum recorded by hand has no Bizum behind it
+
+Given a payment recorded by hand with the method "Bizum"
+When the organiser opens its detail
+Then it shows "Registrado a mano" and no booking date, sender or bank identification
+
+`author decision`: the organiser can record a manual payment as "Bizum" (UC-006-08-S1); it is not linked to the bank feed.
+
+#### UC-006-07-S4 — A player sees the method and nothing of the Bizum (outline)
+
+Given "Luis Pérez" has a payment of 4.00 EUR whose method is <method>
+When Luis opens "Pagos", or the organiser uses "Ver como jugador" or "Ver como otro jugador" for him
+Then the payment shows the method <method> and no booking date, sender, subject, bank identification or amount not allocated
+
+| method |
+| ------ |
+| Bizum, made by the system |
+| Bizum, recorded by hand |
+| Efectivo |
+
+`author decision` (2026-10-16): a player sees the method only. `verified — source`: every disclosure rule is in `OwnDisclosure` and the player's routes take no player id (`AGENTS.md`); the server decides, so the Bizum data is absent from the response, not hidden by the page.
+
+#### UC-006-07-S5 — The method cannot be edited
+
+Given a payment of 4.00 EUR recorded with the method "Efectivo"
+When the organiser looks for a way to change its method
+Then there is none; the correction is to undo it and record it again (UC-006-08-S3, S1)
+
+`author decision` (2026-10-16).
+
+**Settled** by the author, 2026-10-16.
+
+## Interface Examples
+
+- [`requirements/examples/screens.html`](requirements/examples/screens.html): thirteen phone-width screens drawn with the application's own stylesheet and markup (`web/src/styles.css`, the header, the bottom tabs, cards, rows, chips, buttons, section tabs and the full-screen dialog), so each shows where it sits: Ajustes › Banco (frames 1 to 4: bank choice, connection, expiry notice, reading settings, word lists, reconnection, account choice), Deudas with Bizums en espera and the manual payment method (5, 6), the dialogs to assign a player, pay shares and dismiss (7 to 9), the played game with its payments, the payment detail and undoing a multi-share payment (10 to 12) and the player's Pagos (13). Sketches to agree the content, not built.
+- [`requirements/examples/payment-views.md`](requirements/examples/payment-views.md): what the organiser and a player see of a Bizum payment (UC-006-07). `not yet run`: worked by hand for the implementation to verify.
+
+New interfaces, to be given their shape by the design: the callback `GET /api/bank/callback` (public, authorised by the single-use state); admin routes for the connection, the setting of the currency, account, start date and word lists, the waiting list, pairing, ruling, dismissal and undoing; the new method and Bizum link on payments; the new fields in the player's payments response.
+
+## File Locations
+
+Paths below are the places the work touches, from the project layout (`AGENTS.md`); new files are named by the pattern and fixed by the design. Counts are `inferred` and are for the design to confirm.
+
+| Kind | Path or pattern | Count |
+| ---- | --------------- | ----- |
+| Domain rules (new, with tests) | `server/src/domain/bizum-*.ts`, `server/src/domain/bizum-*.test.ts` | about 6 |
+| Domain, existing | `server/src/domain/name-matcher.ts`, `server/src/domain/own-disclosure.ts` and its test | 2 |
+| Schema and migration | `server/src/db/schema.sql`, `server/src/db/schema-migrator.ts` | 2 |
+| Repositories and services (new) | `server/src/repo/bank-*.ts` (the bank-neutral parts and one support class for Revolut), `server/src/repo/bizum-*.ts` | about 8 |
+| Repositories and services, existing | `server/src/repo/payment-service.ts`, `payment-repository.ts`, `debt-repository.ts`, `season-repository.ts`, `alias-repository.ts`, `contact-repository.ts`, `own-data-service.ts`, `billing-effect.ts`, and the composition root `server/src/repo/index.ts` | 9 |
+| Routes | `server/src/routes/api.ts`, `own-router.ts`, a new public bank callback router, `api-routes.ts` | 4 |
+| Server start-up (poller, settings) | `server/src/server-app.ts`, `server/src/index.ts` | 2 |
+| Web pages and components | `web/src/pages/Debts.tsx`, `Manage.tsx`, `AdminShell.tsx`, `web/src/components/OwnPayments.tsx`, `PaymentCell.tsx`, new `Bank*.tsx` and `Waiting*.tsx` | about 8 |
+| Web hooks and lib | `web/src/hooks/usePayments.ts`, `useDebtPayments.ts`, `useOwnPayments.ts`, new `useBank*.ts` | about 5 |
+| End-to-end tests | `e2e/tests/*.spec.ts` | about 3 |
+| Documentation | `docs/commands.md`, `docs/users-and-roles.md`, `docs/domain-model/` (Spanish), `.env.example` | 4 |
+
+## Success Criteria
+
+| Use cases | Check that fails if the requirement is unmet |
+| --------- | -------------------------------------------- |
+| UC-006-03 | A table test over rules R1–R7 with the rows of S1, S2, S4, S7 and S8; reordering the rules fails row 1 or row 2 of S8. |
+| UC-006-03, -11 | A domain test with debts in two seasons: a Bizum booked on 2026-10-12 never settles a debt of 2026-06-10, and one booked on 2026-08-31 does. |
+| UC-006-02 | A test feeding the same account entries twice, through a renewed session, and counting one outcome per entry; a test where a discarded entry leaves no row with sender, subject or amount. |
+| UC-006-04, -05, -06, -10 | Route tests: the waiting list lists R4, R5 and R7 Bizums with their reasons; pairing, ruling and dismissal act as in the scenarios; a game marked played settles the waiting Bizum booked after it; undoing returns the Bizum to the list. |
+| UC-006-07, -08 | Route tests on `OwnRouter`: the response of a player's payments has the method and none of the Bizum fields; manual payments keep the refusals of `PaymentService.pay`; the 67 earlier payments read "Otro". |
+| UC-006-01 | Route tests: the callback refuses an unknown, reused and expired state; no response, page or log holds a key, token, code, state or session id. An end-to-end test of the panel against a fake bank. |
+| UC-006-01, -02 | A test registers a second, fake bank next to Revolut: the panel lists both, the rules and the waiting list work unchanged on its entries, and no code outside the bank support names Revolut. |
+| UC-006-01, -02 | The live check against the real Revolut account stays manual, as in WP-005 (the proof of concept); it is not part of the automated suite. |
+
+## Constraints
+
+- A wrong payment is never recorded; a Bizum that cannot be matched with certainty waits instead of being guessed; a delay of up to a day is acceptable (`VISION.md` §4).
+- Every automatic payment is traceable to its Bizum and correctable (`VISION.md` §4).
+- Every Bizum payment is fully traceable: the payment method and the link to the Bizum with its metadata are stored (`VISION.md` §5).
+- The bank key and tokens never reach the repository, logs or the web interface (`VISION.md` §5).
+- Settling payments by hand keeps working exactly as today, with or without the bank feed (`VISION.md` §5).
+- Bank data and sender names are admin only; a player sees the method of their payments and nothing of the Bizum (`VISION.md` §3, UC-006-07-S4).
+- The bank is a setting: only Revolut is implemented here, and no rule of UC-006-03 to -07 may depend on it (`author decision`, 2026-10-16).
+- Consent to read the account lasts at most 180 days and its renewal needs the account owner's approval in the Revolut app (`VISION.md` §6).
+- Money is integer cents; the season is derived from the date; a payment's date is when the money arrived (`AGENTS.md`).
+- The work follows the project's coding standards, layering and test strategy (`VISION.md` §5; `.agents/rules/`, `docs/test-strategy.md`).

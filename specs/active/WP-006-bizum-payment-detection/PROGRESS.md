@@ -7,7 +7,7 @@
 | Proposal     | settled | 2026-10-12 |
 | Vision       | settled | 2026-10-12 |
 | Study        | settled | 2026-10-12 |
-| Requirements | pending | —          |
+| Requirements | settled | 2026-10-16 |
 | Design       | pending | —          |
 | Anatomy      | pending | —          |
 

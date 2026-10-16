@@ -1,0 +1,1079 @@
+<style>.fx{
+  --bg: #0d1117;
+  --surface: #161b22;
+  --surface-2: #1c2430;
+  --line: #2a3441;
+  --text: #e6edf3;
+  --muted: #8b98a5;
+  --accent: #3fb950;
+  --accent-dim: #1f6f33;
+  --warn: #d29922;
+  --danger: #f85149;
+  --mercy: #a371f7;
+  --radius: 12px;
+  color-scheme: dark;
+}
+.fx, .fx *{
+  box-sizing: border-box;
+}
+.fx, .fx, .fx{
+  height: 100%;
+}
+.fx{
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font:
+    15px/1.5 -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    system-ui,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.fx .app{
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 16px calc(80px + env(safe-area-inset-bottom));
+}
+.fx header.top{
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(13, 17, 23, 0.92);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+  margin: 0 -16px 16px;
+  padding: 12px 16px;
+}
+.fx header.top h1{
+  margin: 0;
+  font-size: 17px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.fx header.top .season, .fx header.top .who{
+  margin-left: auto;
+  font-size: 13px;
+  font-weight: 450;
+  color: var(--muted);
+}
+.fx nav.tabs{
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  display: flex;
+  background: rgba(22, 27, 34, 0.96);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.fx nav.tabs button{
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  padding: 10px 4px 12px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+.fx nav.tabs button .ico{
+  font-size: 18px;
+  line-height: 1;
+}
+.fx nav.tabs button[aria-current='true']{
+  color: var(--accent);
+}
+.fx .card{
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+.fx .card > h2{
+  margin: 0;
+  padding: 12px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.fx .card > h2 .right{
+  margin-left: auto;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.fx .row{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.fx .row:last-child{
+  border-bottom: none;
+}
+.fx .row .name{
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fx .row .name small{
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+}
+.fx .row .amount{
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.fx .row.total{
+  background: var(--surface-2);
+  font-weight: 650;
+}
+.fx .row .pos{
+  width: 22px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+}
+.fx .row .pts{
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  font-size: 13px;
+}
+.fx .row.out{
+  opacity: 0.55;
+}
+.fx .row.mercy{
+  background: color-mix(in srgb, var(--mercy) 12%, transparent);
+}
+.fx .row.demoted{
+  background: color-mix(in srgb, var(--warn) 12%, transparent);
+}
+.fx .row.cut{
+  border-bottom: 2px dashed var(--accent-dim);
+}
+.fx .chips{
+  display: flex;
+  gap: 6px;
+}
+.fx .chip{
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 5px 11px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 550;
+  cursor: pointer;
+  white-space: nowrap;
+  min-width: 44px;
+  transition:
+    background 0.12s,
+    color 0.12s,
+    border-color 0.12s;
+}
+.fx .chip:active{
+  transform: scale(0.96);
+}
+.fx .chip[data-on='true']{
+  color: var(--text);
+}
+.fx .chip.signed[data-on='true']{
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  border-color: var(--accent);
+  color: #d4f7dc;
+}
+.fx .chip.paid[data-on='true']{
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: #d4f7dc;
+}
+.fx .chip.debt[data-on='true']{
+  background: color-mix(in srgb, var(--danger) 22%, transparent);
+  border-color: var(--danger);
+  color: #ffd9d6;
+}
+.fx .tag{
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.fx .tag.mercy{
+  background: color-mix(in srgb, var(--mercy) 25%, transparent);
+  color: #d8c4ff;
+}
+.fx .tag.demoted{
+  background: color-mix(in srgb, var(--warn) 25%, transparent);
+  color: #ffe0a3;
+}
+.fx .tag.debt{
+  background: color-mix(in srgb, var(--danger) 22%, transparent);
+  color: #ffd9d6;
+}
+.fx button.btn{
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--text);
+  border-radius: 9px;
+  padding: 9px 14px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 550;
+  cursor: pointer;
+}
+.fx button.btn.primary{
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: #d4f7dc;
+}
+.fx button.btn:disabled{
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.fx button.btn.wide{
+  width: 100%;
+}
+.fx .actions{
+  display: flex;
+  gap: 8px;
+  padding: 12px 14px;
+}
+.fx input, .fx select{
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--text);
+  border-radius: 9px;
+  padding: 9px 11px;
+  font: inherit;
+  font-size: 16px; 
+  width: 100%;
+}
+.fx label.field{
+  display: block;
+  margin: 0 0 12px;
+}
+.fx label.field span{
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 5px;
+}
+.fx .empty{
+  padding: 28px 16px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 14px;
+}
+.fx .empty .big{
+  display: block;
+  font-size: 28px;
+  margin-bottom: 6px;
+}
+.fx .muted{
+  color: var(--muted);
+}
+.fx .card > p.note{
+  margin: 0;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.fx .note-below{
+  font-size: 12px;
+  padding: 0 2px;
+}
+.fx .hint{
+  font-size: 12px;
+  margin: 10px 0 0;
+}
+.fx .form{
+  padding: 14px;
+}
+.fx input.invalid{
+  border-color: var(--danger);
+}
+.fx label.field small{
+  display: block;
+  color: var(--danger);
+  font-size: 12px;
+  margin-top: 4px;
+}
+.fx ul.rules{
+  margin: 6px 0 0;
+  padding-left: 18px;
+  font-size: 13px;
+}
+.fx .err{
+  background: color-mix(in srgb, var(--danger) 15%, transparent);
+  border: 1px solid var(--danger);
+  color: #ffd9d6;
+  border-radius: 9px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  font-size: 14px;
+}
+.fx .stat-row{
+  display: flex;
+  gap: 10px;
+  padding: 12px 14px;
+}
+.fx .stat{
+  flex: 1;
+  text-align: center;
+}
+.fx .stat b{
+  display: block;
+  font-size: 21px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+}
+.fx .stat span{
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.fx .scroll-x{
+  overflow-x: auto;
+}
+.fx table.grid{
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 13px;
+}
+.fx table.grid th, .fx table.grid td{
+  padding: 7px 9px;
+  text-align: right;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--line);
+}
+.fx table.grid th:first-child, .fx table.grid td:first-child{
+  text-align: left;
+  position: sticky;
+  left: 0;
+  background: var(--surface);
+}
+.fx table.grid th{
+  color: var(--muted);
+  font-weight: 550;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.fx table.grid td{
+  font-variant-numeric: tabular-nums;
+}
+.fx .resolve{
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.fx .resolve .actions{
+  padding: 8px 0 0;
+  flex-wrap: wrap;
+}
+.fx textarea{
+  font: inherit;
+  color: inherit;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+.fx .app.wide{
+  max-width: 1280px;
+}
+.fx{
+  --top-h: 48px;
+  --in: color-mix(in srgb, var(--accent) 14%, transparent);
+  --out: color-mix(in srgb, var(--muted) 10%, transparent);
+  --hand: color-mix(in srgb, var(--warn) 18%, transparent);
+}
+.fx .bar{
+  position: sticky;
+  top: var(--top-h);
+  z-index: 6;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  margin-bottom: 12px;
+}
+.fx .bar .row1{
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.fx .bar .row1 .sp{
+  flex: 1;
+}
+.fx .bar select.sel{
+  width: auto;
+  font-size: 15px;
+  padding: 6px 10px;
+}
+.fx .counters{
+  display: flex;
+  gap: 16px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.fx .counters b{
+  color: var(--text);
+  font-size: 17px;
+}
+.fx .steps{
+  display: flex;
+  gap: 6px;
+  margin: 12px 0;
+  flex-wrap: wrap;
+}
+.fx .step{
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 13px;
+}
+.fx .step.done{
+  background: var(--in);
+  color: var(--text);
+}
+.fx .step.now{
+  background: var(--accent-dim);
+  color: #d4f7dc;
+  border-color: var(--accent);
+  font-weight: 600;
+}
+.fx .step.now.cancelled{
+  background: color-mix(in srgb, var(--danger) 30%, transparent);
+  border-color: var(--danger);
+  color: #ffd9d6;
+}
+.fx .next{
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.fx .next .txt{
+  flex: 1;
+  min-width: 200px;
+}
+.fx button.btn.link{
+  border: 0;
+  background: none;
+  color: var(--muted);
+  text-decoration: underline;
+  padding: 8px 4px;
+  font-weight: 450;
+}
+.fx button.btn.mini{
+  padding: 3px 9px;
+  font-size: 12px;
+  line-height: 1.2;
+}
+.fx .delete-game{
+  margin-top: 4px;
+}
+.fx .delete-game button.btn.link{
+  padding: 2px 0;
+  font-size: 12px;
+}
+.fx .record-game{
+  margin-top: 10px;
+}
+.fx .record-game .actions{
+  padding: 0;
+}
+.fx .game-grid{
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 12px;
+  align-items: start;
+}
+.fx .game-tabs{
+  display: none;
+}
+.fx .card h2 small{
+  margin-left: auto;
+  color: var(--muted);
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.fx .scroll{
+  overflow-x: auto;
+}
+.fx .p1 table{
+  width: 100%;
+  border-collapse: collapse;
+}
+.fx .p1 th, .fx .p1 td{
+  padding: 6px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+  font-size: 14px;
+}
+.fx .p1 th{
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+  background: var(--surface);
+}
+.fx .p1 td.n, .fx .p1 th.n{
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.fx .p1 tr.out td{
+  background: var(--out);
+  color: var(--muted);
+}
+.fx .p1 tr.sub td{
+  background: var(--out);
+  font-size: 13px;
+  color: var(--muted);
+}
+.fx .p1 tr.line td{
+  padding: 0;
+  border-bottom: 2px dashed var(--muted);
+}
+.fx .p1 tbody.drop-over{
+  outline: 2px dashed var(--accent);
+  outline-offset: -2px;
+}
+.fx .p1 td.grip, .fx .p1 th.grip{
+  width: 28px;
+  padding-left: 6px;
+  padding-right: 2px;
+  color: var(--muted);
+  text-align: center;
+}
+.fx .p1 td.grip{
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.fx .p1 td.act{
+  text-align: right;
+}
+.fx button.th-sort{
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  padding: 0;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.fx .drag-ghost{
+  background: var(--accent-dim);
+  border: 1px solid var(--accent);
+  color: #d4f7dc;
+  border-radius: 8px;
+  padding: 6px 12px;
+}
+.fx .phone-line{
+  display: none;
+}
+.fx .tag{
+  margin-left: 6px;
+  background: var(--hand);
+  color: #ffe0a3;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 500;
+}
+.fx .tag.holder{
+  background: color-mix(in srgb, var(--danger) 22%, transparent);
+  color: #ffd9d6;
+  margin: 0 6px 0 0;
+}
+.fx td .chip, .fx .pay-cell .chip{
+  min-width: 0;
+  cursor: default;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+}
+.fx td .chip.claros{
+  background: color-mix(in srgb, #58a6ff 22%, transparent);
+  border-color: #58a6ff;
+  color: var(--text);
+}
+.fx td .chip.oscuros{
+  background: color-mix(in srgb, #bc8cff 22%, transparent);
+  border-color: #bc8cff;
+  color: var(--text);
+}
+.fx .pay-cell .chip.paid{
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: #d4f7dc;
+}
+.fx .pay-cell{
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.fx .pay-cell .adjust{
+  display: inline-flex;
+  gap: 6px;
+}
+.fx .pay-cell .adjust input{
+  width: 90px;
+  padding: 4px 8px;
+  font-size: 14px;
+}
+.fx .side{
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+.fx .side textarea{
+  width: 100%;
+  font-family: ui-monospace, monospace;
+}
+.fx .unres{
+  border: 1px dashed var(--warn);
+  border-radius: 8px;
+}
+.fx .cancelled-view .scroll{
+  opacity: 0.6;
+}
+@media (max-width: 760px){.fx .app.wide{
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+.fx header.top{
+    margin-left: -8px;
+    margin-right: -8px;
+  }
+.fx .game-grid{
+    grid-template-columns: minmax(0, 1fr);
+  }
+.fx .game-grid[data-tab='main'] .p2, .fx .game-grid[data-tab='side'] .p1{
+    display: none;
+  }
+.fx .game-tabs{
+    display: flex;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+.fx .game-tabs button{
+    flex: 1;
+    min-height: 44px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--text);
+    font: inherit;
+  }
+.fx .game-tabs button[aria-selected='true']{
+    background: var(--accent-dim);
+    border-color: var(--accent);
+  }
+.fx .bar{
+    padding: 10px;
+  }
+.fx .counters{
+    width: 100%;
+    justify-content: space-between;
+    gap: 8px;
+  }
+.fx .counters b{
+    font-size: 15px;
+  }
+.fx .steps .step:not(.now){
+    display: none;
+  }
+.fx .steps{
+    margin: 8px 0;
+  }
+.fx .next .btn{
+    min-height: 44px;
+  }
+.fx .hide-sm{
+    display: none;
+  }
+.fx .p1 th, .fx .p1 td{
+    padding: 7px 4px;
+    font-size: 14px;
+  }
+.fx .p1 td:last-child{
+    white-space: normal;
+  }
+.fx .phone-line{
+    display: block;
+    font-size: 12px;
+    color: var(--muted);
+  }
+.fx .p1 td{
+    white-space: normal;
+  }
+.fx .p1 button.btn, .fx .p1 button.th-sort{
+    min-height: 44px;
+  }
+.fx .p1 td.grip{
+    width: 22px;
+  }
+.fx .card{
+    overflow: visible;
+  }}
+.fx .resolve-dialog{
+  width: min(640px, 92vw);
+  max-height: 90vh;
+  padding: 0;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.fx .resolve-dialog header{
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+.fx .resolve-dialog header h2{
+  margin: 0;
+  font-size: 16px;
+}
+.fx .resolve-item{
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+.fx .resolve-item > .btn{
+  margin: 0 14px;
+}
+.fx .resolve-dialog .resolve .actions select, .fx .resolve-dialog .resolve .actions input{
+  flex: 1 1 200px;
+  min-width: 0;
+}
+@media (max-width: 760px){.fx .resolve-dialog{
+    width: 100vw;
+    max-width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    border: 0;
+    border-radius: 0;
+  }}
+.fx .candidate-card{
+  overflow: visible;
+}
+.fx .candidate-card .paste{
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.fx .candidate-card .paste textarea{
+  width: 100%;
+}
+.fx .candidate-card .phone-line-inline{
+  font-size: 12px;
+  white-space: nowrap;
+}
+.fx .sticky-actions{
+  position: sticky;
+  bottom: calc(60px + env(safe-area-inset-bottom));
+  z-index: 5;
+  display: flex;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  border-radius: 0 0 var(--radius) var(--radius);
+}
+.fx .section-tabs{
+  margin-bottom: 14px;
+}
+.fx .section-tabs .chip{
+  flex: 1;
+  padding: 9px 11px;
+}
+.fx .section-tabs .chip[data-on='true']{
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  border-color: var(--accent);
+}
+.fx .debt-filters{
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+}
+.fx .debt-filters .sel{
+  flex: 1 1 160px;
+  min-width: 0;
+}
+.fx .debt-filters .sp{
+  flex: 1;
+}
+.fx .debtor-line{
+  flex-wrap: wrap;
+}
+.fx .row.report-line .name{
+  flex-basis: 100%;
+}
+.fx .row.wrap .name{
+  white-space: normal;
+}
+.fx .tag.stat-good{
+  background: var(--accent-dim);
+  color: #d4f7dc;
+}
+.fx .tag.stat-bad{
+  background: rgba(248, 81, 73, 0.15);
+  color: var(--danger);
+}
+.fx .tag.stat-muted{
+  color: var(--muted);
+}
+.fx b.stat-good{
+  color: var(--accent);
+}
+.fx .login{
+  max-width: 360px;
+  margin: 0 auto;
+  padding: 64px 16px 16px;
+}
+.fx .login h1{
+  text-align: center;
+  font-size: 24px;
+  margin: 0 0 4px;
+}
+.fx .login p.sub{
+  text-align: center;
+  color: var(--muted);
+  margin: 0 0 28px;
+}
+.fx .ok{
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  border: 1px solid var(--accent);
+  color: #d4f7dc;
+  border-radius: 9px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  font-size: 14px;
+}
+.fx header.top .top-action{
+  margin-left: 12px;
+  padding: 0 4px;
+  font-size: 13px;
+}
+.fxwrap{display:flex;flex-wrap:wrap;gap:28px 24px;margin:1rem 0;align-items:flex-start}
+.fxcol{display:grid;gap:8px;width:390px;max-width:100%}
+.fxcap{font:600 .78rem/1.3 system-ui,sans-serif;letter-spacing:.04em;color:#8b98a5}
+.fx{position:relative;width:390px;max-width:100%;overflow:hidden;border:1px solid #2a3441;border-radius:22px;height:auto;line-height:1.5;text-align:left}
+.fx *{box-sizing:border-box}
+.fx h1,.fx h2,.fx h3,.fx h4{border-top:0;text-wrap:initial}
+.fx h1{margin:0}
+.fx th,.fx td{border:0;border-bottom:1px solid var(--line)}
+.fx table{min-width:0}
+.fx p{margin:0}
+.fx .app{max-width:none;margin:0;padding:0 16px 84px;min-height:100%}
+.fx header.top{position:sticky}
+.fx nav.tabs{position:absolute}
+.fx .shell{position:relative}
+.fx .tag.stat-good{margin-left:0}
+.fx .warnbar{background:color-mix(in srgb,var(--warn) 15%,transparent);border:1px solid var(--warn);color:#ffe0a3;border-radius:9px;padding:10px 12px;margin-bottom:14px;font-size:14px}
+.fx .warnbar a{color:inherit;font-weight:600;text-decoration:underline}
+.fx .wait-item{flex-wrap:wrap}
+.fx .wait-item .name small{white-space:normal}
+.fx .wait-item .why{flex-basis:100%;font-size:13px;color:var(--warn)}
+.fx .wait-item .amount{font-size:16px}
+.fx .resolve-dialog{position:absolute;inset:0;width:100%;max-width:none;height:100%;max-height:none;border:0;border-radius:0;display:block;overflow:auto;z-index:30;margin:0}
+.fx .resolve-dialog .app-body{padding:14px;display:grid;gap:12px}
+.fx .resolve-dialog .card{margin-bottom:0}
+.fx .fx-dim{position:absolute;inset:0;background:rgb(0 0 0/.55);z-index:25}
+.fx .words{display:flex;flex-wrap:wrap;gap:6px;padding:12px 14px 0}
+.fx .words .chip{cursor:default}
+.fx .addword{display:flex;gap:8px;padding:12px 14px}
+.fx .pay-cell select{width:auto;padding:4px 8px;font-size:14px}
+.fx button.btn.danger{border-color:var(--danger);color:#ffd9d6}
+.fx .kv .row .name{flex:0 0 auto;color:var(--muted);font-size:13px}
+.fx .kv .row .val{margin-left:auto;text-align:right}
+.fx .nameline{display:flex;justify-content:space-between;gap:8px}
+</style>
+<div class="fxwrap">
+<div class="fxcol"><div class="fxcap">1 · Ajustes › Banco, sin conexión (UC-006-01-S1, S15)</div><div class="fx" style="height:520px"><div class="app">
+<header class="top"><h1><span aria-hidden="true">⚽</span> Pachanguero<span class="season">2026/2027</span><button class="btn link top-action">Salir</button></h1></header>
+<div class="chips section-tabs" role="tablist"><button role="tab" aria-selected="false" class="chip" data-on="false">Jugones</button><button role="tab" aria-selected="false" class="chip" data-on="false">Reglas</button><button role="tab" aria-selected="false" class="chip" data-on="false">Temporada</button><button role="tab" aria-selected="false" class="chip" data-on="false">Mi cuenta</button><button role="tab" aria-selected="true" class="chip" data-on="true">Banco</button></div>
+<div class="card"><h2>Banco <span class="right muted">Sin conexión</span></h2>
+<div class="form">
+<label class="field"><span>Banco</span><select><option>Revolut</option></select></label>
+<p class="muted" style="font-size:13px;margin:0 0 12px">Pachanguero leerá los Bizums que entran en tu cuenta de Revolut y los asignará a las deudas de cada jugador. Solo lectura: nunca mueve ni paga dinero. La conexión dura hasta 180 días y se renueva aquí.</p>
+<button class="btn primary wide">Conectar con Revolut</button>
+<p class="hint muted">Hazlo desde un ordenador y ten a mano la app de Revolut para aprobar.</p>
+</div></div>
+<nav class="tabs"><button aria-current="false"><span class="ico" aria-hidden="true">📋</span>Partido</button><button aria-current="false"><span class="ico" aria-hidden="true">🏆</span>Puntos</button><button aria-current="false"><span class="ico" aria-hidden="true">💸</span>Deudas</button><button aria-current="false"><span class="ico" aria-hidden="true">👤</span>Jugador</button><button aria-current="true"><span class="ico" aria-hidden="true">⚙️</span>Ajustes</button></nav></div></div></div>
+<div class="fxcol"><div class="fxcap">2 · Ajustes › Banco, conectado, con el aviso de caducidad (UC-006-01-S8 a S10, UC-006-09, S14)</div><div class="fx" style="height:1210px"><div class="app">
+<header class="top"><h1><span aria-hidden="true">⚽</span> Pachanguero<span class="season">2026/2027</span><button class="btn link top-action">Salir</button></h1></header>
+<div class="warnbar"><strong>La conexión con el banco caduca en 10 días.</strong> <a href="#">Renovar</a></div><div class="chips section-tabs" role="tablist"><button role="tab" aria-selected="false" class="chip" data-on="false">Jugones</button><button role="tab" aria-selected="false" class="chip" data-on="false">Reglas</button><button role="tab" aria-selected="false" class="chip" data-on="false">Temporada</button><button role="tab" aria-selected="false" class="chip" data-on="false">Mi cuenta</button><button role="tab" aria-selected="true" class="chip" data-on="true">Banco</button></div>
+<div class="card"><h2>Banco <span class="right muted">Conectado · Revolut</span></h2>
+<div class="kv">
+<div class="row"><span class="name">Caduca</span><span class="val">30/03/2027 · 10 días</span></div>
+<div class="row"><span class="name">Cuenta</span><span class="val">Corriente · EUR ··· 4821</span></div>
+<div class="row"><span class="name">Última lectura</span><span class="val">hoy 07:30 · correcta</span></div></div>
+<div class="actions"><button class="btn primary">Renovar</button><button class="btn">Desconectar</button></div></div>
+<div class="card"><h2>Lectura</h2><div class="form">
+<label class="field"><span>Se ignora todo lo anterior al</span><input value="01/09/2026"></label>
+<label class="field"><span>Moneda a leer</span><select><option>EUR</option></select></label>
+<label class="field"><span>Cuenta</span><select><option>Corriente · EUR ··· 4821</option></select></label>
+<label class="field" style="margin:0"><span>Banco</span><select disabled><option>Revolut</option></select><small style="color:var(--muted)">Para cambiar de banco, desconecta primero.</small></label>
+</div></div>
+<div class="card"><h2>Palabras que mantienen un Bizum en la lista</h2>
+<div class="words"><span class="chip">pachanga ×</span><span class="chip">futbol ×</span><span class="chip">fútbol ×</span><span class="chip">fubol ×</span></div>
+<div class="addword"><input placeholder="partido"><button class="btn">Añadir</button></div></div>
+<div class="card"><h2>Palabras que descartan un Bizum</h2>
+<div class="words"><span class="chip">cena ×</span></div>
+<div class="addword"><input placeholder="Añadir palabra"><button class="btn">Añadir</button></div>
+<p class="note">Un Bizum descartado no se guarda y no se puede recuperar. Cambiar las listas no afecta a los Bizums ya procesados.</p></div>
+<nav class="tabs"><button aria-current="false"><span class="ico" aria-hidden="true">📋</span>Partido</button><button aria-current="false"><span class="ico" aria-hidden="true">🏆</span>Puntos</button><button aria-current="false"><span class="ico" aria-hidden="true">💸</span>Deudas</button><button aria-current="false"><span class="ico" aria-hidden="true">👤</span>Jugador</button><button aria-current="true"><span class="ico" aria-hidden="true">⚙️</span>Ajustes</button></nav></div></div></div>
+<div class="fxcol"><div class="fxcap">3 · Banco, reconexión necesaria (UC-006-01-S11)</div><div class="fx" style="height:460px"><div class="app">
+<header class="top"><h1><span aria-hidden="true">⚽</span> Pachanguero<span class="season">2026/2027</span><button class="btn link top-action">Salir</button></h1></header>
+<div class="err">La conexión con el banco ya no es válida: Revolut cerró la sesión. Los pagos a mano siguen funcionando.</div><div class="chips section-tabs" role="tablist"><button role="tab" aria-selected="false" class="chip" data-on="false">Jugones</button><button role="tab" aria-selected="false" class="chip" data-on="false">Reglas</button><button role="tab" aria-selected="false" class="chip" data-on="false">Temporada</button><button role="tab" aria-selected="false" class="chip" data-on="false">Mi cuenta</button><button role="tab" aria-selected="true" class="chip" data-on="true">Banco</button></div>
+<div class="card"><h2>Banco <span class="right muted">Reconexión necesaria</span></h2>
+<div class="kv"><div class="row"><span class="name">Última lectura correcta</span><span class="val">ayer 07:30</span></div></div>
+<div class="form"><button class="btn primary wide">Conectar con Revolut</button></div></div>
+<nav class="tabs"><button aria-current="false"><span class="ico" aria-hidden="true">📋</span>Partido</button><button aria-current="false"><span class="ico" aria-hidden="true">🏆</span>Puntos</button><button aria-current="false"><span class="ico" aria-hidden="true">💸</span>Deudas</button><button aria-current="false"><span class="ico" aria-hidden="true">👤</span>Jugador</button><button aria-current="true"><span class="ico" aria-hidden="true">⚙️</span>Ajustes</button></nav></div></div></div>
+<div class="fxcol"><div class="fxcap">4 · Banco, elegir cuenta (UC-006-01-S6, S7)</div><div class="fx" style="height:460px"><div class="app">
+<header class="top"><h1><span aria-hidden="true">⚽</span> Pachanguero<span class="season">2026/2027</span><button class="btn link top-action">Salir</button></h1></header>
+<div class="chips section-tabs" role="tablist"><button role="tab" aria-selected="false" class="chip" data-on="false">Jugones</button><button role="tab" aria-selected="false" class="chip" data-on="false">Reglas</button><button role="tab" aria-selected="false" class="chip" data-on="false">Temporada</button><button role="tab" aria-selected="false" class="chip" data-on="false">Mi cuenta</button><button role="tab" aria-selected="true" class="chip" data-on="true">Banco</button></div>
+<div class="card"><h2>Banco <span class="right muted">Conectado · Revolut</span></h2>
+<div class="form"><p class="muted" style="font-size:13px;margin:0 0 12px">Moneda a leer: EUR. Hay dos cuentas en esa moneda. Elige cuál leer:</p>
+<button class="btn wide" style="margin-bottom:8px">Corriente · EUR ··· 4821</button>
+<button class="btn wide">Corriente · EUR ··· 7305</button>
+<p class="hint muted">Solo se leen los movimientos de la cuenta elegida.</p></div></div>
+<nav class="tabs"><button aria-current="false"><span class="ico" aria-hidden="true">📋</span>Partido</button><button aria-current="false"><span class="ico" aria-hidden="true">🏆</span>Puntos</button><button aria-current="false"><span class="ico" aria-hidden="true">💸</span>Deudas</button><button aria-current="false"><span class="ico" aria-hidden="true">👤</span>Jugador</button><button aria-current="true"><span class="ico" aria-hidden="true">⚙️</span>Ajustes</button></nav></div></div></div>
+<div class="fxcol"><div class="fxcap">5 · Deudas: los Bizums en espera arriba, el pago a mano con su método (UC-006-04, UC-006-08, UC-006-01-S10)</div><div class="fx" style="height:1180px"><div class="app">
+<header class="top"><h1><span aria-hidden="true">⚽</span> Pachanguero<span class="season">2026/2027</span><button class="btn link top-action">Salir</button></h1></header>
+<div class="warnbar"><strong>La conexión con el banco caduca en 10 días.</strong> <a href="#">Renovar</a></div>
+<div class="card" data-testid="waiting"><h2>Bizums en espera <span class="right muted">4</span></h2>
+<div class="row wait-item"><span class="name">Luis P.R.<small>12/10 · sin asunto</small></span><span class="tag">= Luis Pérez</span><span class="amount">12,00 €</span>
+<span class="why">Luis Pérez debe 2 cuotas y el Bizum son 3.</span>
+<div class="pay-cell"><button class="btn">Pagar cuotas</button><button class="btn danger">Descartar</button></div></div>
+<div class="row wait-item"><span class="name">Marta G.L.<small>11/10 · «pachanga»</small></span><span class="tag stat-good">menciona pachanga</span><span class="amount">4,50 €</span>
+<span class="why">El importe no es un número de cuotas.</span>
+<div class="pay-cell"><button class="btn">Asignar jugador</button><button class="btn">Pagar cuotas</button><button class="btn danger">Descartar</button></div></div>
+<div class="row wait-item"><span class="name">+34 611 11 11 11<small>10/10 · sin asunto</small></span><span class="amount">8,00 €</span>
+<span class="why">No sabemos quién es el remitente.</span>
+<div class="pay-cell"><button class="btn">Asignar jugador</button><button class="btn danger">Descartar</button></div></div>
+<div class="row wait-item"><span class="name">Marta G.L.<small>09/10 · sin asunto</small></span><span class="amount">8,00 €</span>
+<span class="why">Puede ser Marta García o Marta Gómez.</span>
+<div class="pay-cell"><button class="btn">Asignar jugador</button><button class="btn danger">Descartar</button></div></div>
+</div><div class="card"><h2>Deudas<span class="right" style="color:var(--danger)">12 €</span></h2>
+<div class="debt-filters"><select class="sel"><option>Todos los partidos</option></select><select class="sel"><option>Todas las personas</option></select><span class="sp"></span><button class="btn">Copiar para WhatsApp</button></div></div><div class="card"><h2>Marta García<span class="right" style="color:var(--danger)">4,00 €</span></h2>
+<div class="row debtor-line"><span class="name">mié, 7 oct</span><span class="tag debt">4,00 €</span>
+<div class="pay-cell"><select aria-label="Método"><option>Efectivo</option><option>Bizum</option><option>Otro</option></select><button class="btn">Pagar 4,00 €</button></div></div></div>
+<nav class="tabs"><button aria-current="false"><span class="ico" aria-hidden="true">📋</span>Partido</button><button aria-current="false"><span class="ico" aria-hidden="true">🏆</span>Puntos</button><button aria-current="true"><span class="ico" aria-hidden="true">💸</span>Deudas</button><button aria-current="false"><span class="ico" aria-hidden="true">👤</span>Jugador</button><button aria-current="false"><span class="ico" aria-hidden="true">⚙️</span>Ajustes</button></nav></div></div></div>
+<div class="fxcol"><div class="fxcap">6 · Deudas sin Bizums en espera (UC-006-04-S2)</div><div class="fx" style="height:360px"><div class="app">
+<header class="top"><h1><span aria-hidden="true">⚽</span> Pachanguero<span class="season">2026/2027</span><button class="btn link top-action">Salir</button></h1></header>
+<div class="card"><h2>Bizums en espera <span class="right muted">0</span></h2><div class="empty">No hay Bizums en espera.</div></div><div class="card"><h2>Deudas<span class="right" style="color:var(--danger)">0 €</span></h2>
+<div class="debt-filters"><select class="sel"><option>Todos los partidos</option></select><select class="sel"><option>Todas las personas</option></select><span class="sp"></span><button class="btn">Copiar para WhatsApp</button></div></div>
+<nav class="tabs"><button aria-current="false"><span class="ico" aria-hidden="true">📋</span>Partido</button><button aria-current="false"><span class="ico" aria-hidden="true">🏆</span>Puntos</button><button aria-current="true"><span class="ico" aria-hidden="true">💸</span>Deudas</button><button aria-current="false"><span class="ico" aria-hidden="true">👤</span>Jugador</button><button aria-current="false"><span class="ico" aria-hidden="true">⚙️</span>Ajustes</button></nav></div></div></div>
+<div class="fxcol"><div class="fxcap">7 · Asignar jugador (UC-006-05-S1)</div><div class="fx" style="height:640px"><div class="app">
+<header class="top"><h1><span aria-hidden="true">⚽</span> Pachanguero<span class="season">2026/2027</span><button class="btn link top-action">Salir</button></h1></header>
+
+<nav class="tabs"><button aria-current="false"><span class="ico" aria-hidden="true">📋</span>Partido</button><button aria-current="false"><span class="ico" aria-hidden="true">🏆</span>Puntos</button><button aria-current="true"><span class="ico" aria-hidden="true">💸</span>Deudas</button><button aria-current="false"><span class="ico" aria-hidden="true">👤</span>Jugador</button><button aria-current="false"><span class="ico" aria-hidden="true">⚙️</span>Ajustes</button></nav></div><div class="resolve-dialog"><header><h2>Asignar jugador</h2><button class="btn">Cerrar</button></header><div class="app-body"><div class="card kv"><h2>Bizum</h2>
+<div class="row"><span class="name">Remitente</span><span class="val">+34 611 11 11 11</span></div>
+<div class="row"><span class="name">Fecha</span><span class="val">10/10/2026</span></div>
+<div class="row"><span class="name">Importe</span><span class="val">8,00 €</span></div>
+<div class="row"><span class="name">Asunto</span><span class="val muted">sin asunto</span></div></div>
+<label class="field" style="margin:0"><span>¿Quién es este remitente?</span><select><option>Luis Pérez</option></select></label>
+<div class="ok" style="margin:0">Se guardará su teléfono y se volverán a aplicar las reglas a sus Bizums en espera: se liquidará 1 cuota (partido del 7 oct).</div>
+<div class="actions" style="padding:0"><button class="btn primary">Emparejar</button><button class="btn">Cancelar</button></div></div></div></div></div>
+<div class="fxcol"><div class="fxcap">8 · Pagar cuotas, decisión del organizador (UC-006-05-S2)</div><div class="fx" style="height:640px"><div class="app">
+<header class="top"><h1><span aria-hidden="true">⚽</span> Pachanguero<span class="season">2026/2027</span><button class="btn link top-action">Salir</button></h1></header>
+
+<nav class="tabs"><button aria-current="false"><span class="ico" aria-hidden="true">📋</span>Partido</button><button aria-current="false"><span class="ico" aria-hidden="true">🏆</span>Puntos</button><button aria-current="true"><span class="ico" aria-hidden="true">💸</span>Deudas</button><button aria-current="false"><span class="ico" aria-hidden="true">👤</span>Jugador</button><button aria-current="false"><span class="ico" aria-hidden="true">⚙️</span>Ajustes</button></nav></div><div class="resolve-dialog"><header><h2>Pagar cuotas</h2><button class="btn">Cerrar</button></header><div class="app-body"><div class="card kv"><h2>Bizum</h2>
+<div class="row"><span class="name">Remitente</span><span class="val">Marta G.L.</span></div>
+<div class="row"><span class="name">Fecha</span><span class="val">11/10/2026</span></div>
+<div class="row"><span class="name">Importe</span><span class="val">4,50 €</span></div>
+<div class="row"><span class="name">Asunto</span><span class="val">pachanga</span></div></div>
+<label class="field" style="margin:0"><span>Jugador</span><select><option>Marta García</option></select></label>
+<label class="field" style="margin:0"><span>Cuotas que paga</span><select><option>1 cuota (4,00 €)</option></select></label>
+<div class="ok" style="margin:0">Se liquidará la deuda del 7 oct. Quedarán 0,50 € sin asignar en el Bizum. Solo se pagan deudas de la misma temporada que el Bizum.</div>
+<div class="actions" style="padding:0"><button class="btn primary">Pagar 1 cuota</button><button class="btn">Cancelar</button></div></div></div></div></div>
+<div class="fxcol"><div class="fxcap">9 · Descartar para siempre (UC-006-05-S5)</div><div class="fx" style="height:520px"><div class="app">
+<header class="top"><h1><span aria-hidden="true">⚽</span> Pachanguero<span class="season">2026/2027</span><button class="btn link top-action">Salir</button></h1></header>
+
+<nav class="tabs"><button aria-current="false"><span class="ico" aria-hidden="true">📋</span>Partido</button><button aria-current="false"><span class="ico" aria-hidden="true">🏆</span>Puntos</button><button aria-current="true"><span class="ico" aria-hidden="true">💸</span>Deudas</button><button aria-current="false"><span class="ico" aria-hidden="true">👤</span>Jugador</button><button aria-current="false"><span class="ico" aria-hidden="true">⚙️</span>Ajustes</button></nav></div><div class="resolve-dialog"><header><h2>Descartar Bizum</h2><button class="btn">Cerrar</button></header><div class="app-body"><div class="err" style="margin:0">Este Bizum de 8,00 € de +34 611 11 11 11 desaparecerá de la lista para siempre. Se borran el remitente, el asunto y el importe. No se podrá recuperar.</div>
+<div class="actions" style="padding:0"><button class="btn danger">Descartar para siempre</button><button class="btn">Cancelar</button></div></div></div></div></div>
+<div class="fxcol"><div class="fxcap">10 · Partido jugado: cómo se pagó cada cuota y deshacerla (UC-006-06, UC-006-07-S1)</div><div class="fx" style="height:520px"><div class="app">
+<header class="top"><h1><span aria-hidden="true">⚽</span> Pachanguero<span class="season">2026/2027</span><button class="btn link top-action">Salir</button></h1></header>
+
+<div class="card p1"><h2>mié, 7 oct · Jugado<span class="right muted">14 jugadores</span></h2><div class="scroll"><table><thead><tr><th>Jugador</th><th>Pago</th></tr></thead><tbody>
+<tr><td>Luis Pérez</td><td><div class="pay-cell"><span class="chip paid">Pagado 4,00 € · Bizum <button class="btn mini">Deshacer</button></span></div></td></tr>
+<tr><td>Marta García</td><td><div class="pay-cell"><span class="chip paid">Pagado 4,00 € · Efectivo <button class="btn mini">Deshacer</button></span></div></td></tr>
+<tr><td>Joaquín</td><td><div class="pay-cell"><span class="chip paid">Pagado 4,00 € · Bizum <button class="btn mini">Deshacer</button></span></div></td></tr>
+<tr><td>Adam</td><td><div class="pay-cell"><button class="btn">Pagar 4,00 €</button></div></td></tr></tbody></table></div></div>
+<p class="muted note-below">Al pulsar un pago con Bizum se abre su detalle.</p>
+<nav class="tabs"><button aria-current="true"><span class="ico" aria-hidden="true">📋</span>Partido</button><button aria-current="false"><span class="ico" aria-hidden="true">🏆</span>Puntos</button><button aria-current="false"><span class="ico" aria-hidden="true">💸</span>Deudas</button><button aria-current="false"><span class="ico" aria-hidden="true">👤</span>Jugador</button><button aria-current="false"><span class="ico" aria-hidden="true">⚙️</span>Ajustes</button></nav></div></div></div>
+<div class="fxcol"><div class="fxcap">11 · Detalle de un pago con Bizum, vista del organizador (UC-006-07-S1 a S3)</div><div class="fx" style="height:760px"><div class="app">
+<header class="top"><h1><span aria-hidden="true">⚽</span> Pachanguero<span class="season">2026/2027</span><button class="btn link top-action">Salir</button></h1></header>
+
+<nav class="tabs"><button aria-current="true"><span class="ico" aria-hidden="true">📋</span>Partido</button><button aria-current="false"><span class="ico" aria-hidden="true">🏆</span>Puntos</button><button aria-current="false"><span class="ico" aria-hidden="true">💸</span>Deudas</button><button aria-current="false"><span class="ico" aria-hidden="true">👤</span>Jugador</button><button aria-current="false"><span class="ico" aria-hidden="true">⚙️</span>Ajustes</button></nav></div><div class="resolve-dialog"><header><h2>Pago de Luis Pérez</h2><button class="btn">Cerrar</button></header><div class="app-body"><div class="card kv"><h2>Pago</h2>
+<div class="row"><span class="name">Partido</span><span class="val">mié, 7 oct</span></div>
+<div class="row"><span class="name">Importe</span><span class="val">4,00 €</span></div>
+<div class="row"><span class="name">Fecha de pago</span><span class="val">12/10/2026</span></div>
+<div class="row"><span class="name">Método</span><span class="val">Bizum</span></div>
+<div class="row"><span class="name">Resuelto</span><span class="val">Por decisión del organizador</span></div></div>
+<div class="card kv"><h2>Bizum</h2>
+<div class="row"><span class="name">Remitente</span><span class="val">Luis P.R.</span></div>
+<div class="row"><span class="name">Fecha</span><span class="val">12/10/2026</span></div>
+<div class="row"><span class="name">Importe</span><span class="val">4,50 €</span></div>
+<div class="row"><span class="name">Asunto</span><span class="val">pachanga</span></div>
+<div class="row"><span class="name">Sin asignar</span><span class="val">0,50 €</span></div>
+<div class="row"><span class="name">Referencia</span><span class="val muted">del banco</span></div></div>
+<div class="actions" style="padding:0"><button class="btn danger">Deshacer pago</button></div></div></div></div></div>
+<div class="fxcol"><div class="fxcap">12 · Deshacer un pago de un Bizum de varias cuotas (UC-006-06-S2)</div><div class="fx" style="height:520px"><div class="app">
+<header class="top"><h1><span aria-hidden="true">⚽</span> Pachanguero<span class="season">2026/2027</span><button class="btn link top-action">Salir</button></h1></header>
+
+<nav class="tabs"><button aria-current="true"><span class="ico" aria-hidden="true">📋</span>Partido</button><button aria-current="false"><span class="ico" aria-hidden="true">🏆</span>Puntos</button><button aria-current="false"><span class="ico" aria-hidden="true">💸</span>Deudas</button><button aria-current="false"><span class="ico" aria-hidden="true">👤</span>Jugador</button><button aria-current="false"><span class="ico" aria-hidden="true">⚙️</span>Ajustes</button></nav></div><div class="resolve-dialog"><header><h2>Deshacer pago</h2><button class="btn">Cerrar</button></header><div class="app-body"><div class="err" style="margin:0;background:color-mix(in srgb,var(--warn) 15%,transparent);border-color:var(--warn);color:#ffe0a3">Este pago salió de un Bizum de 8,00 € del 12/10 que pagó 2 cuotas. Se deshacen las dos y el Bizum vuelve a «Bizums en espera».</div>
+<div class="card kv"><h2>Se deshacen</h2>
+<div class="row"><span class="name">Luis Pérez · 7 oct</span><span class="val">4,00 €</span></div>
+<div class="row"><span class="name">Luis Pérez · 30 sept</span><span class="val">4,00 €</span></div></div>
+<div class="actions" style="padding:0"><button class="btn danger">Deshacer los dos pagos</button><button class="btn">Cancelar</button></div></div></div></div></div>
+<div class="fxcol"><div class="fxcap">13 · Vista del jugador: Pagos, con el método y sin datos del Bizum (UC-006-07-S4)</div><div class="fx" style="height:480px"><div class="app">
+<header class="top"><h1><span aria-hidden="true">⚽</span> Pachanguero<span class="season">Luis Pérez</span><button class="btn link top-action">Salir</button></h1></header>
+<div class="card" data-testid="own-payments"><h2>Pagos</h2>
+<div class="row wrap"><span class="name">07/10/2026 · pagado el 12/10/2026</span><span class="tag">Bizum</span><span class="amount">4,00 €</span></div>
+<div class="row wrap"><span class="name">30/09/2026 · pagado el 01/10/2026</span><span class="tag">Efectivo</span><span class="amount">4,00 €</span></div>
+<div class="row wrap"><span class="name">23/09/2026 · pagado el 23/09/2026</span><span class="tag">Otro</span><span class="amount">4,00 €</span></div></div>
+<nav class="tabs"><button aria-current="false"><span class="ico" aria-hidden="true">💸</span>Deudas</button><button aria-current="true"><span class="ico" aria-hidden="true">🧾</span>Pagos</button><button aria-current="false"><span class="ico" aria-hidden="true">📊</span>Estadísticas</button><button aria-current="false"><span class="ico" aria-hidden="true">⚙️</span>Ajustes</button></nav></div></div></div>
+</div>
