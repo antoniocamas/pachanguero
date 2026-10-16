@@ -72,6 +72,23 @@ organiser, and that a path nobody declared is refused.
 gate. (There is no dedicated integration script yet; add `server/src/routes/*.test.ts` files and
 they run alongside the domain suite.)
 
+## Deployment settings test
+
+**What it verifies** (`server/src/deployment-settings.test.ts`): every environment variable the server reads is accounted for in production:
+set by the `Dockerfile`, passed by the Helm chart, or listed in the test as deliberately left to the
+application's default. It reads the source, the `Dockerfile` and the chart templates as text; there
+is no server, no database and no cluster.
+
+**Use when:** a change adds, renames or removes a setting. The test fails until the deployment
+catches up, so a variable that works locally through `.env` cannot be silently missing in the
+cluster. The rest of what a change owes the deployment is in
+[`deployment.md`](deployment.md#deployment-impact-of-a-change).
+
+**Do not use for:** whether a value is correct, or whether the chart renders (`helm lint` and
+`helm template` do that). It only finds variables read as `env.X` or `env['X']`.
+
+**Run:** with the server suite (`npm test`), so it gates every commit like the rest.
+
 ## E2E tests — `e2e/tests/*.spec.ts`
 
 **What they verify:** a full user journey through a real browser, hitting the real Vite dev
@@ -132,6 +149,7 @@ wrong?
 
 - A calculation is wrong → domain/unit test.
 - The SQL or route wiring is wrong → integration test.
+- The server reads a setting the deployment does not provide → deployment settings test.
 - The frontend and backend disagree about a contract, or a multi-step journey breaks → E2E test.
 
 Never write an E2E test to cover something an integration test could catch faster and more
