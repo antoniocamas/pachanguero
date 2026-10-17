@@ -25,7 +25,7 @@ The field-by-field registration guide, the Mock ASPSP and how to test are in `en
 3. **Activate the application by linking accounts.** A new Production application is *Inactive* until you press "Activate by linking accounts" and approve the Revolut account; it then becomes *Active* in restricted mode and can read **only the linked accounts** **[docs]**. Linking does not itself authorise your application: the API authorisation of section 4 is still needed **[docs]**.
 4. **Keep the secrets out of version control**: the private key, tokens, sessions and any raw data.
 
-Redirect URL: `https://example.com/callback` was accepted and works **[PoC]**. Whether `http://localhost:<port>/...` is accepted **[not determined]**. Nothing needs to listen at the redirect URL, see 4.
+Redirect URL: `https://example.com/callback` was accepted and works **[PoC]**. A `http://localhost:<port>/...` URL was accepted by a Sandbox application, listed exactly; not tried on the production application **[PoC]**. Nothing needs to listen at the redirect URL, see 4.
 
 ## 3. Authenticating each call
 
@@ -109,6 +109,7 @@ Outgoing Bizums (`DBIT`) exist too (34 in 13 months) and must be excluded by the
 
 - Documentation: many banks allow about **4 data fetches a day** when the user is not present (no PSU headers); on `429` with `ASPSP_RATE_LIMIT_EXCEEDED` wait about **6 hours** **[docs]**.
 - Observed: **at least 60 transaction calls** (three full fetches of 20 pages each, in one afternoon, the third through a new session) plus the account-details and session calls in between, with no 429 **[PoC]**. So Revolut's background limit, if any, is well above 4 a day. **Placeholder:** the actual limit and the recovery time are **[not determined]**; they will be measured with the limit probe and this section updated.
+- The deliberate probe (repeat fetches until a 429, then measure the recovery time and the history depth over time) was **not run, by the author's decision** (2026-10-17): they do not want to risk the real account being blocked. The real limit, the recovery time and the depth over time are therefore **[not determined]**.
 - Design for rare polling anyway: a Bizum payment does not need minute-level latency, and the limit is the bank's, outside your control.
 
 ## 9. Errors worth handling
@@ -134,4 +135,4 @@ Outgoing Bizums (`DBIT`) exist too (34 in 13 months) and must be excluded by the
 
 ## 11. Not determined
 
-`localhost` as a redirect URL; the real rate limit and recovery time; history depth after an hour or a day; natural and early expiry; pending Bizums; why some senders appear as numbers.
+`localhost` as a redirect URL on the production application (accepted on a sandbox one); the real rate limit and recovery time; history depth after an hour or a day; natural and early expiry; pending Bizums; why some senders appear as numbers.

@@ -62,6 +62,11 @@ None: pure new functionality.
 | F5 | Player match report: `match` | PoC script | `ebpoc.py` | UC-005-05-S1, UC-005-05-S2 | terminal | database file unchanged | `study/pachanguero-today.md` |
 | F6 | Limit probe: `limits` | PoC script | `ebpoc.py` | UC-005-06-S1–S3 | terminal | prints counts and dates | `study/enable-banking-docs.md` |
 | F7 | The two guides | Guides | `output/*.md` | UC-005-08-S1, UC-005-09-S1 | deferred — R1, resolved by the results of running F1–F6 | each `unknown` answered or "not determined" | `study/poc-experiments.md` |
+| F8 | Sandbox consent and data control: drive the consent page by script; create, append and remove Mock data | PoC script, Guides | `ebpoc.py` (sandbox commands, if any), `poc/fixtures/` | UC-005-10-S1–S3, UC-005-11-S1–S4 | terminal (iteration 2 requirements) | each question has a verdict and evidence | `SANDBOX_TESTING_NEEDS_FROM_WP-006.md`, `output/enable-banking-control-panel-and-testing.md` |
+| F9 | Sandbox redirect and fidelity: localhost redirect, several `https` URLs, `entry_reference`, `date_from`, order, shape, bank name | PoC script, Guides | `ebpoc.py`, `poc/fixtures/` | UC-005-12-S1–S3, UC-005-13-S1–S4 | terminal (iteration 2 requirements) | each question has a verdict and evidence | `SANDBOX_TESTING_NEEDS_FROM_WP-006.md`, `output/enable-banking-control-panel-and-testing.md` |
+| F10 | Sandbox edge cases (without the rate limit) | PoC script, Guides | `ebpoc.py`, `poc/fixtures/` | UC-005-14-S1 (all situations but the rate limit), UC-005-14-S2 | terminal (iteration 2 requirements) | the situations table is filled | `SANDBOX_TESTING_NEEDS_FROM_WP-006.md`, `output/enable-banking-control-panel-and-testing.md` |
+| F11 | The sandbox testing guide and the Pachanguero testing recommendation | Guides | `output/*.md`, `poc/README.md` | UC-005-16-S1–S3, UC-005-17-S1–S2 | terminal (iteration 2 requirements) | every question answered or "not determined"; each scenario placed on one tier | `iterations/2/REQUIREMENTS.md`, `output/enable-banking-control-panel-and-testing.md`, `output/pachanguero-integration.md` |
+| F12 | Sandbox limits, the rate-limit probe last | PoC script, Guides | `ebpoc.py` | UC-005-14-S1 (the rate-limit row), UC-005-15-S1–S3 | terminal (iteration 2 requirements) | counts recorded; the placeholder in the guides filled | `SANDBOX_TESTING_NEEDS_FROM_WP-006.md`, `output/enable-banking-control-panel-and-testing.md`, `tasks/03-limit-probe.md` |
 
 ### 2.8 Documentation Impact
 
@@ -87,6 +92,9 @@ Verification is by running against the real account (see `docs/test-strategy.md`
 | F5 | Match | Yes (fixtures) | read the report against the real names |
 | F6 | Limits | No | observe count and recovery time |
 | F7 | Guides | No | read |
+| F8–F10 | Sandbox experiments | Partly (whether a run can be unattended and from a known state decides whether the rest can be) | run each against a Sandbox application |
+| F11 | Sandbox guide and recommendation | No | read |
+| F12 | Sandbox limits | No | observe counts and recovery time |
 
 ### 2.11 Patterns and Conventions
 

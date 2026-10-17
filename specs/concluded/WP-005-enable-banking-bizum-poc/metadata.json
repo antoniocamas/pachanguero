@@ -1,8 +1,8 @@
 {
   "id": "WP-005-enable-banking-bizum-poc",
-  "status": "Anatomy settled",
+  "status": "done",
   "importance": "should",
   "priority": 3,
   "created": "2026-10-12",
-  "updated": "2026-10-12"
+  "updated": "2026-10-17"
 }

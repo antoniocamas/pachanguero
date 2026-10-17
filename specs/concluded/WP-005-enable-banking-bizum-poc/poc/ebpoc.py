@@ -113,13 +113,14 @@ def cmd_auth(args, config):
         match = [a for a in listing if a["name"] == aspsp["name"]]
         days = match[0]["maximum_consent_validity"] / 86400 if match else 90
         days = max(1, int(days) - 1)
-    valid_until = (datetime.now(timezone.utc) + timedelta(days=days)).replace(microsecond=0).isoformat()
+    span = timedelta(minutes=args.minutes) if getattr(args, "minutes", None) else timedelta(days=days)
+    valid_until = (datetime.now(timezone.utc) + span).replace(microsecond=0).isoformat()
     state = uuid.uuid4().hex
     data = api("POST", "/auth", config, json={
         "access": {"valid_until": valid_until}, "aspsp": aspsp, "state": state,
         "redirect_url": config["redirect_url"], "psu_type": "personal"})
     save_json(PENDING, {"state": state, "authorization_id": data.get("authorization_id"), "valid_until": valid_until})
-    print(f"Consent requested until {valid_until} ({days} days).")
+    print(f"Consent requested until {valid_until} ({args.minutes} minutes)." if getattr(args, "minutes", None) else f"Consent requested until {valid_until} ({days} days).")
     print("Open this URL in the browser on this computer and approve in the Revolut app:\n")
     print(data["url"])
     print("\nThen copy the full address of the page you land on and run: session '<that address>'")
@@ -368,6 +369,13 @@ def summarise_limits(entries):
             "ok_since_first_429": sum(1 for e in entries if first_429 and e["time"] > first_429 and e["outcome"] == "ok")}
 
 
+def compare_reads(first, second):
+    """Which entry_reference values two reads of the same account share, lose or gain."""
+    a = {t.get("entry_reference") for t in first}
+    b = {t.get("entry_reference") for t in second}
+    return {"stable": len(a & b), "missing_from_second": sorted(a - b), "new_in_second": sorted(b - a)}
+
+
 def append_log(path, entry):
     path.parent.mkdir(exist_ok=True)
     with path.open("a") as out:
@@ -482,6 +490,10 @@ def cmd_selfcheck(args, config):
     assert tx_key(h, booked) == "HASH|R1"
     assert tx_key(h, {"booking_date": "2026-01-01", "transaction_amount": {"amount": "4"}}).startswith("HASH|content:")
     assert tx_key(h, {"booking_date": "2026-01-01"}) == tx_key(h, {"booking_date": "2026-01-01"})
+    one = [{"entry_reference": "A"}, {"entry_reference": "B"}]
+    two = [{"entry_reference": "B"}, {"entry_reference": "C"}]
+    assert compare_reads(one, one) == {"stable": 2, "missing_from_second": [], "new_in_second": []}
+    assert compare_reads(one, two) == {"stable": 1, "missing_from_second": ["A"], "new_in_second": ["C"]}
     print("selfcheck ok")
 
 
@@ -493,7 +505,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("aspsps", help="list Revolut in a country").add_argument("country")
-    sub.add_parser("auth", help="start an authorisation").add_argument("--days", type=int)
+    auth = sub.add_parser("auth", help="start an authorisation")
+    auth.add_argument("--days", type=int)
+    auth.add_argument("--minutes", type=int, help="a very short consent, to provoke expiry (sandbox only)")
     sub.add_parser("session", help="create the session from the redirected URL").add_argument("url")
     sub.add_parser("accounts", help="show the details of each account in the session")
     fetch = sub.add_parser("fetch", help="download transactions into local/transactions.jsonl")

@@ -1,0 +1,41 @@
+@startuml
+left to right direction
+actor "Organiser" as org
+actor "Enable Banking sandbox" as eb <<system>>
+actor "Mock ASPSP" as mock <<system>>
+
+rectangle "Sandbox testing experiments" {
+  usecase "UC-005-10 Complete the consent without a person" as UC10
+  usecase "UC-005-11 Control the Mock data" as UC11
+  usecase "UC-005-12 Reach a local server with the redirect" as UC12
+  usecase "UC-005-13 Know how faithful the Mock is" as UC13
+  usecase "UC-005-14 Provoke the edge cases" as UC14
+  usecase "UC-005-15 Learn the sandbox's limits" as UC15
+  usecase "UC-005-16 Publish the sandbox testing guide" as UC16
+  usecase "UC-005-17 Publish the Pachanguero recommendation" as UC17
+}
+
+org --> UC10
+org --> UC11
+org --> UC12
+org --> UC13
+org --> UC14
+org --> UC15
+org --> UC16
+org --> UC17
+UC10 --> eb
+UC11 --> mock
+UC12 --> eb
+UC13 --> mock
+UC14 --> mock
+UC15 --> eb
+UC13 ..> UC11 : <<include>>
+UC14 ..> UC11 : <<include>>
+UC16 ..> UC10 : <<include>>
+UC16 ..> UC11 : <<include>>
+UC16 ..> UC12 : <<include>>
+UC16 ..> UC13 : <<include>>
+UC16 ..> UC14 : <<include>>
+UC16 ..> UC15 : <<include>>
+UC17 ..> UC16 : <<include>>
+@enduml

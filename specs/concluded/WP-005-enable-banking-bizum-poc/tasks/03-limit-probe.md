@@ -1,5 +1,9 @@
 # Task 03 — The limit probe
 
+## Status note
+
+**Cancelled by the author, 2026-10-17.** The real-account probe was never run: a burst of calls could get the real account's access blocked, and the organiser prefers not to risk it. The `limits` and `depth` commands stay in `poc/ebpoc.py` (checked against the sandbox only). UC-005-06-S1–S3 are answered in the guide as `not determined`. Its definition-of-done items below are not met and are not to be met.
+
 ## Type
 
 **Feature.** Iteration 1. Elements absorbed: **F6**. Depends on task 02.
