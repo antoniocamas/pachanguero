@@ -23,6 +23,7 @@ rectangle "Bizum payment detection" {
 
 Org --> UC01
 Org --> UC09
+Org --> UC02 : force a read
 Org --> UC05
 Org --> UC06
 Org --> UC07

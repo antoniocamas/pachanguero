@@ -2,7 +2,7 @@
   "id": "WP-006-bizum-payment-detection",
   "status": "Requirements settled",
   "importance": "should",
-  "priority": 4,
+  "priority": 3,
   "created": "2026-10-12",
-  "updated": "2026-10-16"
+  "updated": "2026-10-17"
 }

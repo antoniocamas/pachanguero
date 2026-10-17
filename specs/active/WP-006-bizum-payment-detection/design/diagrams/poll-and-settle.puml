@@ -1,0 +1,26 @@
+@startuml
+title A scheduled read: from the bank to a payment
+participant BankPoller
+participant BizumFeed
+participant BankConnector as Connector
+participant BizumDialect as Dialect
+participant BankEntryLedger as Ledger
+participant BizumPolicy as Policy
+participant BizumStore as Store
+participant "Pachanguero handler" as App
+
+BankPoller -> BizumFeed : run(now)  [every 6 h, one at a time]
+BizumFeed -> Connector : entries(account, dateFrom), all parts
+Connector --> BizumFeed : raw entries
+loop each raw entry not in the ledger
+  BizumFeed -> Dialect : recognise(raw)
+  Dialect --> BizumFeed : Bizum | not a Bizum
+  BizumFeed -> Policy : judge(bizum)
+  Policy --> BizumFeed : discard | keep(afterKept)
+  alt keep
+    BizumFeed -> Store : save(bizum)
+    BizumFeed -> App : afterKept(stored)  (settle or wait)
+  end
+  BizumFeed -> Ledger : remember(key, outcome)
+end
+@enduml

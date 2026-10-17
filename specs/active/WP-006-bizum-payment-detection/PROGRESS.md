@@ -8,7 +8,7 @@
 | Vision       | settled | 2026-10-12 |
 | Study        | settled | 2026-10-12 |
 | Requirements | settled | 2026-10-16 |
-| Design       | pending | —          |
+| Design       | ongoing | —          |
 | Anatomy      | pending | —          |
 
 ## Iterations

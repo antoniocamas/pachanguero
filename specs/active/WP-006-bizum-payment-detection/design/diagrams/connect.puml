@@ -1,0 +1,27 @@
+@startuml
+title Connecting, and the redirect back
+actor Organiser
+participant "Web: Banco panel" as Panel
+participant BankAdminRouter
+participant BankConnectionService as Conn
+participant BankCallbackRouter
+participant "BankConnector\n(Enable Banking)" as Bc
+participant "Enable Banking" as Eb
+
+Organiser -> Panel : Conectar
+Panel -> BankAdminRouter : POST /api/bank/connect
+BankAdminRouter -> Conn : start()
+Conn -> Conn : store pending {state, expires}
+Conn -> Bc : begin(redirect = PACHANGUERO_PUBLIC_URL + /api/bank/callback, state)
+Bc -> Eb : POST /auth
+Eb --> Bc : url
+Bc --> Conn : url
+Conn --> Panel : url
+Panel -> Eb : browser goes to url; owner approves in Revolut app
+Eb -> BankCallbackRouter : GET /api/bank/callback?state&code  (no login)
+BankCallbackRouter -> Conn : complete(state, code)
+Conn -> Bc : complete(code)
+Bc -> Eb : POST /sessions {code}
+Conn -> Conn : store session, accounts; close pending
+BankCallbackRouter --> Organiser : 302 PUBLIC_URL/?bank=connected | ?bank=<reason code>
+@enduml

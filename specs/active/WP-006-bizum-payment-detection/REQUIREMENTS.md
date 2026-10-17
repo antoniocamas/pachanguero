@@ -16,7 +16,7 @@
 | N5 | Every payment records how it was paid: cash, Bizum or other (§3) | UC-006-07, -08 |
 | N6 | A Bizum payment links to its Bizum and metadata (date, identifier…) (§3) | UC-006-03, -07 |
 | N7 | A wrong payment is never recorded; uncertain Bizums wait, not guessed (§4) | UC-006-03, -04, -10 |
-| N8 | A delay of up to a day is acceptable (§4) | UC-006-02 |
+| N8 | A delay of up to a day is acceptable (§4); the organiser may shorten it by forcing a read (author decision, 2026-10-17) | UC-006-02 (S8, S9, S10) |
 | N9 | Every automatic payment is traceable to its Bizum and correctable (§4) | UC-006-06, -07 |
 | C1 | Bank key and tokens never reach repository, logs or web interface (§5) | UC-006-01 (+ constraint) |
 | C2 | Manual settlement keeps working as today, with or without the feed (§5) | UC-006-08, -09 |
@@ -298,6 +298,30 @@ When 24 hours pass
 Then the Bizum has been processed
 
 `author decision`: a delay of up to a day is acceptable (`VISION.md` §4). If the server was stopped meanwhile, it is processed on the first read after the server starts.
+
+#### UC-006-02-S9 — The organiser forces a read
+
+Given the connection works, the account is chosen, the start date is set, the last read ended 30 minutes ago, and a Bizum of 4.00 EUR from `Marta G.L.` was booked at the bank since then
+When the organiser presses "Leer ahora" in the Banco panel, or at the top of "Bizums en espera" in the Deudas tab
+Then the system reads the account at once, as on its schedule, processes the Bizum by the same rules (UC-006-03), the button shows that the read ended, and the Banco panel shows the new time of the last read
+
+`author decision` (2026-10-17): to cut the wait and to test by hand (N8; `VISION.md` §4 accepts a delay of up to a day, it does not require one). The button is the same in both places and shows the same state. It is part of the admin view only, like the rest of the Banco panel and "Bizums en espera" (UC-006-01, UC-006-04-S4). A forced read is the scheduled read run on request: it processes nothing twice (UC-006-02-S3) and respects the start date (UC-006-09).
+
+#### UC-006-02-S10 — A forced read that cannot run (outline)
+
+Given <situation>
+When the organiser presses "Leer ahora"
+Then nothing is read and the button shows <message>
+
+| situation | message |
+| --------- | ------- |
+| a read, scheduled or forced, is in progress | "Ya se está leyendo el banco." |
+| the last read ended 2 minutes ago | "Espera unos minutos antes de volver a leer." |
+| the bank answered the last read with its rate limit and its retry time has not come | "El banco pide esperar hasta <hora>." |
+| the connection is "Sin conexión" or "Reconexión necesaria" | the button is not offered; the panel says what is missing |
+| the start date is not set, or the account is not chosen (UC-006-09-S2) | the button is not offered; the panel says what is missing |
+
+`author decision` (2026-10-17, by approving the design): at least 5 minutes pass between the end of one read and the start of the next, scheduled or forced, so that forcing does not exhaust the bank's allowance (the documentation states about 4 background reads a day, WP-005 guide §8, `verified — document`; the real limit is Q-11, carried forward). The 5 minutes are a constant of the design. A read that ends in error shows the failure as in S7.
 
 ### UC-006-09 — The organiser sets the start date
 
@@ -798,7 +822,7 @@ Then there is none; the correction is to undo it and record it again (UC-006-08-
 - [`requirements/examples/screens.html`](requirements/examples/screens.html): thirteen phone-width screens drawn with the application's own stylesheet and markup (`web/src/styles.css`, the header, the bottom tabs, cards, rows, chips, buttons, section tabs and the full-screen dialog), so each shows where it sits: Ajustes › Banco (frames 1 to 4: bank choice, connection, expiry notice, reading settings, word lists, reconnection, account choice), Deudas with Bizums en espera and the manual payment method (5, 6), the dialogs to assign a player, pay shares and dismiss (7 to 9), the played game with its payments, the payment detail and undoing a multi-share payment (10 to 12) and the player's Pagos (13). Sketches to agree the content, not built.
 - [`requirements/examples/payment-views.md`](requirements/examples/payment-views.md): what the organiser and a player see of a Bizum payment (UC-006-07). `not yet run`: worked by hand for the implementation to verify.
 
-New interfaces, to be given their shape by the design: the callback `GET /api/bank/callback` (public, authorised by the single-use state); admin routes for the connection, the setting of the currency, account, start date and word lists, the waiting list, pairing, ruling, dismissal and undoing; the new method and Bizum link on payments; the new fields in the player's payments response.
+New interfaces, to be given their shape by the design: the callback `GET /api/bank/callback` (public, authorised by the single-use state); admin routes for the connection, forcing a read ("Leer ahora", UC-006-02-S9; the button is not yet drawn in `screens.html`), the setting of the currency, account, start date and word lists, the waiting list, pairing, ruling, dismissal and undoing; the new method and Bizum link on payments; the new fields in the player's payments response.
 
 ## File Locations
 
@@ -828,6 +852,7 @@ Paths below are the places the work touches, from the project layout (`AGENTS.md
 | UC-006-04, -05, -06, -10 | Route tests: the waiting list lists R4, R5 and R7 Bizums with their reasons; pairing, ruling and dismissal act as in the scenarios; a game marked played settles the waiting Bizum booked after it; undoing returns the Bizum to the list. |
 | UC-006-07, -08 | Route tests on `OwnRouter`: the response of a player's payments has the method and none of the Bizum fields; manual payments keep the refusals of `PaymentService.pay`; the 67 earlier payments read "Otro". |
 | UC-006-01 | Route tests: the callback refuses an unknown, reused and expired state; no response, page or log holds a key, token, code, state or session id. An end-to-end test of the panel against a fake bank. |
+| UC-006-02 | Route tests: a forced read processes a new Bizum at once, and is refused while a read is in progress, within 5 minutes of the last read, and after a rate-limit answer until its retry time; the same state shows in both places of the web app (end to end). |
 | UC-006-01, -02 | A test registers a second, fake bank next to Revolut: the panel lists both, the rules and the waiting list work unchanged on its entries, and no code outside the bank support names Revolut. |
 | UC-006-01, -02 | The live check against the real Revolut account stays manual, as in WP-005 (the proof of concept); it is not part of the automated suite. |
 

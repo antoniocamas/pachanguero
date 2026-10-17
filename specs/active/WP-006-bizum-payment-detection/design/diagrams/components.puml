@@ -1,0 +1,43 @@
+@startuml
+title Layers: Pachanguero depends on the Bizum core; adapters depend on the core; the core depends on nothing of ours
+skinparam componentStyle rectangle
+
+package "web/src" {
+  [Web: Banco panel, banner,\nBizums en espera, payments] as Web
+}
+package "server/src/routes" {
+  [HTTP routers] as Http
+}
+package "Pachanguero integration\nserver/src/repo/bizum-*.ts" {
+  [Rules, handler, waiting list,\npairing, undo, re-evaluation] as App
+  [Payments (modified)] as Pay
+}
+package "Bizum core (library-shaped)\nserver/src/bizum/" {
+  [Bizum model + ports\nBizum, BizumDialect, BankConnector,\nBizumPolicy, BizumStore] as Core
+  [Feed engine\nBizumFeed, ledger, BankPoller] as Feed
+}
+package "Bank adapters\nserver/src/bank/" {
+  [Enable Banking connector] as Conn
+  [Revolut dialect] as Rev
+  [Catalogue] as Cat
+}
+database "SQLite" as Db
+cloud "Enable Banking API" as Eb
+
+Web --> Http
+Http --> App
+Http --> Conn
+App --> Core
+App --> Pay
+Feed --> Core
+App --> Feed
+Conn ..|> Core : implements BankConnector
+Rev ..|> Core : implements BizumDialect
+Cat --> Conn
+Cat --> Rev
+Conn --> Eb
+Feed --> Db
+App --> Db
+Eb ..> Http : redirect GET /api/bank/callback
+note right of Core : imports nothing from players,\ndebts, payments, seasons, express
+@enduml
