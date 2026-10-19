@@ -439,12 +439,12 @@ Then the payer is <payer>
 | knowledge | sender | payer |
 | --------- | ------ | ----- |
 | the organiser paired `Luis P.R.` with the player "Luis Pérez" | `Luis P.R.` | "Luis Pérez" |
-| no pairing, and the only player whose name fits is "Marta" | `Marta G.L.` | "Marta" |
+| no player has the Bizum name `Marta G.L.`, though the only player called "Marta" would be suggested (UC-006-04-S5) | `Marta G.L.` | nobody |
 | the player "Luis Pérez" has the phone `+34600000000` | `+34600000000` | "Luis Pérez" |
-| the organiser paired `Marta G.L.` with "Marta García" and with "Marta Gómez" | `Marta G.L.` | nobody: two players fit |
+| the organiser paired `Marta G.L.` with "Marta García" and with "Marta Gómez" | `Marta G.L.` | nobody: two players have that Bizum name |
 | no player is linked to `+34611111111` | `+34611111111` | nobody |
 
-`verified — source`: `NameMatcher` never guesses, a name that fits two players is reported ambiguous (`server/src/domain/name-matcher.ts`); `player_aliases` holds 5 rows and `player_contacts` holds a phone column with no rows (study Q-05), so a stored phone is new data. `verified — document`: senders are an abbreviated name or, in 5%, a phone number (guide §6). `author decision`: a sender is also recognised from the players' names alone, without a pairing, when exactly one player fits; if a new player with the same first name enters (a second "Marta"), the sender then fits two players and the author expects this to need revisiting.
+`author decision` (2026-10-19): a sender is recognised only from what is stored for a player: the player's **Bizum name** (how the player appears on Bizum, a property of the player, set when the organiser pairs a sender; for example the player "Guti" appears as `Jorge G.A.`) or the player's phone. Nothing else identifies a sender: not the player's name, not the sign-up aliases, not a similarity between them; those only *suggest* a player to the organiser (UC-006-04-S5). A Bizum name held by two players identifies nobody. `verified — source`: `player_contacts` holds a phone column with no rows (study Q-05), so a stored phone is new data. `verified — document`: senders are an abbreviated name or, in 5%, a phone number (guide §6). Accepted risk (`author decision`): two people who appear on Bizum exactly alike, one of them a paired player, cannot be told apart; R3's whole-shares and open-debt conditions narrow it, and undo (UC-006-06) corrects it.
 
 #### UC-006-03-S2 — A Bizum of whole shares settles the nearest open debts first (outline)
 
@@ -521,7 +521,7 @@ Then <result>
 
 #### UC-006-03-S8 — The first matching rule decides (outline)
 
-Given the share is 4.00 EUR, "Luis Pérez" is the only player a sender <sender> fits and has 2 open debts, and the include word "pachanga" and the exclude word "cena" are listed
+Given the share is 4.00 EUR, `Luis P.R.` is the Bizum name of "Luis Pérez" and of no other player, he has 2 open debts, and the include word "pachanga" and the exclude word "cena" are listed
 When the system processes a Bizum of <amount> EUR from <sender> with the subject <subject>
 Then rule <rule> decides and the Bizum is <result>
 
@@ -533,9 +533,9 @@ Then rule <rule> decides and the Bizum is <result>
 | `Luis P.R.` | 12.00 | (empty) | R4 | waiting: 3 shares, 2 debts |
 | `Marta G.L.` | 4.50 | `pachanga` | R5 | waiting |
 | `Marta G.L.` | 4.50 | (empty) | R6 | discarded |
-| `Marta G.L.` | 8.00 | (empty) | R7 | waiting: sender fits no player |
+| `Marta G.L.` | 8.00 | (empty) | R7 | waiting: no player has that Bizum name |
 
-`inferred` from the rule table: one row per rule shows each rule is reachable and the order matters (row 1 and row 2 would differ if reordered). Row 7 assumes `Marta G.L.` fits no player.
+`inferred` from the rule table: one row per rule shows each rule is reachable and the order matters (row 1 and row 2 would differ if reordered). Row 7 assumes no player has the Bizum name `Marta G.L.`.
 
 ### UC-006-11 — Debts are not carried from one season to another
 
@@ -580,7 +580,7 @@ Then "Bizums en espera" lists it with its date, sender as the bank shows it, amo
 | 12.00 | `Luis P.R.` (paired with "Luis Pérez", 2 open debts) | (empty) | R4 | "Luis Pérez debe 2 cuotas y el Bizum son 3" |
 | 4.50 | `Marta G.L.` | `pachanga` | R5 | "El importe no es un número de cuotas, pero el asunto menciona pachanga" |
 | 8.00 | `+34611111111` | (empty) | R7 | "No sabemos quién es el remitente" |
-| 8.00 | `Marta G.L.` (fits "Marta García" and "Marta Gómez") | (empty) | R7 | "El remitente puede ser Marta García o Marta Gómez" |
+| 8.00 | `Marta G.L.` (the Bizum name of both "Marta García" and "Marta Gómez") | (empty) | R7 | "El remitente puede ser Marta García o Marta Gómez" |
 
 `inferred`: the reason is shown because without it the organiser cannot tell which action the Bizum needs; the Spanish copy is a proposal. The subject is shown whatever it holds, since only the organiser reads it.
 
@@ -612,6 +612,23 @@ Then "Bizums en espera" is not shown and its data is refused by the server
 
 `inferred` from `AGENTS.md`: a route added to `api.ts` is admin-only, and the player routes take no player id. No sender name or amount of a waiting Bizum reaches a player.
 
+#### UC-006-04-S5 — An unknown sender comes with a suggestion (outline)
+
+Given no player has the Bizum name or the phone of the sender <sender>, and the players <players> exist
+When the system lists the waiting Bizum from <sender> (R7)
+Then its reason is "No sabemos quién es el remitente" and the suggested players are <suggested>, and nothing is settled
+
+| sender | players | suggested |
+| ------ | ------- | --------- |
+| `Marta G.L.` | "Marta", "Luis Pérez" | "Marta" |
+| `Alberto H.M.` | "Alberto", "Alberto H." | "Alberto" and "Alberto H." |
+| `Álvaro B.X.` | "Álvaro B.", "Álvaro C." | "Álvaro B." |
+| `Marta G.L.` | "Marta García Pérez" | none |
+| `Jorge G.A.` | "Guti" | none |
+| `+34611111111` | any | none |
+
+`author decision` (2026-10-19): a suggestion never settles and never pairs; the organiser chooses. A player is suggested when one of the player's names (the name or a sign-up alias) has the sender's first name as its first word, ignoring case and accents, and the initials of its further words, in order, begin the sender's initials; a one-word name is suggested for any sender with that first name. Row 2 is why it is only a suggestion: the real data has a one-word "Alberto" and an "Alberto H." (`verified — invocation`, read-only count of the local database, 2026-10-19).
+
 ### UC-006-05 — The organiser resolves a waiting Bizum: pairs its sender and rules what it pays
 
 **Actor:** the organiser. **Goal:** teach the system who a sender is, once, from a waiting Bizum, so this and every later Bizum of that sender is judged by the rules with that player as payer; and the organiser can rule that a waiting Bizum pays shares the rules would not settle, and is obeyed. **Graduation:** hard requirement (proposed). **Rests on:** Q-04, Q-05, Q-08. `author decision` (2026-10-16): the administrator is always right. What the rules cannot settle with certainty waits; once the organiser rules on it, the ruling is carried out, and the organiser may have reasons the system is not to judge.
@@ -628,7 +645,9 @@ Then the sender is paired with him and the rules are applied again to every wait
 | 8.00 | `Luis P.R.` | 1 | the 8.00 Bizum waits (R4: 2 shares, 1 debt) and the 4.00 one settles; the 8.00 stays listed with its new reason |
 | 4.00 | `+34600000000` | 2 | as the first row; the pairing is the phone, kept as his phone |
 
-Each settled payment is as in UC-006-03-S5: method "Bizum", the link to its Bizum, the date it was booked. `verified — source`: a player's names are stored as aliases and a phone in `player_contacts` (study Q-05). `author decision` (agreed): a name sender is stored as an alias of the player and a phone sender as the player's phone.
+The dialog offers the suggested players of UC-006-04-S5 first and any player after them.
+
+Each settled payment is as in UC-006-03-S5: method "Bizum", the link to its Bizum, the date it was booked. `author decision` (2026-10-19): a name sender is stored as the player's Bizum name, a property of the player and not a sign-up alias, so pairing never changes how sign-up lists are matched; a player has one Bizum name, and pairing another replaces it (the dialog says so). A phone sender is stored as the player's phone (`author decision`, agreed; `verified — source`: the phone lives in `player_contacts`, study Q-05), replacing an earlier one in the same way.
 
 #### UC-006-05-S2 — The organiser rules that a waiting Bizum pays shares, whatever its amount (outline)
 
@@ -644,21 +663,21 @@ Then it settles that many debts, the nearest game first, each with method "Bizum
 
 `author decision`: the cents beyond the share may be there for a reason the system is not to judge; the debt is settled for its share and the difference is left alone. The ruling bypasses rule R6 and the whole-shares condition of R3 only: the debts paid are still those of the Bizum's own season (UC-006-11; `author decision`: debts are not carried from one season to another, and that holds for the organiser's ruling too), and never more shares than the player has open debts. `author decision` (agreed): the nearest-first order applies; the number of shares is chosen by the organiser; the rest is stored on the Bizum, not on the payment, so a payment keeps being exactly one share (`verified — source`: `PaymentService.pay` adjusts the amount of a single share only). Correcting a ruling is UC-006-06.
 
-#### UC-006-05-S3 — A sender that now fits two players
+#### UC-006-05-S3 — A Bizum name given to two players
 
 Given `Marta G.L.` is paired with "Marta García"
 When the organiser pairs `Marta G.L.` with "Marta Gómez" from another waiting Bizum
-Then the panel tells the organiser the sender now fits two players, and from then on Bizums of that sender wait (R7) until the organiser removes one pairing
+Then the panel tells the organiser that two players now have that Bizum name, and from then on Bizums of that sender wait (R7) until the organiser removes one pairing
 
-`verified — source` for the outcome: a name that fits two players is ambiguous and never guessed (UC-006-03-S1; `NameMatcher`). `author decision` (agreed): the warning, so the organiser is not surprised.
+`author decision`: a Bizum name held by two players identifies nobody (UC-006-03-S1); the warning, so the organiser is not surprised (agreed).
 
 #### UC-006-05-S4 — The organiser removes a pairing
 
 Given `Luis P.R.` is paired with "Luis Pérez"
 When the organiser removes that pairing
-Then later Bizums of `Luis P.R.` are judged as an unknown sender, and every payment already made from earlier Bizums stays as it was
+Then "Luis Pérez" has no Bizum name, later Bizums of `Luis P.R.` are judged as an unknown sender, and every payment already made from earlier Bizums stays as it was
 
-`author decision` (agreed), from N3 of the audit (the organiser can correct anything). Correcting a payment already made is UC-006-06. Where the pairings are listed and removed (the player's data, the Banco panel) is for the design.
+`author decision` (agreed), from N3 of the audit (the organiser can correct anything). Correcting a payment already made is UC-006-06. Where the pairings are listed and removed (the player's data, the Banco panel) is for the design. A phone pairing is undone by changing the player's phone.
 
 #### UC-006-05-S5 — The organiser dismisses a Bizum forever
 
@@ -692,7 +711,7 @@ Then the Bizum is not listed, not evaluated and settles nothing
 
 #### UC-006-10-S1 — The game is marked played and the waiting Bizum settles
 
-Given "Luis Pérez" is the only player `Luis P.R.` fits, and a Bizum of 4.00 EUR from `Luis P.R.` booked on 2026-10-08 waits because he had no open debt (R4), and the game of 2026-10-07 is about to be played with him in it
+Given `Luis P.R.` is the Bizum name of "Luis Pérez" and of no other player, and a Bizum of 4.00 EUR from `Luis P.R.` booked on 2026-10-08 waits because he had no open debt (R4), and the game of 2026-10-07 is about to be played with him in it
 When the organiser marks that game played
 Then the debt for that game is created, the waiting Bizum settles it (rule R3) with method "Bizum", the link to the Bizum and the date 2026-10-08, and the Bizum leaves "Bizums en espera"
 
@@ -831,10 +850,10 @@ Paths below are the places the work touches, from the project layout (`AGENTS.md
 | Kind | Path or pattern | Count |
 | ---- | --------------- | ----- |
 | Domain rules (new, with tests) | `server/src/domain/bizum-*.ts`, `server/src/domain/bizum-*.test.ts` | about 6 |
-| Domain, existing | `server/src/domain/name-matcher.ts`, `server/src/domain/own-disclosure.ts` and its test | 2 |
+| Domain, existing | `server/src/domain/name-stripper.ts` (folding, reused by the suggestion), `server/src/domain/own-disclosure.ts` and its test | 2 |
 | Schema and migration | `server/src/db/schema.sql`, `server/src/db/schema-migrator.ts` | 2 |
 | Repositories and services (new) | `server/src/repo/bank-*.ts` (the bank-neutral parts and one support class for Revolut), `server/src/repo/bizum-*.ts` | about 8 |
-| Repositories and services, existing | `server/src/repo/payment-service.ts`, `payment-repository.ts`, `debt-repository.ts`, `season-repository.ts`, `alias-repository.ts`, `contact-repository.ts`, `own-data-service.ts`, `billing-effect.ts`, and the composition root `server/src/repo/index.ts` | 9 |
+| Repositories and services, existing | `server/src/repo/payment-service.ts`, `payment-repository.ts`, `debt-repository.ts`, `season-repository.ts`, `player-repository.ts`, `contact-repository.ts`, `own-data-service.ts`, `billing-effect.ts`, and the composition root `server/src/repo/index.ts` | 9 |
 | Routes | `server/src/routes/api.ts`, `own-router.ts`, a new public bank callback router, `api-routes.ts` | 4 |
 | Server start-up (poller, settings) | `server/src/server-app.ts`, `server/src/index.ts` | 2 |
 | Web pages and components | `web/src/pages/Debts.tsx`, `Manage.tsx`, `AdminShell.tsx`, `web/src/components/OwnPayments.tsx`, `PaymentCell.tsx`, new `Bank*.tsx` and `Waiting*.tsx` | about 8 |
@@ -854,6 +873,7 @@ Paths below are the places the work touches, from the project layout (`AGENTS.md
 | UC-006-01 | Route tests: the callback refuses an unknown, reused and expired state; no response, page or log holds a key, token, code, state or session id. An end-to-end test of the panel against a fake bank. |
 | UC-006-02 | Route tests: a forced read processes a new Bizum at once, and is refused while a read is in progress, within 5 minutes of the last read, and after a rate-limit answer until its retry time; the same state shows in both places of the web app (end to end). |
 | UC-006-01, -02 | A test registers a second, fake bank next to Revolut: the panel lists both, the rules and the waiting list work unchanged on its entries, and no code outside the bank support names Revolut. |
+| UC-006-02, -03, -04, -05 | A one-time rehearsal at the end of the work package (`author decision`, 2026-10-19): on a throwaway copy of the production database, with every payment since 2026-09-01 put back as a debt, the real account is read from 2026-09-01; no automatic payment differs from the payment the organiser had recorded by hand for that game and player, and every other Bizum waits with a reason the organiser understands or was discarded by a rule. Nothing of it reaches production, and its report, which names real players, is never committed. |
 | UC-006-01, -02 | The live check against the real Revolut account stays manual, as in WP-005 (the proof of concept); it is not part of the automated suite. |
 
 ## Constraints

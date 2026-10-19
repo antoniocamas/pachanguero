@@ -10,11 +10,11 @@ participant BizumStore as Store
 participant "Pachanguero handler" as App
 
 BankPoller -> BizumFeed : run(now)  [every 6 h, one at a time]
-BizumFeed -> Connector : entries(account, dateFrom), all parts
+BizumFeed -> Connector : entries(account, dateFrom, {deep}), all parts
 Connector --> BizumFeed : raw entries
-loop each raw entry not in the ledger
-  BizumFeed -> Dialect : recognise(raw)
-  Dialect --> BizumFeed : Bizum | not a Bizum
+BizumFeed -> Dialect : recognise(each raw)
+Dialect --> BizumFeed : Bizum | ignore
+loop each recognised entry, oldest booking first, not in the ledger: one transaction
   BizumFeed -> Policy : judge(bizum)
   Policy --> BizumFeed : discard | keep(afterKept)
   alt keep
