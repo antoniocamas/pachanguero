@@ -92,7 +92,10 @@ export class EnableBankingConnector implements BankConnector {
       method: 'GET',
       path: `/sessions/${encodeURIComponent(sessionId)}`,
     });
-    const validUntil = new Date(String(session.body?.valid_until));
+    // The end of the consent is `access.valid_until`: the session answer has no such field at its top.
+    const access = session.body?.access as
+      { valid_until?: unknown } | undefined;
+    const validUntil = new Date(String(access?.valid_until));
     if (Number.isNaN(validUntil.getTime())) {
       throw new BankError('unavailable', 'BAD_SESSION');
     }

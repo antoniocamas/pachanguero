@@ -372,7 +372,8 @@ export class FakeEnableBankingServer implements FakeControl {
     if (session === undefined) throw new FakeApiError(404, 'SESSION_NOT_FOUND');
     res.json({
       status: session.status === 'REVOKED' ? 'AUTHORIZED' : session.status,
-      valid_until: session.validUntil.toISOString(),
+      // As the real API answers: the end of the consent is in `access`, not at the top.
+      access: { valid_until: session.validUntil.toISOString() },
     });
   }
 
