@@ -27,6 +27,10 @@ never `--no-verify` (the pre-commit hook runs the server tests). **Never push** 
    step 4's bump and commit; run its checks. If tag `vX.Y.Z` already exists, stop: that version is
    released.
 3. **Verify the tree**: `npm test`, `npm run lint`, `npm run format:check`.
+   If the release touches the bank feed, also run `npm run test:sandbox` when the standing session
+   is configured (it skips otherwise), and ask the user to run the guided checklist in
+   [`docs/test-strategy.md`](../../../docs/test-strategy.md#guided-checklist-for-a-release-that-touches-the-bank-feed);
+   report it as not run until they confirm.
 4. **Bump, check, commit.** `scripts/bump-version.sh X.Y.Z` (it fails unless the three places
    agree), then
    `helm lint deploy/helm/pachanguero -f deploy/helm/pachanguero/values.secrets.yaml.example` and

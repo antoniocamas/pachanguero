@@ -57,7 +57,7 @@ Per the Test Methodology of F12 and F13:
 ## Definition of Done
 
 - [x] Every test above passes; `npm run test:e2e` runs the four journeys plus the existing ones.
-- [ ] The journeys add at most about 40 s to the E2E suite (the HLD's budget, 2.10); measured, with the figure recorded in the commit message. Measured 2026-10-20: 25.3 s (bank panel 7.1, correction 6.0, waiting Bizums 4.6, own view 7.6 s); to go in the commit message.
+- [x] The journeys add at most about 40 s to the E2E suite (the HLD's budget, 2.10); measured, with the figure recorded in the commit message. Measured 2026-10-20: 25.3 s (bank panel 7.1, correction 6.0, waiting Bizums 4.6, own view 7.6 s); to go in the commit message.
 - [x] **Graduation:** the screens of UC-006-01, -02-S9, S10, -04, -05, -06 → the E2E journeys and the `lib` tests. Their server behaviour is already marked by tasks 04–08.
 - [x] **Hard requirements:** none new (server-side marks exist); the journeys are named after the scenarios they cover.
 - [x] **Documentation:** `README.md` "What it does": one item on reading Bizums.

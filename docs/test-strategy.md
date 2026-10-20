@@ -2,7 +2,9 @@
 
 Pachanguero tests follow the standard test pyramid: many fast, narrow tests at the bottom; a
 handful of slow, full-stack tests at the top. Each layer verifies a different kind of claim, and
-each has its own home, runner, and speed budget.
+each has its own home, runner, time budget and gate. Beside the pyramid sit tiers that need a
+network, a credential or a person (the bank's sandbox, a guided checklist, a live check): they
+are chosen by the tree below, not by layer alone.
 
 ```
         ▲  slow, few, expensive
@@ -13,11 +15,60 @@ each has its own home, runner, and speed budget.
         │   Integration (Vitest, server workspace)
         │   route handlers + the repository/service layer against a real SQLite file
         │
-        │   Unit (Vitest, server/src/domain + web component tests)
-        │   pure functions, isolated components
+        │   Unit (Vitest, server/src/domain + web lib/ tests)
+        │   pure functions
         │
         ▼  fast, many, cheap
 ```
+
+## Choosing where a test goes
+
+Decide on these axes, in this order:
+
+1. **What claim can be false?** Take the smallest layer that can show it.
+2. **What does the test need?** A network, a credential, a signed-in person, the real bank.
+3. **How long does it take?**
+4. **Is it deterministic?** A test that depends on someone else's service or on a person is not.
+5. **Where may it run?** The pre-commit hook, before merging, before a release, or on request.
+
+Ask the tree top to bottom and stop at the first yes:
+
+1. A rule or calculation with no I/O → **unit**.
+2. SQL or route wiring, or our code against an in-process fake → **integration**.
+3. A setting the deployment must provide → **deployment settings test**.
+4. Our bank connector speaking HTTP to the aggregator → **integration**, as the connector contract
+   run against the fake aggregator server; the same contract runs against the sandbox when asked.
+5. A journey across screens that no lower layer can show → **E2E**. Say in the test what no lower
+   layer shows.
+6. Whether the fake still matches the real API → the **sandbox suite**.
+7. Something only a signed-in person can do (a fresh consent, data changed in the aggregator's
+   control panel) → the **guided checklist**.
+8. Something only the real bank shows (wording, limits, expiry, approval) → the **live check**.
+
+If two layers can both show the claim, prefer the cheaper and faster one.
+
+## Tiers: time and gate
+
+Figures were measured on 2026-10-20 on the development machine; reproduce them with `time npm test` and `time npm run test:e2e`, and refresh them when a tier changes noticeably.
+
+| Tier                     | Home                                                                             | Command                 | Needs                                   | Time                                                           | Gate                                                       |
+| ------------------------ | -------------------------------------------------------------------------------- | ----------------------- | --------------------------------------- | -------------------------------------------------------------- | ---------------------------------------------------------- |
+| Unit                     | `server/src/domain`, `server/src/bizum`, `web/src/lib`                           | `npm test`              | nothing                                 | each under 100 ms; `npm test` 49 s wall, 1655 + 235 tests      | every commit (pre-commit runs the server workspace)        |
+| Integration              | `server/src/routes`, `server/src/repo`, `server/src/bank` (not the unit folders) | `npm test`              | nothing (fakes on a loopback port)      | each under 1 s; same run as unit                               | every commit                                               |
+| Deployment settings test | `server/src/deployment-settings.test.ts`                                         | `npm test`              | nothing                                 | part of the run above                                          | every commit                                               |
+| E2E                      | `e2e/tests/`                                                                     | `time npm run test:e2e` | the real servers and a fake bank        | 5 min 22 s wall for 44 tests; a new journey fits in about 10 s | before merging a feature or in CI                          |
+| Sandbox suite            | `server/src/bank/sandbox/`                                                       | `npm run test:sandbox`  | sandbox key and a standing session      | not measured                                                   | on request and before a release that touches the bank feed |
+| Guided checklist         | below                                                                            | by hand                 | a person signed in to the control panel | minutes                                                        | before a release that touches the bank feed                |
+| Live check               | the real account, read-only                                                      | by hand                 | the real bank                           | manual                                                         | rarely                                                     |
+
+## Limits
+
+- Nothing the hook or `npm test` runs touches a network beyond the loopback or a secret.
+- The sandbox suite only reads. It refuses to run unless its configuration names the sandbox
+  application, never edits the sandbox data, and skips with a message (it does not fail) when
+  unconfigured. Its key and session live in the local `.env`, never in the repository.
+- E2E shares one database and one worker and stays small.
+- A test that needs a person is a checklist item, not a suite.
 
 ## Unit tests — `server/src/domain/*.test.ts`, `web/src/lib/*.test.ts`
 
@@ -39,7 +90,9 @@ the counters): plain TypeScript with no DOM, run by `vitest` in the `web` worksp
 is left to the E2E layer unless its logic moves into `lib/`.
 
 **Run:** `npm test` (root, which runs the server and the web suites) or `npx vitest run` from
-`server/` or `web/`. The server suite gates every commit via the pre-commit hook.
+`server/` or `web/`.
+
+**Time:** each test under 100 ms. **Gate:** the server suite gates every commit via the pre-commit hook.
 
 ## Integration tests — `server/src/routes/*.test.ts`
 
@@ -68,9 +121,11 @@ which sits behind the guard, and so needs no token. `api-routes.test.ts` is the 
 it lists every route of every router and checks that each is public, session, own-data or
 organiser, and that a path nobody declared is refused.
 
-**Run:** same as unit tests — `vitest run` in `server/`, same `npm test` command, same pre-commit
-gate. (There is no dedicated integration script yet; add `server/src/routes/*.test.ts` files and
-they run alongside the domain suite.)
+**Run:** same as unit tests — `vitest run` in `server/`, same `npm test` command. (There is no
+dedicated integration script yet; add `server/src/routes/*.test.ts` files and they run alongside
+the domain suite.)
+
+**Time:** each test under 1 s. **Gate:** every commit, as the unit tests.
 
 ## Deployment settings test
 
@@ -87,7 +142,44 @@ cluster. The rest of what a change owes the deployment is in
 **Do not use for:** whether a value is correct, or whether the chart renders (`helm lint` and
 `helm template` do that). It only finds variables read as `env.X` or `env['X']`.
 
-**Run:** with the server suite (`npm test`), so it gates every commit like the rest.
+**Run:** with the server suite (`npm test`).
+
+**Time:** negligible. **Gate:** every commit.
+
+## Bank connector contract — `server/src/bank/`
+
+**What it verifies:** one set of assertions about the bank connector's behaviour (first read, paging
+above 100 entries, the ledger across two reads, the start date, failing reads), run through the real
+connector and dialect. On every commit it runs against a fake aggregator server on a loopback port;
+that fake copies what the real sandbox was observed to do (pages of 100 with a continuation key,
+newest first, exact matching of redirect addresses, the aggregator's error codes).
+
+**Use when:** the claim is about how our connector talks to the aggregator.
+
+**Do not use for:** the rules that judge a Bizum (unit) or the screens (E2E).
+
+**Run:** with `npm test`. **Time:** each test under 1 s. **Gate:** every commit.
+
+## Sandbox suite — `server/src/bank/sandbox/`
+
+**What it verifies:** the same contract against the aggregator's Mock bank, from a standing session
+read with the application key alone. It is the only automated check that the fake has not drifted
+from the real API: the fake tests our logic against our idea of the API, the sandbox tests the idea.
+Only the fake can produce a revoked session, a rate-limit answer or expiry driven by a clock; those
+stay in the integration tier.
+
+**Use when:** the bank feed, the connector or the fake changed, and before a release that touches
+them.
+
+**Do not use for:** anything the fake can show, or a schedule or CI job: it needs a session a
+person authorised, which lasts up to 179 days.
+
+**Run:** `npm run test:sandbox`. Without the `ENABLE_BANKING_SANDBOX*` variables of `.env.example`
+it skips with a message. Before any call it refuses to run if the sandbox application or key equals
+the production one, if the session is not the sandbox application's, or if one read does not count
+the expected number of entries. It never ends the session. **Time:** not measured (the suite is not
+configured on the development machine). **Gate:** on request and before a release that touches the
+bank feed.
 
 ## E2E tests — `e2e/tests/*.spec.ts`
 
@@ -150,8 +242,44 @@ broke silently.
 **Do not use for:** validating business rules (that's domain/unit), validating a single endpoint's
 contract (that's integration), or anything that can be verified without a browser.
 
-**Run:** `npm run test:e2e` (root) or `npm test` from `e2e/`. Not part of the pre-commit hook —
-too slow for that; run it before merging a feature or in CI.
+**Run:** `npm run test:e2e` (root) or `npm test` from `e2e/`.
+
+**Time:** 6 to 9 s per test typically; a new journey names what no lower layer shows and fits in
+about 10 s. **Gate:** before merging a feature or in CI; not part of the pre-commit hook, which it
+would make too slow.
+
+## Guided checklist for a release that touches the bank feed
+
+For what the suites cannot do: they need a person signed in to the aggregator's control panel
+(CAPTCHA, e-mail and SMS codes). Use the sandbox application with the Mock bank, never the
+production account, from a browser on `localhost`.
+
+1. **Fresh consent.** In the Banco panel press "Conectar con Revolut", approve in the Mock's consent page. Expect
+   the return to the app and "Conectado hasta …" about 179 days ahead.
+2. **An entry added after a read.** Press "Leer ahora", add a Bizum-shaped entry to the Mock data in the
+   control panel, press "Leer ahora" again once the five-minute gap between reads has passed. Expect the new entry kept (a payment or in
+   "Bizums en espera") and nothing already known repeated.
+3. **A pending entry becoming booked.** Add a pending entry, read, confirm it is not kept; book it,
+   read again. Expect it kept once.
+4. Throughout, expect the server log to hold codes and counts only: no token, key or session id.
+
+## Worked examples: Bizum payment detection
+
+Where each kind of claim landed:
+
+| Claim                                                                   | Tier                                              |
+| ----------------------------------------------------------------------- | ------------------------------------------------- |
+| The rules that decide a Bizum, sender fit, nearest-debt order, seasons  | unit                                              |
+| Recognising a Bizum and reading its sender                              | unit; sandbox on the Mock's entries               |
+| A Bizum is handled once, also after a renewal                           | integration on the fake; sandbox across two reads |
+| A read of many Bizums (above 100)                                       | integration; sandbox with a larger fixture        |
+| A read that fails                                                       | integration; sandbox for the codes the Mock gives |
+| Revoked session, rate limit                                             | integration only (the Mock cannot produce them)   |
+| The consent, the callback route, "Conectado hasta …"                    | E2E on the fake; guided checklist on the Mock     |
+| A new Bizum between two reads                                           | integration and E2E; guided checklist             |
+| Waiting list, pairing, ruling, dismissal, undo, re-evaluation           | integration; one E2E journey each                 |
+| The payment method; the player sees the method and nothing of the Bizum | integration; one E2E journey                      |
+| What the bank really sends, its limits and expiry                       | live check                                        |
 
 ## Rule of thumb
 
@@ -161,7 +289,11 @@ wrong?
 - A calculation is wrong → domain/unit test.
 - The SQL or route wiring is wrong → integration test.
 - The server reads a setting the deployment does not provide → deployment settings test.
+- Our connector and the aggregator disagree → connector contract test; whether the fake still
+  matches the real API → sandbox suite.
 - The frontend and backend disagree about a contract, or a multi-step journey breaks → E2E test.
+- Only a person or the real bank can show it → guided checklist or live check.
 
 Never write an E2E test to cover something an integration test could catch faster and more
-reliably. Push assertions as far down the pyramid as they'll go.
+reliably. Push assertions as far down the pyramid as they'll go, and prefer the cheaper and faster
+of two layers that can both show the claim.
