@@ -288,6 +288,22 @@ describe('SchemaMigrator', () => {
     );
   });
 
+  it('migrates a version 2 file that is not in WAL mode, as a backup is', () => {
+    const conn = connect();
+    conn.exec(schemaV2.replace('PRAGMA journal_mode = WAL;', ''));
+    conn.pragma('user_version = 2');
+    expect(conn.pragma('journal_mode', { simple: true })).toBe('delete');
+
+    migrator(conn, [
+      new PaymentMethodMigration(),
+      new PlayerBizumNameMigration(),
+      new PaymentBizumLinkMigration(),
+    ]).run();
+
+    expect(version(conn)).toBe(LATEST_SCHEMA_VERSION);
+    expect(conn.pragma('journal_mode', { simple: true })).toBe('wal');
+  });
+
   it('migrates a version 2 file with payments: backup, latest version, rows unchanged and read "otro", same columns as a new file', () => {
     const conn = connect();
     conn.exec(schemaV2);

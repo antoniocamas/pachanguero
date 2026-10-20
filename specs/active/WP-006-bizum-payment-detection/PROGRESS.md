@@ -31,7 +31,7 @@
 | 08 | Undo a Bizum's payments as a whole; trace every payment | 1 | done | 2026-10-19 |
 | 09 | The Banco panel, the banner, and Bizums en espera | 1 | done | 2026-10-20 |
 | 10 | The test strategy as a decision tree | 1 | done | 2026-10-20 |
-| 11 | Every manual check, and the real-data rehearsal | 1 | pending | — |
+| 11 | Every manual check, and the real-data rehearsal | 1 | ongoing | — |
 
 ## Open Items
 

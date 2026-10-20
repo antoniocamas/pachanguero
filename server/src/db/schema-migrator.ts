@@ -44,8 +44,17 @@ export class SchemaMigrator {
       this.conn.exec(this.schemaSql);
     } else {
       this.backup.create('before-migration');
+      this.useWriteAheadLog();
       this.conn.transaction(() => this.migrate()).immediate();
     }
+  }
+
+  /**
+   * `schema.sql` asks for WAL, and SQLite refuses to change the journal mode inside the
+   * migration's transaction. A file that is not WAL yet (a restored backup) is switched here.
+   */
+  private useWriteAheadLog(): void {
+    this.conn.pragma('journal_mode = WAL');
   }
 
   private migrate(): void {
