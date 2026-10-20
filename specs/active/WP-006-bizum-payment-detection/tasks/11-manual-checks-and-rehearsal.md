@@ -63,6 +63,24 @@ Run the parts in order. **Stop at any failure:**
 14. Choose the EUR account and set the start date to 2026-09-01.
 15. Press "Leer ahora" in Deudas. The read ends with counts. Bizums appear as Bizum payments or in "Bizums en espera". Pressing again at once says "Espera unos minutos".
 16. Compare the number of Bizums kept plus discarded since 2026-09-01 with the guide's rule over the same days (the PoC's `fetch` and `recognise`, read-only). They are equal (F4).
+
+*Checkout point to come back to this step after bug found*
+Data
+ To come back to this moment
+  1. Stop the server (Ctrl+C in its terminal).
+  2. Run:
+  cp ~/pachanguero-rehearsal/snapshots/20261021-001229/pachanguero.db ~/pachanguero-rehearsal/pachanguero-20261020-020000.db
+  rm -f ~/pachanguero-rehearsal/pachanguero-20261020-020000.db-wal ~/pachanguero-rehearsal/pachanguero-20261020-020000.db-shm
+  3. Start the server again as before.
+
+  The two rm lines clear the live database's journal files so the restored copy isn't mixed with stale ones.
+  
+  The earlier safety copy ~/pachanguero-rehearsal/before-adam-reset.db is also still there. It's the state just before the Adam reset,
+  with Adam paired and paid.
+
+
+
+
 17. Go through "Bizums en espera": pair senders, helped by the suggestions, and note each pairing; rule or dismiss only where the organiser really would. Pairing settles what then qualifies.
 18. After 5 minutes, press "Leer ahora" in the Banco panel. Every entry is counted as known, and nothing new is listed or paid.
 19. Signed-out return: start a renewal ("Renovar"), sign out in another tab, approve in Revolut. The login appears; after signing in, the panel shows the new end date (F12). The previous session shows closed in the Control Panel (F5).

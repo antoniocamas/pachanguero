@@ -1,4 +1,4 @@
-import type { PairResult, WaitingBizum } from '../api';
+import type { PairResult, SettledBizum, WaitingBizum } from '../api';
 import { fmtDate } from './dates';
 import { euros } from './money';
 
@@ -20,6 +20,8 @@ const gameDay = (iso: string) => fmtDate(iso).replace(/^\S+,\s*/, '');
 const nameOf = (item: WaitingBizum, playerId: number) =>
   item.players[playerId] ?? `Jugador ${playerId}`;
 
+const games = (n: number) => (n === 1 ? '1 partido' : `${n} partidos`);
+
 const shares = (n: number) => (n === 1 ? '1 cuota' : `${n} cuotas`);
 
 /** The sender as the bank showed it. */
@@ -27,12 +29,15 @@ export const senderText = (sender: WaitingBizum['sender']) =>
   sender.name ?? sender.phone ?? 'Remitente sin nombre';
 
 /** `12/10 · «pachanga»`, or `12/10 · sin asunto`. */
-export const bookedText = (item: WaitingBizum) => {
+export const bookedText = (
+  item: Pick<WaitingBizum, 'bookedOn' | 'subject'>
+) => {
   const [, month, day] = item.bookedOn.split('-');
   return `${day}/${month} · ${item.subject === null ? 'sin asunto' : `«${item.subject}»`}`;
 };
 
-export const amountText = (item: WaitingBizum) => euros(item.amountCents);
+export const amountText = (item: Pick<WaitingBizum, 'amountCents'>) =>
+  euros(item.amountCents);
 
 /** `= Luis Pérez` when the sender is a player; otherwise null. */
 export const identifiedAs = (item: WaitingBizum): string | null =>
@@ -44,15 +49,22 @@ export const identifiedAs = (item: WaitingBizum): string | null =>
 export const reasonLines = (item: WaitingBizum): string[] => {
   const { reason, senderIdentity } = item;
   switch (reason.code) {
-    case 'not_enough_debts':
+    case 'not_enough_debts': {
+      const name = nameOf(item, reason.playerId);
+      const until = gameDay(item.bookedOn);
       return [
-        `${nameOf(item, reason.playerId)} debe ${shares(reason.debts)} y el Bizum son ${reason.shares}.`,
+        `El Bizum paga ${shares(reason.shares)}, pero ${name} ${
+          reason.debts === 0
+            ? 'no debe ningún partido'
+            : `solo debe ${games(reason.debts)}`
+        } jugado${reason.debts === 1 || reason.debts === 0 ? '' : 's'} hasta el ${until}.`,
         ...(item.laterGames.length > 0
           ? [
-              `Debe ${shares(item.laterGames.length)} de partidos posteriores al Bizum: ${andList(item.laterGames.map(gameDay))}.`,
+              `${name} sí debe ${games(item.laterGames.length)} posterior${item.laterGames.length === 1 ? '' : 'es'} (${andList(item.laterGames.map(gameDay))}): no se pagan solos, pero puedes pagarlos tú con «Pagar cuotas».`,
             ]
           : []),
       ];
+    }
     case 'include_word':
       return [
         reason.wholeShares
@@ -150,23 +162,25 @@ export const pairingText = (
   return `${saved} y se volverán a aplicar las reglas a los Bizums en espera de ${playerName}.`;
 };
 
-/** What pairing did, one line each: what settled, what still waits and who else shares the name. */
+/** `la deuda del 7 sept`, `las deudas del 14 sept y del 21 sept`. */
+const debtsText = (games: readonly string[]) =>
+  games.length === 1
+    ? `la deuda del ${gameDay(games[0])}`
+    : `las deudas ${andList(games.map(game => `del ${gameDay(game)}`))}`;
+
+/** What pairing did, one line per Bizum judged: the games it settled, or why it still waits. */
 export const pairResultLines = (result: PairResult): string[] => {
-  const settled = result.results.filter(r => r.status === 'settled').length;
-  const waiting = result.results.length - settled;
-  const lines = [
-    settled === 0
-      ? 'No se liquidó ningún Bizum.'
-      : settled === 1
-        ? 'Se liquidó 1 Bizum.'
-        : `Se liquidaron ${settled} Bizums.`,
-  ];
-  if (waiting > 0) {
-    lines.push(
-      waiting === 1
-        ? 'Sigue en espera 1 Bizum.'
-        : `Siguen en espera ${waiting} Bizums.`
-    );
+  const lines = result.results.map(judged => {
+    const [, month, day] = judged.bookedOn.split('-');
+    const head = `Bizum de ${euros(judged.amountCents)} del ${day}/${month}`;
+    if (judged.status === 'settled') {
+      return `${head}: liquida ${debtsText(judged.games)}.`;
+    }
+    const item = result.waiting.find(w => w.id === judged.bizumId);
+    return `${head}: sigue en espera.${item ? ` ${reasonLines(item).join(' ')}` : ''}`;
+  });
+  if (lines.length === 0) {
+    lines.push('No había Bizums en espera de ese remitente.');
   }
   if (result.sharedWith.length > 0) {
     lines.push(
@@ -175,3 +189,17 @@ export const pairResultLines = (result: PairResult): string[] => {
   }
   return lines;
 };
+
+/** What a settled Bizum paid, one line per game, and what stayed on it. */
+export const settledLines = (item: SettledBizum): string[] => [
+  ...item.payments.map(
+    p =>
+      `${p.playerName} · partido del ${gameDay(p.playedOn)} · ${euros(p.amountCents)}`
+  ),
+  ...(item.unallocatedCents > 0
+    ? [`Sin asignar: ${euros(item.unallocatedCents)}`]
+    : []),
+];
+
+export const settledHowText = (how: SettledBizum['settledHow']) =>
+  how === 'organiser' ? 'Decidido por ti' : 'Automático';

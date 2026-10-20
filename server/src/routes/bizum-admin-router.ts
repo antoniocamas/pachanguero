@@ -20,6 +20,9 @@ export class BizumAdminRouter {
     router.get('/bizums/waiting', (_req, res) => {
       res.json(this.resolution.waiting());
     });
+    router.get('/bizums/settled', (_req, res) => {
+      res.json(this.resolution.settled());
+    });
     router.get('/bizums/pairings', (_req, res) => {
       res.json(this.pairing.pairings());
     });

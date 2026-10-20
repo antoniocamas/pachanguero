@@ -59,6 +59,7 @@ describe('the Bizum routes', () => {
 
   it.each([
     ['GET', '/bizums/waiting'],
+    ['GET', '/bizums/settled'],
     ['GET', '/bizums/pairings'],
     ['PUT', '/bizums/pairings/1'],
     ['DELETE', '/bizums/pairings/1'],

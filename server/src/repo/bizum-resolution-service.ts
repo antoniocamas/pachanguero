@@ -40,9 +40,34 @@ export interface WaitingBizum {
   laterGames: string[];
 }
 
+/** A Bizum that is settled: what it was and the debts it paid. */
+export interface SettledBizum {
+  id: number;
+  bookedOn: string;
+  amountCents: number;
+  currency: string;
+  sender: { name: string | null; phone: string | null };
+  subject: string | null;
+  settledHow: 'automatic' | 'organiser';
+  unallocatedCents: number;
+  /** Earliest game first. */
+  payments: {
+    paymentId: number;
+    gameId: number;
+    playedOn: string;
+    /** Whose share it paid; a guest's is named after the player who brought them. */
+    playerName: string;
+    amountCents: number;
+  }[];
+}
+
 export interface Reevaluated {
   bizumId: number;
   status: 'settled' | 'waiting';
+  bookedOn: string;
+  amountCents: number;
+  /** The dates of the games it paid, earliest first; none while it waits. */
+  games: string[];
 }
 
 export interface Ruling {
@@ -97,6 +122,28 @@ export class BizumResolutionService {
           ),
           senderIdentity,
           laterGames: this.laterGames(handling.reason, bizum),
+        },
+      ];
+    });
+  }
+
+  /** The settled Bizums, newest booking first, each with the debts it paid. */
+  settled(): SettledBizum[] {
+    return this.handling.settledByBooking().flatMap(handling => {
+      const stored = this.store.find(handling.bizumId);
+      if (stored === null) return [];
+      const { bizum } = stored;
+      return [
+        {
+          id: stored.id,
+          bookedOn: bizum.bookedOn,
+          amountCents: bizum.amountCents,
+          currency: bizum.currency,
+          sender: { name: bizum.sender.name, phone: bizum.sender.phone },
+          subject: bizum.subject,
+          settledHow: handling.settledHow ?? 'automatic',
+          unallocatedCents: handling.unallocatedCents,
+          payments: this.paymentsOf(stored.id),
         },
       ];
     });
@@ -172,6 +219,48 @@ export class BizumResolutionService {
     })();
   }
 
+  private paymentsOf(bizumId: number): SettledBizum['payments'] {
+    const rows = this.conn
+      .prepare(
+        `SELECT p.id, p.game_id, g.played_on, p.amount_cents,
+                p.beneficiary_player_id, p.holder_player_id
+           FROM payments p JOIN games g ON g.id = p.game_id
+          WHERE p.bizum_id = ? ORDER BY g.played_on, p.id`
+      )
+      .all(bizumId) as {
+      id: number;
+      game_id: number;
+      played_on: string;
+      amount_cents: number;
+      beneficiary_player_id: number | null;
+      holder_player_id: number;
+    }[];
+    return rows.map(row => {
+      const holder = this.players.nameOf(row.holder_player_id) ?? '';
+      return {
+        paymentId: row.id,
+        gameId: row.game_id,
+        playedOn: row.played_on,
+        playerName:
+          row.beneficiary_player_id === null
+            ? `Invitado de ${holder}`
+            : (this.players.nameOf(row.beneficiary_player_id) ?? ''),
+        amountCents: row.amount_cents,
+      };
+    });
+  }
+
+  private gamesPaidBy(bizumId: number): string[] {
+    return (
+      this.conn
+        .prepare(
+          `SELECT g.played_on FROM payments p JOIN games g ON g.id = p.game_id
+           WHERE p.bizum_id = ? ORDER BY g.played_on`
+        )
+        .all(bizumId) as { played_on: string }[]
+    ).map(row => row.played_on);
+  }
+
   /**
    * Judges these Bizums again, in the order given, each against what the ones before settled.
    * One no longer waiting is left alone. The caller holds the transaction.
@@ -187,7 +276,15 @@ export class BizumResolutionService {
         this.rules.judge(this.facts.read(stored.bizum), 'review')
       );
       const status = this.handling.get(bizumId)?.status ?? 'waiting';
-      return [{ bizumId, status }];
+      return [
+        {
+          bizumId,
+          status,
+          bookedOn: stored.bizum.bookedOn,
+          amountCents: stored.bizum.amountCents,
+          games: this.gamesPaidBy(bizumId),
+        },
+      ];
     });
   }
 

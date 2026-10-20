@@ -218,6 +218,18 @@ export class BizumFeedRig {
     return gameId;
   }
 
+  /** A game of the previous season the player played and still owes. */
+  owesInPreviousSeason(playerId: number, playedOn: string): number {
+    const seasonId = (
+      this.flow.seasons.current(playedOn) ??
+      this.flow.seasons.create({ name: '2025/2026' })
+    ).id;
+    const gameId = this.flow.games.create(seasonId, playedOn).id;
+    this.flow.participations.set(gameId, playerId, { signed_up: true });
+    this.flow.played(gameId);
+    return gameId;
+  }
+
   payments(): {
     id: number;
     game_id: number;

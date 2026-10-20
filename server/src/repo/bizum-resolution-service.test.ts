@@ -113,7 +113,7 @@ describe('BizumResolutionService', () => {
     const [a, b] = [rig.idOf('a'), rig.idOf('b')];
 
     expect(resolution().reevaluate([999, a, b, a])).toEqual([
-      { bizumId: b, status: 'waiting' },
+      expect.objectContaining({ bizumId: b, status: 'waiting', games: [] }),
     ]);
   });
 
@@ -211,6 +211,121 @@ describe('BizumResolutionService', () => {
       expect(() =>
         resolution().rule(rig.idOf('r1'), a, 1, 'whatever' as never)
       ).toThrow('Indica qué se hace con el resto del Bizum');
+    });
+  });
+
+  describe('money left after every debt of the Bizum season', () => {
+    const adam = () => rig.player('Adam');
+
+    it('offers the debts of a previous season after those of its own, the latest game first', async () => {
+      const a = adam();
+      const own = rig.owes(a, '2026-09-07');
+      const old1 = rig.owesInPreviousSeason(a, '2026-05-06');
+      const old2 = rig.owesInPreviousSeason(a, '2026-05-13');
+      await arrive('r1', 1200, { name: 'ADAM RON B.' }, null, '2026-09-10');
+
+      const offered = resolution().openShares(rig.idOf('r1'), a);
+
+      expect(
+        offered.map(s => [s.gameId, s.afterBooking, s.previousSeason])
+      ).toEqual([
+        [own, false, false],
+        [old2, false, true],
+        [old1, false, true],
+      ]);
+    });
+
+    it('lets the organiser pay them with the money that remains', async () => {
+      const a = adam();
+      const own = rig.owes(a, '2026-09-07');
+      const old = rig.owesInPreviousSeason(a, '2026-05-06');
+      await arrive('r1', 800, { name: 'ADAM RON B.' }, null, '2026-09-10');
+
+      resolution().rule(rig.idOf('r1'), a, 2);
+
+      expect(rig.payments().map(p => p.game_id)).toEqual([own, old]);
+      expect(rig.handlingOf('r1')).toMatchObject({ status: 'settled' });
+    });
+
+    it('does not pay them with money the own season needs: the Bizum must cover them', async () => {
+      const a = adam();
+      rig.owes(a, '2026-09-07');
+      rig.owesInPreviousSeason(a, '2026-05-06');
+      await arrive('r1', 400, { name: 'ADAM RON B.' }, null, '2026-09-10');
+
+      expect(() => resolution().rule(rig.idOf('r1'), a, 2)).toThrow(
+        'El Bizum no cubre 2 cuotas'
+      );
+    });
+
+    it('the rules alone never pay a previous season', async () => {
+      const a = adam();
+      rig.flow.senderPairing.addBizumName(a, 'ADAM RON B.');
+      rig.owesInPreviousSeason(a, '2026-05-06');
+      await arrive('r1', 400, { name: 'ADAM RON B.' }, null, '2026-09-10');
+
+      expect(rig.payments()).toEqual([]);
+      expect(resolution().waiting()).toHaveLength(1);
+    });
+  });
+
+  describe('the settled Bizums', () => {
+    it('lists each with the games it settled, earliest game first, and how', async () => {
+      const a = rig.player('Adam');
+      rig.flow.senderPairing.addBizumName(a, 'ADAM RON B.');
+      const g1 = rig.owes(a, '2026-10-05');
+      const g2 = rig.owes(a, '2026-10-06');
+      await arrive('r1', 800, { name: 'ADAM RON B.' }, 'furgol', '2026-10-08');
+
+      expect(resolution().settled()).toEqual([
+        {
+          id: rig.idOf('r1'),
+          bookedOn: '2026-10-08',
+          amountCents: 800,
+          currency: 'EUR',
+          sender: { name: 'ADAM RON B.', phone: null },
+          subject: 'furgol',
+          settledHow: 'automatic',
+          unallocatedCents: 0,
+          payments: [
+            {
+              paymentId: expect.any(Number),
+              gameId: g1,
+              playedOn: '2026-10-05',
+              playerName: 'Adam',
+              amountCents: 400,
+            },
+            {
+              paymentId: expect.any(Number),
+              gameId: g2,
+              playedOn: '2026-10-06',
+              playerName: 'Adam',
+              amountCents: 400,
+            },
+          ],
+        },
+      ]);
+    });
+
+    it('lists the newest booking first', async () => {
+      const a = rig.player('Adam');
+      rig.flow.senderPairing.addBizumName(a, 'ADAM RON B.');
+      rig.owes(a, '2026-10-05');
+      rig.owes(a, '2026-10-06');
+      await arrive('old', 400, { name: 'ADAM RON B.' }, null, '2026-10-07');
+      await arrive('new', 400, { name: 'ADAM RON B.' }, null, '2026-10-09');
+
+      expect(
+        resolution()
+          .settled()
+          .map(s => s.bookedOn)
+      ).toEqual(['2026-10-09', '2026-10-07']);
+    });
+
+    it('does not list a Bizum that waits', async () => {
+      await arrive('r1', 800, { phone: '+34611111111' });
+
+      expect(resolution().settled()).toEqual([]);
     });
   });
 });

@@ -81,19 +81,33 @@ export class BizumFactsReader {
 
   /**
    * What the organiser may pay with the Bizum: the shares the rules would use, then the shares of
-   * games played after the booking date, earliest first, marked as such.
+   * games played after the booking date, earliest first, then those of earlier seasons, the
+   * latest game first; each marked as such.
    */
   candidateSharesOf(playerId: number, bizum: Bizum): RulableShare[] {
+    const mark = (
+      shares: OpenShare[],
+      afterBooking: boolean,
+      previousSeason: boolean
+    ): RulableShare[] =>
+      shares.map(share => ({ ...share, afterBooking, previousSeason }));
     return [
-      ...this.openSharesOf(playerId, bizum).map(share => ({
-        ...share,
-        afterBooking: false,
-      })),
-      ...this.laterSharesOf(playerId, bizum).map(share => ({
-        ...share,
-        afterBooking: true,
-      })),
+      ...mark(this.openSharesOf(playerId, bizum), false, false),
+      ...mark(this.laterSharesOf(playerId, bizum), true, false),
+      ...mark(this.previousSeasonsSharesOf(playerId, bizum), false, true),
     ];
+  }
+
+  /** The shares of games played in seasons before the Bizum's, the latest game first. */
+  previousSeasonsSharesOf(playerId: number, bizum: Bizum): OpenShare[] {
+    const season = this.seasons.current(bizum.bookedOn);
+    if (!season) return [];
+    return this.order.latestFirst(
+      this.debts
+        .openBefore(playerId, season.starts_on)
+        .map(share => this.openShare(share)),
+      playerId
+    );
   }
 
   /** The shares of games played after the booking date, in the Bizum's season, earliest first. */

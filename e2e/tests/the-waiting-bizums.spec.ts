@@ -56,7 +56,7 @@ test.describe('the waiting Bizums', () => {
       .selectOption({ label: 'Zespera Uno' });
     await dialog.getByRole('button', { name: 'Emparejar' }).click();
     await expect(dialog.getByTestId('pair-result')).toContainText(
-      'Se liquidó 1 Bizum.'
+      'liquida la deuda del'
     );
     await dialog.getByRole('button', { name: 'Hecho' }).click();
     await expect(waiting.getByTestId('waiting-bizum')).toHaveCount(0);
@@ -95,7 +95,7 @@ test.describe('the waiting Bizums', () => {
       .filter({ hasText: 'Zacepta U.N.' });
     await item.getByRole('button', { name: 'Sí, es Zacepta Uno' }).click();
     await expect(page.getByTestId('pair-result')).toContainText(
-      'Se liquidó 1 Bizum.'
+      'liquida la deuda del'
     );
     await page.getByRole('button', { name: 'Hecho' }).click();
     await expect(waiting.getByTestId('waiting-bizum')).toHaveCount(0);

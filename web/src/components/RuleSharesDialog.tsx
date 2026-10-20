@@ -5,8 +5,10 @@ import {
   defaultShares,
   maxShares,
   rulingPreview,
-  sharesLabel,
+  shareRows,
+  sharesAfterToggle,
 } from '../lib/rulingPreview';
+import { euros } from '../lib/money';
 import { defaultPlayerId } from '../lib/waitingBizums';
 import { BizumFacts } from './BizumFacts';
 import { PlayerSelect } from './PlayerSelect';
@@ -59,8 +61,9 @@ function RuleBody({
   const count =
     wanted === null
       ? defaultShares(asked, shares, item.amountCents)
-      : Math.min(Math.max(wanted, 1), Math.max(most, 1));
+      : Math.min(Math.max(wanted, 0), most);
   const preview = rulingPreview(shares, item.amountCents, count);
+  const rows = shareRows(shares, item.amountCents, count);
 
   return (
     <div className="dialog-body">
@@ -84,40 +87,43 @@ function RuleBody({
       )}
       {most > 0 && (
         <>
-          <label className="field">
-            Cuotas que paga
-            <select
-              className="sel"
-              value={count}
-              onChange={e => setWanted(Number(e.target.value))}
-            >
-              {Array.from({ length: most }, (_, i) => i + 1).map(n => (
-                <option key={n} value={n}>
-                  {sharesLabel(shares, n)}
-                </option>
-              ))}
-            </select>
-          </label>
+          <fieldset className="field">
+            <legend>Cuotas que paga</legend>
+            {rows.map((row, i) => (
+              <label className="choice" key={row.share.debtId}>
+                <input
+                  type="checkbox"
+                  checked={row.checked}
+                  disabled={!row.payable}
+                  onChange={e =>
+                    setWanted(sharesAfterToggle(count, i, e.target.checked))
+                  }
+                />
+                {row.text}
+                {!row.payable && ' · el Bizum no lo cubre'}
+              </label>
+            ))}
+          </fieldset>
           <p className="muted">{preview.text}</p>
           {preview.restCents > 0 && (
             <fieldset className="field">
-              <legend>El resto del Bizum</legend>
-              <label>
+              <legend>El resto del Bizum ({euros(preview.restCents)})</legend>
+              <label className="choice">
                 <input
                   type="radio"
                   name="rest"
                   checked={rest === 'keep'}
                   onChange={() => setRest('keep')}
-                />{' '}
+                />
                 Dejarlo sin asignar, para próximos partidos
               </label>
-              <label>
+              <label className="choice">
                 <input
                   type="radio"
                   name="rest"
                   checked={rest === 'dismiss'}
                   onChange={() => setRest('dismiss')}
-                />{' '}
+                />
                 Descartarlo
               </label>
             </fieldset>
@@ -127,13 +133,17 @@ function RuleBody({
       <div className="actions">
         <button
           className="btn primary"
-          disabled={busy || playerId === null || most === 0}
+          disabled={busy || playerId === null || count === 0}
           onClick={() => {
             if (playerId !== null)
               onRule(playerId, count, preview.restCents > 0 ? rest : 'keep');
           }}
         >
-          {count === 1 ? 'Pagar 1 cuota' : `Pagar ${count} cuotas`}
+          {count === 0
+            ? 'Pagar cuotas'
+            : count === 1
+              ? 'Pagar 1 cuota'
+              : `Pagar ${count} cuotas`}
         </button>
         <button className="btn" onClick={onClose}>
           Cancelar

@@ -52,7 +52,7 @@ test.describe('correcting a Bizum', () => {
     await item.getByRole('button', { name: 'Pagar cuotas' }).click();
     const rule = page.getByRole('dialog');
     await rule.getByLabel('Jugador').selectOption({ label: 'Zcorrige Uno' });
-    await expect(rule).toContainText('Quedarán 0,5 € sin asignar en el Bizum.');
+    await expect(rule).toContainText('El resto del Bizum (0,5 €)');
     await rule.getByRole('button', { name: 'Pagar 1 cuota' }).click();
     await expect(waiting).toContainText('No hay Bizums en espera.');
 
@@ -125,16 +125,26 @@ test.describe('correcting a Bizum', () => {
     await page.getByRole('button', { name: 'Hecho' }).click();
 
     // The rules never pay a game after the booking; the organiser is told which ones there are.
-    await expect(item).toContainText(
-      'Debe 1 cuota de partidos posteriores al Bizum: 27 sept.'
-    );
+    await expect(item).toContainText('sí debe 1 partido posterior (27 sept)');
     await item.getByRole('button', { name: 'Pagar cuotas' }).click();
     const rule = page.getByRole('dialog');
+    // A later game is never pre-selected: the organiser chooses it.
+    await expect(rule.getByRole('button', { name: 'Pagar' })).toBeDisabled();
+    await rule.getByLabel('27 sept · 4 € · posterior al Bizum').check();
     await expect(rule).toContainText(
-      'Entre ellas, 1 de un partido posterior a la fecha del Bizum.'
+      'Se liquidará la deuda del 27 sept (posterior al Bizum).'
     );
     await rule.getByRole('button', { name: 'Pagar 1 cuota' }).click();
     await expect(item).toHaveCount(0);
+
+    // It is now in the settled list, with the game it paid.
+    const settled = page
+      .getByTestId('settled-bizum')
+      .filter({ hasText: 'Zprepaga U.N.' });
+    await page.getByTestId('settled-bizums').locator('summary').click();
+    await expect(settled).toContainText(
+      'Zprepaga Uno · partido del 27 sept · 4 €'
+    );
 
     await tab(page, 'Partido').click();
     const row = await openGameRow(page, gameId, 'Zprepaga Uno');

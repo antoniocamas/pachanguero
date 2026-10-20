@@ -125,6 +125,18 @@ export class DebtRepository {
       .all({ playerId, seasonId }) as OutstandingShare[];
   }
 
+  /** The shares a player holds or is the beneficiary of in games played before a date. */
+  openBefore(playerId: number, before: string): OutstandingShare[] {
+    return this.conn
+      .prepare(
+        `${OUTSTANDING_SELECT}
+          WHERE (d.holder_player_id = @playerId OR d.beneficiary_player_id = @playerId)
+            AND g.status = 'played' AND g.played_on < @before
+          ORDER BY g.played_on, g.id, d.id`
+      )
+      .all({ playerId, before }) as OutstandingShare[];
+  }
+
   /** What each holder owes across the played games of a season. */
   totalsByHolder(seasonId: number): Map<number, number> {
     const rows = this.conn

@@ -507,6 +507,28 @@ export interface OpenShare {
 /** A debt the organiser may pay with a Bizum, and whether its game came after the Bizum. */
 export interface RulableShare extends OpenShare {
   afterBooking: boolean;
+  /** Its game belongs to a season before the Bizum's. */
+  previousSeason: boolean;
+}
+
+/** A Bizum that is settled, and the debts it paid. */
+export interface SettledBizum {
+  id: number;
+  bookedOn: string;
+  amountCents: number;
+  currency: string;
+  sender: { name: string | null; phone: string | null };
+  subject: string | null;
+  settledHow: 'automatic' | 'organiser';
+  unallocatedCents: number;
+  /** Earliest game first. */
+  payments: {
+    paymentId: number;
+    gameId: number;
+    playedOn: string;
+    playerName: string;
+    amountCents: number;
+  }[];
 }
 
 export interface PairResult {
@@ -514,7 +536,14 @@ export interface PairResult {
   replaced: string | null;
   /** The other players who now hold the same Bizum name or phone. */
   sharedWith: { playerId: number; name: string }[];
-  results: { bizumId: number; status: 'settled' | 'waiting' }[];
+  results: {
+    bizumId: number;
+    status: 'settled' | 'waiting';
+    bookedOn: string;
+    amountCents: number;
+    /** The dates of the games it paid, earliest first. */
+    games: string[];
+  }[];
   waiting: WaitingBizum[];
 }
 
@@ -773,6 +802,7 @@ export const api = {
       { method: 'DELETE' }
     ),
   waitingBizums: () => call<WaitingBizum[]>('/bizums/waiting'),
+  settledBizums: () => call<SettledBizum[]>('/bizums/settled'),
   openShares: (bizumId: number, playerId: number) =>
     call<RulableShare[]>(`/bizums/${bizumId}/open-shares?playerId=${playerId}`),
   pairBizum: (bizumId: number, playerId: number) =>

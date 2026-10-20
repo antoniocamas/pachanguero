@@ -24,6 +24,11 @@ export class NearestDebtOrder {
       );
   }
 
+  /** All the shares, the latest game first. */
+  latestFirst(shares: readonly OpenShare[], playerId: number): OpenShare[] {
+    return this.order(shares, playerId, '9999-12-31');
+  }
+
   /** The shares of games played after the booking date, the earliest game first. */
   later(
     shares: readonly OpenShare[],

@@ -178,6 +178,35 @@ describe('the waiting Bizums requirements', () => {
       expect(rig.flow.players.bizumNamesOf(luisId)).toEqual(['Luis P.R.']);
     });
 
+    it('says, for each Bizum judged, which games it settled and what it is', async () => {
+      const luisId = luis(null);
+      rig.owes(luisId, '2026-10-05');
+      rig.owes(luisId, '2026-10-06');
+      await rig.arrive(
+        bizum('a', '2026-10-08', 800, { name: 'Luis P.R.' }),
+        bizum('b', '2026-10-09', 400, { name: 'Luis P.R.' })
+      );
+
+      const result = rig.flow.senderPairing.pair(rig.idOf('a'), luisId);
+
+      expect(result.results).toEqual([
+        {
+          bizumId: rig.idOf('a'),
+          status: 'settled',
+          bookedOn: '2026-10-08',
+          amountCents: 800,
+          games: ['2026-10-05', '2026-10-06'],
+        },
+        {
+          bizumId: rig.idOf('b'),
+          status: 'waiting',
+          bookedOn: '2026-10-09',
+          amountCents: 400,
+          games: [],
+        },
+      ]);
+    });
+
     it('pairs with 1 debt: the 8.00 waits with its new reason and the 4.00 settles', async () => {
       const luisId = luis(null);
       rig.owes(luisId, '2026-10-07');

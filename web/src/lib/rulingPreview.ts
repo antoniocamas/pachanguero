@@ -30,7 +30,11 @@ export interface RulingPreview {
 }
 
 const gameDays = (paid: readonly RulableShare[]) =>
-  paid.map(share => fmtDate(share.playedOn).replace(/^\S+,\s*/, ''));
+  paid.map(share => {
+    const day = fmtDate(share.playedOn).replace(/^\S+,\s*/, '');
+    if (share.afterBooking) return `${day} (posterior al Bizum)`;
+    return share.previousSeason ? `${day} (de una temporada anterior)` : day;
+  });
 
 export const rulingPreview = (
   open: readonly RulableShare[],
@@ -40,44 +44,68 @@ export const rulingPreview = (
   const paid = open.slice(0, shares);
   const restCents = amountCents - paid.reduce((s, p) => s + p.amountCents, 0);
   const days = gameDays(paid);
-  const settles =
-    paid.length === 1
-      ? `Se liquidará la deuda del ${days[0]}.`
-      : `Se liquidarán las deudas del ${days.slice(0, -1).join(', ')} y del ${days[days.length - 1]}.`;
-  const later = paid.filter(share => share.afterBooking).length;
-  const afterBooking =
-    later === 0
-      ? ''
-      : ` Entre ellas, ${later} de ${later === 1 ? 'un partido posterior' : 'partidos posteriores'} a la fecha del Bizum.`;
-  const rest =
-    restCents > 0
-      ? ` Quedarán ${euros(restCents)} sin asignar en el Bizum.`
-      : '';
-  return {
-    paid,
-    restCents,
-    text:
-      paid.length === 0
+  const listed = days.map(day => `del ${day}`);
+  const text =
+    paid.length === 0
+      ? open.length === 0
         ? 'No hay deudas que pagar.'
-        : `${settles}${afterBooking}${rest} Solo se pagan deudas de la misma temporada que el Bizum.`,
-  };
+        : 'Marca las cuotas que paga este Bizum; si no marcas ninguna, sigue en espera.'
+      : paid.length === 1
+        ? `Se liquidará la deuda del ${days[0]}.`
+        : `Se liquidarán las deudas ${listed.slice(0, -1).join(', ')} y ${listed[listed.length - 1]}.`;
+  return { paid, restCents, text };
 };
-
-/** `1 cuota (4 €)` or `2 cuotas (8 €)`: the shares chosen and what they come to. */
-export const sharesLabel = (open: readonly RulableShare[], shares: number) => {
-  const cents = open.slice(0, shares).reduce((s, p) => s + p.amountCents, 0);
-  return `${shares === 1 ? '1 cuota' : `${shares} cuotas`} (${euros(cents)})`;
-};
-
 /**
- * The shares a ruling starts from: as many as the Bizum is when the rules counted them, as far as
- * the debts and the money go; one otherwise.
+ * The shares a ruling starts from: as many as the Bizum is when the rules counted them (one
+ * otherwise), as far as the money goes and only among the games up to the Bizum's date. A later
+ * game or a previous season's is never where a ruling starts: the organiser adds it.
  */
 export const defaultShares = (
   wanted: number | null,
   open: readonly RulableShare[],
   amountCents: number
-): number =>
-  wanted === null
-    ? 1
-    : Math.max(1, Math.min(wanted, maxShares(open, amountCents)));
+): number => {
+  const upToBooking = open.findIndex(
+    share => share.afterBooking || share.previousSeason
+  );
+  const available = upToBooking === -1 ? open.length : upToBooking;
+  return Math.min(wanted ?? 1, maxShares(open, amountCents), available);
+};
+
+/** One debt in the dialog: its text, whether it is ticked and whether the Bizum can pay it. */
+export interface ShareRow {
+  share: RulableShare;
+  text: string;
+  checked: boolean;
+  payable: boolean;
+}
+
+/** Every open debt in the order a Bizum pays them, ticked up to `count`. */
+export const shareRows = (
+  open: readonly RulableShare[],
+  amountCents: number,
+  count: number
+): ShareRow[] => {
+  const most = maxShares(open, amountCents);
+  return open.map((share, i) => {
+    const day = fmtDate(share.playedOn).replace(/^\S+,\s*/, '');
+    const mark = share.afterBooking
+      ? ' · posterior al Bizum'
+      : share.previousSeason
+        ? ' · de una temporada anterior'
+        : '';
+    return {
+      share,
+      text: `${day} · ${euros(share.amountCents)}${mark}`,
+      checked: i < count,
+      payable: i < most,
+    };
+  });
+};
+
+/** The count after ticking or unticking the debt at `index`: a Bizum pays in order. */
+export const sharesAfterToggle = (
+  count: number,
+  index: number,
+  checked: boolean
+): number => (checked ? index + 1 : index);

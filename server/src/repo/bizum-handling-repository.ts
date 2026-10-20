@@ -102,6 +102,18 @@ export class BizumHandlingRepository {
       .run(bizumId, unallocatedCents, how, at.toISOString());
   }
 
+  /** Every settled Bizum, newest booking first. */
+  settledByBooking(): BizumHandling[] {
+    return (
+      this.conn
+        .prepare(
+          `SELECT h.* FROM bizum_handling h JOIN bizums b ON b.id = h.bizum_id
+            WHERE h.status = 'settled' ORDER BY b.booked_on DESC, b.reference DESC, h.bizum_id DESC`
+        )
+        .all() as HandlingRow[]
+    ).map(row => this.handling(row));
+  }
+
   private waitingRows(
     join: string,
     params: Record<string, string | number>

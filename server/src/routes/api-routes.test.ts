@@ -102,7 +102,7 @@ describe('who may call what', () => {
 
   it('decides every route of the admin router: 401 anonymous, 403 regular, neither for an admin', async () => {
     const routes = new RouteLister().list(app.routes.adminRouter);
-    expect(routes.length).toBe(59);
+    expect(routes.length).toBe(60);
     for (const route of routes) {
       const [method, template] = route.split(' ');
       const path = `/api${template.replace(/:[A-Za-z]+/g, '1')}`;
@@ -238,6 +238,7 @@ describe('who may call what', () => {
           'PUT /bank/words',
           'POST /bank/disconnect',
           'GET /bizums/waiting',
+          'GET /bizums/settled',
           'GET /bizums/pairings',
           'PUT /bizums/pairings/:playerId',
           'DELETE /bizums/pairings/:playerId',

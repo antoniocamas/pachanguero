@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { PairResult, WaitingBizum } from '../api';
+import type { PairResult, SettledBizum, WaitingBizum } from '../api';
 import {
   bookedText,
   defaultPlayerId,
@@ -8,6 +8,8 @@ import {
   pairingText,
   playerChoices,
   reasonLines,
+  settledHowText,
+  settledLines,
   senderText,
   suggestedPlayer,
   waitingActions,
@@ -64,8 +66,8 @@ describe('reasonLines', () => {
       laterGames: ['2026-09-28', '2026-10-05'],
     });
     expect(reasonLines(prepaid)).toEqual([
-      'Adam debe 0 cuotas y el Bizum son 3.',
-      'Debe 2 cuotas de partidos posteriores al Bizum: 28 sept y 5 oct.',
+      'El Bizum paga 3 cuotas, pero Adam no debe ningún partido jugado hasta el 12 oct.',
+      'Adam sí debe 2 partidos posteriores (28 sept y 5 oct): no se pagan solos, pero puedes pagarlos tú con «Pagar cuotas».',
     ]);
   });
 
@@ -77,13 +79,13 @@ describe('reasonLines', () => {
       laterGames: ['2026-09-28'],
     });
     expect(reasonLines(prepaid)[1]).toBe(
-      'Debe 1 cuota de partidos posteriores al Bizum: 28 sept.'
+      'Adam sí debe 1 partido posterior (28 sept): no se pagan solos, pero puedes pagarlos tú con «Pagar cuotas».'
     );
   });
 
   it('says how many shares are owed and how many the Bizum is', () => {
     expect(reasonLines(luis)).toEqual([
-      'Luis Pérez debe 2 cuotas y el Bizum son 3.',
+      'El Bizum paga 3 cuotas, pero Luis Pérez solo debe 2 partidos jugados hasta el 12 oct.',
     ]);
   });
 
@@ -93,7 +95,7 @@ describe('reasonLines', () => {
       players: { 1: 'Luis Pérez' },
     });
     expect(reasonLines(one)).toEqual([
-      'Luis Pérez debe 1 cuota y el Bizum son 2.',
+      'El Bizum paga 2 cuotas, pero Luis Pérez solo debe 1 partido jugado hasta el 12 oct.',
     ]);
   });
 
@@ -242,28 +244,71 @@ describe('pairResultLines', () => {
     ...over,
   });
 
-  it('says what settled and what still waits', () => {
+  it('says, for each Bizum, which games it settled, and why one still waits', () => {
+    const waiting = bizum({
+      id: 3,
+      bookedOn: '2026-09-02',
+      amountCents: 1200,
+      reason: { code: 'not_enough_debts', playerId: 1, shares: 3, debts: 0 },
+      players: { 1: 'Adam' },
+    });
     expect(
       pairResultLines(
         result({
           results: [
-            { bizumId: 1, status: 'settled' },
-            { bizumId: 2, status: 'settled' },
-            { bizumId: 3, status: 'waiting' },
+            {
+              bizumId: 3,
+              status: 'waiting',
+              bookedOn: '2026-09-02',
+              amountCents: 1200,
+              games: [],
+            },
+            {
+              bizumId: 1,
+              status: 'settled',
+              bookedOn: '2026-09-09',
+              amountCents: 400,
+              games: ['2026-09-07'],
+            },
+            {
+              bizumId: 2,
+              status: 'settled',
+              bookedOn: '2026-09-23',
+              amountCents: 800,
+              games: ['2026-09-14', '2026-09-21'],
+            },
           ],
+          waiting: [waiting],
         })
       )
-    ).toEqual(['Se liquidaron 2 Bizums.', 'Sigue en espera 1 Bizum.']);
+    ).toEqual([
+      'Bizum de 12 € del 02/09: sigue en espera. El Bizum paga 3 cuotas, pero Adam no debe ningún partido jugado hasta el 2 sept.',
+      'Bizum de 4 € del 09/09: liquida la deuda del 7 sept.',
+      'Bizum de 8 € del 23/09: liquida las deudas del 14 sept y del 21 sept.',
+    ]);
+  });
+
+  it('says so when there was no Bizum to judge', () => {
+    expect(pairResultLines(result({}))).toEqual([
+      'No había Bizums en espera de ese remitente.',
+    ]);
   });
 
   it('warns when another player holds the same name', () => {
     const lines = pairResultLines(
       result({
-        results: [{ bizumId: 1, status: 'waiting' }],
+        results: [
+          {
+            bizumId: 1,
+            status: 'waiting',
+            bookedOn: '2026-09-02',
+            amountCents: 400,
+            games: [],
+          },
+        ],
         sharedWith: [{ playerId: 3, name: 'Marta Gómez' }],
       })
     );
-    expect(lines[0]).toBe('No se liquidó ningún Bizum.');
     expect(lines[lines.length - 1]).toContain('Marta Gómez');
   });
 });
@@ -313,5 +358,53 @@ describe('pairingText', () => {
     expect(pairingText(phoned, 'Adam', ['ADAM RON B.'])).toBe(
       'Se guardará su teléfono +34611111111 y se volverán a aplicar las reglas a los Bizums en espera de Adam.'
     );
+  });
+});
+
+describe('settledLines', () => {
+  const settled = (over: Partial<SettledBizum>): SettledBizum => ({
+    id: 1,
+    bookedOn: '2026-10-08',
+    amountCents: 800,
+    currency: 'EUR',
+    sender: { name: 'ADAM RON B.R.', phone: null },
+    subject: 'Furgol 289 y 510',
+    settledHow: 'automatic',
+    unallocatedCents: 0,
+    payments: [
+      {
+        paymentId: 1,
+        gameId: 1,
+        playedOn: '2026-09-28',
+        playerName: 'Adam',
+        amountCents: 400,
+      },
+      {
+        paymentId: 2,
+        gameId: 2,
+        playedOn: '2026-10-05',
+        playerName: 'Adam',
+        amountCents: 400,
+      },
+    ],
+    ...over,
+  });
+
+  it('says, one line per game, whose share it paid and how much', () => {
+    expect(settledLines(settled({}))).toEqual([
+      'Adam · partido del 28 sept · 4 €',
+      'Adam · partido del 5 oct · 4 €',
+    ]);
+  });
+
+  it('says what stays unassigned', () => {
+    expect(settledLines(settled({ unallocatedCents: 400 })).at(-1)).toBe(
+      'Sin asignar: 4 €'
+    );
+  });
+
+  it('says who decided', () => {
+    expect(settledHowText('automatic')).toBe('Automático');
+    expect(settledHowText('organiser')).toBe('Decidido por ti');
   });
 });

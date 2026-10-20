@@ -16,9 +16,13 @@ export interface OpenShare {
   amountCents: number;
 }
 
-/** A debt the organiser may choose to pay with a Bizum, and whether its game came after the Bizum. */
+/**
+ * A debt the organiser may choose to pay with a Bizum: whether its game came after the Bizum, or
+ * belongs to a season before the Bizum's.
+ */
 export interface RulableShare extends OpenShare {
   afterBooking: boolean;
+  previousSeason: boolean;
 }
 
 /** Everything the rules need to know about a Bizum, gathered beforehand. */
