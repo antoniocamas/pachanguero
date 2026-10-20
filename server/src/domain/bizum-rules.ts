@@ -16,6 +16,11 @@ export interface OpenShare {
   amountCents: number;
 }
 
+/** A debt the organiser may choose to pay with a Bizum, and whether its game came after the Bizum. */
+export interface RulableShare extends OpenShare {
+  afterBooking: boolean;
+}
+
 /** Everything the rules need to know about a Bizum, gathered beforehand. */
 export interface BizumFacts {
   amountCents: number;

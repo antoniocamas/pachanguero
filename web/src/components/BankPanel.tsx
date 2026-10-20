@@ -91,7 +91,7 @@ export function BankPanel({
         players={players}
         busy={pairings.busy}
         onSet={(id, name) => void pairings.set(id, name)}
-        onClear={id => void pairings.clear(id)}
+        onClear={(id, name) => void pairings.clear(id, name)}
       />
     </>
   );

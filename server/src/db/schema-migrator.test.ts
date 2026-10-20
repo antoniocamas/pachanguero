@@ -16,6 +16,7 @@ import { DatabaseBackup } from './database-backup.js';
 import { PaymentBizumLinkMigration } from './payment-bizum-link-migration.js';
 import { PaymentMethodMigration } from './payment-method-migration.js';
 import { PlayerBizumNameMigration } from './player-bizum-name-migration.js';
+import { PlayerBizumNamesMigration } from './player-bizum-names-migration.js';
 import {
   LATEST_SCHEMA_VERSION,
   SchemaMigrator,
@@ -28,6 +29,7 @@ const currentSchema = readFileSync(join(here, 'schema.sql'), 'utf8');
 const schemaV2 = readFileSync(join(here, 'fixtures/schema-v2.sql'), 'utf8');
 const schemaV3 = readFileSync(join(here, 'fixtures/schema-v3.sql'), 'utf8');
 const schemaV4 = readFileSync(join(here, 'fixtures/schema-v4.sql'), 'utf8');
+const schemaV5 = readFileSync(join(here, 'fixtures/schema-v5.sql'), 'utf8');
 const legacySchema = readFileSync(join(here, 'fixtures/schema-v0.sql'), 'utf8');
 
 class FixedClock implements Clock {
@@ -170,6 +172,7 @@ describe('SchemaMigrator', () => {
       new PaymentMethodMigration(),
       new PlayerBizumNameMigration(),
       new PaymentBizumLinkMigration(),
+      new PlayerBizumNamesMigration(),
     ]).run();
 
     // ALTER TABLE words an added column's definition differently from schema.sql, so the tables
@@ -323,6 +326,7 @@ describe('SchemaMigrator', () => {
       new PaymentMethodMigration(),
       new PlayerBizumNameMigration(),
       new PaymentBizumLinkMigration(),
+      new PlayerBizumNamesMigration(),
     ]).run();
 
     expect(readdirSync(backupDir)).toHaveLength(1);
@@ -338,7 +342,7 @@ describe('SchemaMigrator', () => {
     expect(columns(conn)).toEqual(columns(fresh));
   });
 
-  it('migrates a version 3 file with players: backup, latest version, rows unchanged and no Bizum name, same columns as a new file', () => {
+  it('migrates a version 3 file with players: backup, latest version, rows unchanged, same columns as a new file', () => {
     const conn = connect();
     conn.exec(schemaV3);
     conn.pragma('user_version = 3');
@@ -352,12 +356,13 @@ describe('SchemaMigrator', () => {
     migrator(conn, [
       new PlayerBizumNameMigration(),
       new PaymentBizumLinkMigration(),
+      new PlayerBizumNamesMigration(),
     ]).run();
 
     expect(readdirSync(backupDir)).toHaveLength(1);
     expect(version(conn)).toBe(LATEST_SCHEMA_VERSION);
     expect(conn.prepare('SELECT * FROM players ORDER BY id').all()).toEqual(
-      before.map(row => ({ ...row, bizum_name: null }))
+      before
     );
 
     const fresh = new Database(':memory:');
@@ -382,10 +387,13 @@ describe('SchemaMigrator', () => {
       .prepare('SELECT * FROM payments ORDER BY id')
       .all() as Record<string, unknown>[];
 
-    migrator(conn, [new PaymentBizumLinkMigration()]).run();
+    migrator(conn, [
+      new PaymentBizumLinkMigration(),
+      new PlayerBizumNamesMigration(),
+    ]).run();
 
     expect(readdirSync(backupDir)).toHaveLength(1);
-    expect(version(conn)).toBe(5);
+    expect(version(conn)).toBe(LATEST_SCHEMA_VERSION);
     expect(conn.prepare('SELECT * FROM payments ORDER BY id').all()).toEqual(
       before.map(row => ({ ...row, bizum_id: null }))
     );
@@ -400,6 +408,47 @@ describe('SchemaMigrator', () => {
         table
       );
     }
+  });
+
+  it('migrates a version 5 file: each Bizum name goes to its own table, the column goes, nothing else changes, same columns as a new file', () => {
+    const conn = connect();
+    conn.exec(schemaV5);
+    conn.pragma('user_version = 5');
+    conn.exec(`
+      INSERT INTO players (id, name, bizum_name) VALUES (1, 'Ana López', 'Ana L.'), (2, 'Beto Ruiz', NULL), (3, 'Carlos García', 'Ana L.');
+    `);
+
+    migrator(conn, [new PlayerBizumNamesMigration()]).run();
+
+    expect(readdirSync(backupDir)).toHaveLength(1);
+    expect(version(conn)).toBe(LATEST_SCHEMA_VERSION);
+    expect(
+      conn
+        .prepare(
+          'SELECT player_id, bizum_name FROM player_bizum_names ORDER BY player_id'
+        )
+        .all()
+    ).toEqual([
+      { player_id: 1, bizum_name: 'Ana L.' },
+      { player_id: 3, bizum_name: 'Ana L.' },
+    ]);
+    expect(
+      conn.prepare('SELECT id, name FROM players ORDER BY id').all()
+    ).toEqual([
+      { id: 1, name: 'Ana López' },
+      { id: 2, name: 'Beto Ruiz' },
+      { id: 3, name: 'Carlos García' },
+    ]);
+
+    const fresh = new Database(':memory:');
+    open.push(fresh);
+    migrator(fresh).run();
+    const columns = (c: Database.Database) => c.pragma('table_info(players)');
+    expect(columns(conn)).toEqual(columns(fresh));
+    // Dropping a column rewrites the table's definition, so `players` is compared by its columns.
+    const apartFromPlayers = (c: Database.Database) =>
+      tables(c).filter(t => (t as { name: string }).name !== 'players');
+    expect(apartFromPlayers(conn)).toEqual(apartFromPlayers(fresh));
   });
 
   it('refuses a file made by a newer application and touches nothing', () => {

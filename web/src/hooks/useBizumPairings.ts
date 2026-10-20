@@ -3,7 +3,7 @@ import { api } from '../api';
 import { useGuarded } from './useGuarded';
 import { useLoaded } from './useLoaded';
 
-/** The players with a Bizum name, and giving or taking one away by hand. */
+/** The players' Bizum names, and giving or taking one away by hand. */
 export function useBizumPairings(report: (message: string | null) => void) {
   const { data, error, reload } = useLoaded(api.pairings);
   const { busy, run } = useGuarded(report);
@@ -17,9 +17,9 @@ export function useBizumPairings(report: (message: string | null) => void) {
     [run, reload]
   );
   const clear = useCallback(
-    (playerId: number) =>
+    (playerId: number, bizumName: string) =>
       run(async () => {
-        await api.clearBizumName(playerId);
+        await api.removeBizumName(playerId, bizumName);
         await reload();
       }),
     [run, reload]

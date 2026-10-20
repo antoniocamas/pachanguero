@@ -12,6 +12,9 @@ import {
 } from './bizum-handling-repository.js';
 import type { ShareSettler } from './share-settler.js';
 
+/** What becomes of the money of a Bizum that no share takes: kept on it, or dismissed. */
+export type RestOfBizum = 'keep' | 'dismiss';
+
 /**
  * Writes what a verdict means for a kept Bizum: shares paid through the one payment writer, or a
  * waiting row with its reason. Every trigger that judges a Bizum calls these same methods, so one
@@ -32,12 +35,16 @@ export class BizumSettlementService {
     }
   }
 
-  /** Pays the shares in order; a Bizum that does not cover their amounts pays nothing and waits. */
+  /**
+   * Pays the shares in order; a Bizum that does not cover their amounts pays nothing and waits.
+   * What is left of the Bizum stays on it unassigned, unless the organiser has it dismissed.
+   */
   settle(
     stored: StoredBizum,
     playerId: number,
     shares: readonly OpenShare[],
-    how: SettledHow
+    how: SettledHow,
+    rest: RestOfBizum = 'keep'
   ): void {
     const owed = shares.reduce((sum, share) => sum + share.amountCents, 0);
     if (owed > stored.bizum.amountCents) {
@@ -60,7 +67,7 @@ export class BizumSettlementService {
     this.handling.markSettled(
       stored.id,
       how,
-      stored.bizum.amountCents - paid,
+      rest === 'dismiss' ? 0 : stored.bizum.amountCents - paid,
       this.clock.now()
     );
   }

@@ -59,9 +59,7 @@ describe('BizumFactsReader', () => {
     );
     nextSeasonId = flow.seasons.create({ name: '2026/2027' }).id;
     luis = flow.players.add(flow.seasonId, 'Luis Pérez', 1).id;
-    flow.conn
-      .prepare("UPDATE players SET bizum_name = 'Luis P.R.' WHERE id = ?")
-      .run(luis);
+    flow.players.addBizumName(luis, 'Luis P.R.');
   });
 
   it('reads the share, the amount, the subject and the lists', () => {

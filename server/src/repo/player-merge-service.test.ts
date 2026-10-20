@@ -165,39 +165,52 @@ describe('PlayerMergeService', () => {
     });
   });
 
-  describe('the Bizum name', () => {
-    const setBizumName = (playerId: number, name: string | null) =>
+  describe('the Bizum names', () => {
+    const addBizumName = (playerId: number, name: string) =>
       conn
-        .prepare('UPDATE players SET bizum_name = ? WHERE id = ?')
-        .run(name, playerId);
-    const bizumName = (playerId: number) =>
+        .prepare(
+          'INSERT INTO player_bizum_names (player_id, bizum_name) VALUES (?, ?)'
+        )
+        .run(playerId, name);
+    const bizumNames = (playerId: number) =>
       (
         conn
-          .prepare('SELECT bizum_name AS name FROM players WHERE id = ?')
-          .get(playerId) as { name: string | null }
-      ).name;
+          .prepare(
+            'SELECT bizum_name AS name FROM player_bizum_names WHERE player_id = ? ORDER BY rowid'
+          )
+          .all(playerId) as { name: string }[]
+      ).map(row => row.name);
 
-    it('survives a merge when only the absorbed player has one', () => {
-      setBizumName(santo, 'Santi Z.');
+    it('survive a merge when only the absorbed player has them', () => {
+      addBizumName(santo, 'Santi Z.');
 
       merge.merge(santi, santo);
 
-      expect(bizumName(santi)).toBe('Santi Z.');
+      expect(bizumNames(santi)).toEqual(['Santi Z.']);
     });
 
-    it("keeps the survivor's own when both have one", () => {
-      setBizumName(santi, 'Santiago Z.');
-      setBizumName(santo, 'Santi Z.');
+    it("add the absorbed player's to the survivor's own", () => {
+      addBizumName(santi, 'Santiago Z.');
+      addBizumName(santo, 'Santi Z.');
 
       merge.merge(santi, santo);
 
-      expect(bizumName(santi)).toBe('Santiago Z.');
+      expect(bizumNames(santi)).toEqual(['Santiago Z.', 'Santi Z.']);
     });
 
-    it('stays empty when neither has one', () => {
+    it('are not repeated when both had the same one', () => {
+      addBizumName(santi, 'Santi Z.');
+      addBizumName(santo, 'Santi Z.');
+
       merge.merge(santi, santo);
 
-      expect(bizumName(santi)).toBeNull();
+      expect(bizumNames(santi)).toEqual(['Santi Z.']);
+    });
+
+    it('stay empty when neither has any', () => {
+      merge.merge(santi, santo);
+
+      expect(bizumNames(santi)).toEqual([]);
     });
   });
 });

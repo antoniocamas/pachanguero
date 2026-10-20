@@ -176,9 +176,17 @@ reglas pero **sin descartar nunca** (lo que ya se guardó no se borra en silenci
   del partido ya existen, así que los que ahora cubren una deuda la pagan, en la
   misma operación que marca el partido. Si falla algo, el partido no queda jugado.
   Reabrir el partido no deshace esos pagos;
-- cuando el organizador **dictamina** cuántas partes paga: se pagan las más cercanas,
-  nunca más de lo que cubre el Bizum, y lo que sobra queda sin asignar. El dictamen
-  no empareja al remitente.
+- cuando el organizador **dictamina** cuántas partes paga: se pagan las más cercanas
+  (los partidos hasta la fecha del Bizum, el más reciente primero), nunca más de lo
+  que cubre el Bizum, y lo que sobra queda sin asignar o se descarta, a elección del
+  organizador. El dictamen no empareja al remitente.
+
+Un Bizum puede llegar **antes** de los partidos que paga («3 furgol» el 2/9 para los
+tres partidos siguientes). Las reglas no pagan nunca un partido posterior a la fecha
+del Bizum, así que espera, pero «Bizums en espera» dice qué partidos posteriores debe
+el jugador y el organizador puede dictaminar que se paguen: tras los partidos hasta la
+fecha del Bizum van los posteriores, el más antiguo primero. Si el Bizum es más
+grande que las deudas, lo que sobra se deja sin asignar o se descarta.
 
 El organizador también puede **descartar** un Bizum que espera, para siempre: del
 Bizum solo queda la identificación del banco y que se descartó. Uno ya pagado no se

@@ -133,9 +133,10 @@ organizador.
 ## Nombre de Bizum
 
 Cómo aparece un jugador cuando paga por Bizum (`Jorge G.A.` para «Guti»): una
-propiedad del jugador, distinta de sus alias al apuntarse. Se guarda al emparejar a
-un remitente con un jugador o a mano, y se puede quitar; los pagos ya hechos no
-cambian. Un remitente solo se reconoce por este nombre o por el teléfono del jugador,
+propiedad del jugador, distinta de sus alias al apuntarse. Un jugador puede tener
+varios, porque el banco no siempre lo muestra igual (`ADAM RON B.` y `ADAM RON B.R.`).
+Se añade al emparejar a un remitente con un jugador o a mano, sin sustituir los que ya
+tiene, y se puede quitar uno a uno; los pagos ya hechos no cambian. Un remitente solo se reconoce por este nombre o por el teléfono del jugador,
 nunca por parecido; un nombre de Bizum que tienen dos jugadores no identifica a
 ninguno.
 

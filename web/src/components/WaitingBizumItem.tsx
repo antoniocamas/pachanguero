@@ -1,15 +1,24 @@
 import { useState } from 'react';
-import type { PairResult, Pairing, Player, WaitingBizum } from '../api';
+import type {
+  PairResult,
+  Pairing,
+  Player,
+  RestOfBizum,
+  WaitingBizum,
+} from '../api';
 import {
   amountText,
   bookedText,
   identifiedAs,
   reasonLines,
   senderText,
+  suggestedPlayer,
   waitingActions,
 } from '../lib/waitingBizums';
 import { AssignPlayerDialog } from './AssignPlayerDialog';
 import { DismissBizumDialog } from './DismissBizumDialog';
+import { PairResultBody } from './PairResultBody';
+import { ResolveDialog } from './ResolveDialog';
 import { RuleSharesDialog } from './RuleSharesDialog';
 
 type Dialog = 'assign' | 'rule' | 'dismiss' | null;
@@ -33,17 +42,21 @@ export function WaitingBizumItem({
   onRule: (
     bizumId: number,
     playerId: number,
-    shares: number
+    shares: number,
+    rest: RestOfBizum
   ) => Promise<boolean>;
   onDismiss: (bizumId: number) => Promise<boolean>;
   /** The list may have changed: read it again. */
   onClosed: () => void;
 }) {
   const [dialog, setDialog] = useState<Dialog>(null);
+  const [accepted, setAccepted] = useState<PairResult | null>(null);
+  const suggested = suggestedPlayer(item);
   const actions = waitingActions(item);
   const who = identifiedAs(item);
   const close = () => {
     setDialog(null);
+    setAccepted(null);
     onClosed();
   };
 
@@ -63,6 +76,19 @@ export function WaitingBizumItem({
         </p>
       ))}
       <div className="actions">
+        {suggested !== null && (
+          <button
+            className="btn primary"
+            disabled={busy}
+            onClick={() =>
+              void onPair(item.id, suggested.id).then(
+                answer => answer && setAccepted(answer)
+              )
+            }
+          >
+            Sí, es {suggested.name}
+          </button>
+        )}
         {actions.assign && (
           <button className="btn" onClick={() => setDialog('assign')}>
             Asignar jugador
@@ -77,6 +103,15 @@ export function WaitingBizumItem({
           Descartar
         </button>
       </div>
+      <ResolveDialog
+        open={accepted !== null}
+        title="Asignar jugador"
+        onClose={close}
+      >
+        {accepted !== null && (
+          <PairResultBody result={accepted} onClose={close} />
+        )}
+      </ResolveDialog>
       <AssignPlayerDialog
         item={item}
         open={dialog === 'assign'}
@@ -91,9 +126,9 @@ export function WaitingBizumItem({
         open={dialog === 'rule'}
         players={players}
         busy={busy}
-        onRule={(playerId, shares) => {
+        onRule={(playerId, shares, rest) => {
           setDialog(null);
-          void onRule(item.id, playerId, shares);
+          void onRule(item.id, playerId, shares, rest);
         }}
         onClose={() => setDialog(null)}
       />

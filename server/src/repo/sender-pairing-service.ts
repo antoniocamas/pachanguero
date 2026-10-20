@@ -1,6 +1,7 @@
 import type Database from 'better-sqlite3';
 import type { BizumStore } from '../bizum/ports.js';
 import { SenderMatch } from '../domain/sender-match.js';
+import { TextFolding } from '../domain/text-folding.js';
 import type { BizumFactsReader } from './bizum-facts-reader.js';
 import type { BizumHandlingRepository } from './bizum-handling-repository.js';
 import {
@@ -18,7 +19,7 @@ export interface Pairing {
 }
 
 export interface PairResult {
-  /** What the player had before, when it was something else. */
+  /** The phone the player had before, when a phone was paired and it was another one. */
   replaced: string | null;
   /** The other players who now hold the same Bizum name or phone. */
   sharedWith: { playerId: number; name: string }[];
@@ -26,14 +27,16 @@ export interface PairResult {
 }
 
 /**
- * Teaches the system who a sender is: a name sender becomes the player's Bizum name, a phone
- * sender becomes the player's phone. A sender is known only by what is stored here, so this is
- * the only way a Bizum gets a payer it was not already matched to.
+ * Teaches the system who a sender is: a name sender becomes one more of the player's Bizum names
+ * (the bank may show a player under several), a phone sender becomes the player's phone. A sender
+ * is known only by what is stored here, so this is the only way a Bizum gets a payer it was not
+ * already matched to.
  */
 export class SenderPairingService {
   static readonly NAME_MAX = 80;
 
   private readonly senders = new SenderMatch();
+  private readonly folding = new TextFolding();
 
   constructor(
     private readonly store: BizumStore,
@@ -88,21 +91,22 @@ export class SenderPairingService {
       .sort((a, b) => a.playerName.localeCompare(b.playerName, 'es'));
   }
 
-  /** Gives the player the name the organiser typed; a blank one clears it. Judges nothing. */
-  setBizumName(playerId: number, bizumName: string): void {
+  /** Gives the player one more name the organiser typed, next to the ones they have. Judges nothing. */
+  addBizumName(playerId: number, bizumName: string): void {
     this.requirePlayer(playerId);
     const name = bizumName.trim();
+    if (name === '') throw new BizumRefusal('Indica el nombre de Bizum');
     this.requireFits(name);
-    this.players.setBizumName(playerId, name === '' ? null : name);
+    this.addName(playerId, name);
   }
 
-  /** Removes the player's Bizum name; the payments already made stay. */
-  clearBizumName(playerId: number): void {
+  /** Removes one of the player's Bizum names; their other names and the payments already made stay. */
+  removeBizumName(playerId: number, bizumName: string): void {
     this.requirePlayer(playerId);
-    this.players.setBizumName(playerId, null);
+    this.players.removeBizumName(playerId, bizumName);
   }
 
-  /** Writes the phone or the name the sender showed; returns what it replaced. */
+  /** Writes the phone or the name the sender showed; returns the phone it replaced. */
   private write(
     playerId: number,
     sender: { name: string | null; phone: string | null }
@@ -116,9 +120,16 @@ export class SenderPairingService {
       throw new BizumRefusal('Ese Bizum no dice quién lo envía');
     }
     this.requireFits(sender.name);
-    const before = this.players.bizumNameOf(playerId);
-    this.players.setBizumName(playerId, sender.name);
-    return before !== null && before !== sender.name ? before : null;
+    this.addName(playerId, sender.name);
+    return null;
+  }
+
+  /** A name the player already has, in other capitals or accents, is not added again. */
+  private addName(playerId: number, name: string): void {
+    const known = this.players
+      .bizumNamesOf(playerId)
+      .some(held => this.folding.same(held, name));
+    if (!known) this.players.addBizumName(playerId, name);
   }
 
   private sharedWith(

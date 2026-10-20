@@ -3,6 +3,7 @@ import {
   BizumRefusal,
   type BizumResolutionService,
 } from '../repo/bizum-resolution-service.js';
+import type { RestOfBizum } from '../repo/bizum-settlement-service.js';
 import type { SenderPairingService } from '../repo/sender-pairing-service.js';
 import { HttpError, type HttpErrorHandler } from './http-error.js';
 
@@ -28,13 +29,17 @@ export class BizumAdminRouter {
         throw new HttpError(400, 'Nombre de Bizum no válido');
       }
       this.refused(() =>
-        this.pairing.setBizumName(this.idIn(req.params.playerId), bizumName)
+        this.pairing.addBizumName(this.idIn(req.params.playerId), bizumName)
       );
       res.json(this.pairing.pairings());
     });
     router.delete('/bizums/pairings/:playerId', (req, res) => {
+      const name = req.query.name;
+      if (typeof name !== 'string' || name === '') {
+        throw new HttpError(400, 'Nombre de Bizum no válido');
+      }
       this.refused(() =>
-        this.pairing.clearBizumName(this.idIn(req.params.playerId))
+        this.pairing.removeBizumName(this.idIn(req.params.playerId), name)
       );
       res.json(this.pairing.pairings());
     });
@@ -54,12 +59,13 @@ export class BizumAdminRouter {
       res.json({ ...result, waiting: this.resolution.waiting() });
     });
     router.post('/bizums/:id/rule', (req, res) => {
-      const { playerId, shares } = this.bodyOf(req.body);
+      const { playerId, shares, rest } = this.bodyOf(req.body);
       const ruling = this.refused(() =>
         this.resolution.rule(
           this.idIn(req.params.id),
           this.idIn(playerId),
-          typeof shares === 'number' ? shares : Number.NaN
+          typeof shares === 'number' ? shares : Number.NaN,
+          (rest ?? 'keep') as RestOfBizum
         )
       );
       res.json({ ...ruling, waiting: this.resolution.waiting() });

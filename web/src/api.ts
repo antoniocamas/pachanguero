@@ -490,6 +490,8 @@ export interface WaitingBizum {
   /** Names of every player the reason or the sender mentions. */
   players: Record<number, string>;
   senderIdentity: SenderIdentity;
+  /** The dates of the games after its booking that the player owes, when it waits for lack of debts. */
+  laterGames: string[];
 }
 
 /** A debt a Bizum could pay. */
@@ -502,6 +504,11 @@ export interface OpenShare {
   amountCents: number;
 }
 
+/** A debt the organiser may pay with a Bizum, and whether its game came after the Bizum. */
+export interface RulableShare extends OpenShare {
+  afterBooking: boolean;
+}
+
 export interface PairResult {
   /** What the player had before, when it was something else. */
   replaced: string | null;
@@ -510,6 +517,9 @@ export interface PairResult {
   results: { bizumId: number; status: 'settled' | 'waiting' }[];
   waiting: WaitingBizum[];
 }
+
+/** What becomes of the money of a Bizum that no share takes: kept on it unassigned, or dismissed. */
+export type RestOfBizum = 'keep' | 'dismiss';
 
 export interface Ruling {
   shares: number;
@@ -757,20 +767,28 @@ export const api = {
       method: 'PUT',
       body: body({ bizumName }),
     }),
-  clearBizumName: (playerId: number) =>
-    call<Pairing[]>(`/bizums/pairings/${playerId}`, { method: 'DELETE' }),
+  removeBizumName: (playerId: number, bizumName: string) =>
+    call<Pairing[]>(
+      `/bizums/pairings/${playerId}?name=${encodeURIComponent(bizumName)}`,
+      { method: 'DELETE' }
+    ),
   waitingBizums: () => call<WaitingBizum[]>('/bizums/waiting'),
   openShares: (bizumId: number, playerId: number) =>
-    call<OpenShare[]>(`/bizums/${bizumId}/open-shares?playerId=${playerId}`),
+    call<RulableShare[]>(`/bizums/${bizumId}/open-shares?playerId=${playerId}`),
   pairBizum: (bizumId: number, playerId: number) =>
     call<PairResult>(`/bizums/${bizumId}/pair`, {
       method: 'POST',
       body: body({ playerId }),
     }),
-  ruleBizum: (bizumId: number, playerId: number, shares: number) =>
+  ruleBizum: (
+    bizumId: number,
+    playerId: number,
+    shares: number,
+    rest: RestOfBizum
+  ) =>
     call<Ruling>(`/bizums/${bizumId}/rule`, {
       method: 'POST',
-      body: body({ playerId, shares }),
+      body: body({ playerId, shares, rest }),
     }),
   dismissBizum: (bizumId: number) =>
     call<{ waiting: WaitingBizum[] }>(`/bizums/${bizumId}/dismiss`, {

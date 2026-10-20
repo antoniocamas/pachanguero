@@ -63,4 +63,28 @@ describe('NearestDebtOrder', () => {
     order.order(shares, marta, '2026-10-12');
     expect(ids(shares)).toEqual([1, 2]);
   });
+
+  describe('later', () => {
+    it('lists the games after the booking date, the earliest first', () => {
+      const shares = [
+        share(1, 1, '2026-10-20'),
+        share(2, 2, '2026-10-13'),
+        share(3, 3, '2026-10-06'),
+      ];
+      expect(ids(order.later(shares, marta, '2026-10-12'))).toEqual([2, 1]);
+    });
+
+    it('leaves out a game played on or before the booking date', () => {
+      const shares = [share(1, 1, '2026-10-12'), share(2, 2, '2026-10-13')];
+      expect(ids(order.later(shares, marta, '2026-10-12'))).toEqual([2]);
+    });
+
+    it('puts the player own share before the plus-ones of the same game', () => {
+      const shares = [
+        share(10, 2, '2026-10-13', { hostPlayerId: marta, ordinal: 1 }),
+        share(12, 2, '2026-10-13'),
+      ];
+      expect(ids(order.later(shares, marta, '2026-10-12'))).toEqual([12, 10]);
+    });
+  });
 });

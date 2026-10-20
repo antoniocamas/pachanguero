@@ -64,15 +64,13 @@ describe('PlayerRepository', () => {
     const ana = players.add(seasonId, 'Ana', 1).id;
     const luis = players.add(seasonId, 'Luis', 1).id;
     players.add(seasonId, 'Marta', 1);
-    conn
-      .prepare('UPDATE players SET bizum_name = ? WHERE id = ?')
-      .run('Ana L.', ana);
-    conn
-      .prepare('UPDATE players SET bizum_name = ? WHERE id = ?')
-      .run('Ana L.', luis);
+    players.addBizumName(ana, 'Ana L.');
+    players.addBizumName(ana, 'Ana L.B.');
+    players.addBizumName(luis, 'Ana L.');
 
     expect(players.listBizumNames()).toEqual([
       { playerId: ana, bizumName: 'Ana L.' },
+      { playerId: ana, bizumName: 'Ana L.B.' },
       { playerId: luis, bizumName: 'Ana L.' },
     ]);
   });
@@ -129,14 +127,16 @@ describe('PlayerRepository', () => {
     });
   });
 
-  it('pairs a Bizum name with a player, and clears it', () => {
+  it('gives a player several Bizum names, adds one once, and removes one at a time', () => {
     const ana = players.register('Ana').id;
 
-    expect(players.bizumNameOf(ana)).toBeNull();
-    players.setBizumName(ana, 'Ana L.');
-    expect(players.bizumNameOf(ana)).toBe('Ana L.');
-    players.setBizumName(ana, null);
-    expect(players.bizumNameOf(ana)).toBeNull();
-    expect(players.bizumNameOf(999)).toBeNull();
+    expect(players.bizumNamesOf(ana)).toEqual([]);
+    players.addBizumName(ana, 'Ana L.');
+    players.addBizumName(ana, 'Ana L.B.');
+    players.addBizumName(ana, 'Ana L.');
+    expect(players.bizumNamesOf(ana)).toEqual(['Ana L.', 'Ana L.B.']);
+    players.removeBizumName(ana, 'Ana L.');
+    expect(players.bizumNamesOf(ana)).toEqual(['Ana L.B.']);
+    expect(players.bizumNamesOf(999)).toEqual([]);
   });
 });

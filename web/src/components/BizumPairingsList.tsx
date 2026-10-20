@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Pairing, Player } from '../api';
 
-/** The players whose Bizums are recognised by a name, with a way to remove one or give one by hand. */
+/** The names the bank shows the players under, one each, with a way to remove one or add one by hand. */
 export function BizumPairingsList({
   pairings,
   players,
@@ -13,7 +13,7 @@ export function BizumPairingsList({
   players: Pick<Player, 'id' | 'name'>[];
   busy: boolean;
   onSet: (playerId: number, bizumName: string) => void;
-  onClear: (playerId: number) => void;
+  onClear: (playerId: number, bizumName: string) => void;
 }) {
   const [playerId, setPlayerId] = useState('');
   const [name, setName] = useState('');
@@ -25,14 +25,14 @@ export function BizumPairingsList({
           <p className="muted">Ningún jugador tiene nombre de Bizum.</p>
         ) : (
           pairings.map(p => (
-            <div className="row" key={p.playerId}>
+            <div className="row" key={`${p.playerId}:${p.bizumName}`}>
               <span className="name">{p.playerName}</span>
               <span>{p.bizumName}</span>
               <button
                 className="btn mini"
                 disabled={busy}
-                aria-label={`Quitar el nombre de Bizum de ${p.playerName}`}
-                onClick={() => onClear(p.playerId)}
+                aria-label={`Quitar «${p.bizumName}» de ${p.playerName}`}
+                onClick={() => onClear(p.playerId, p.bizumName)}
               >
                 Quitar
               </button>

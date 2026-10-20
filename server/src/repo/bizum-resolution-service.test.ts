@@ -31,15 +31,30 @@ describe('BizumResolutionService', () => {
     ).toEqual(['2026-10-02', '2026-10-12']);
   });
 
-  it('lists the open shares a Bizum could pay, nearest first, for a player not paired', async () => {
+  it('lists the open shares a Bizum could pay for a player not paired: nearest first, then the later games', async () => {
     const older = rig.owes(luis, '2026-10-05');
     const nearer = rig.owes(luis, '2026-10-06');
-    rig.owes(luis, '2026-10-20');
+    const upcoming = rig.owes(luis, '2026-10-20');
     await arrive('r1', 800, { phone: '+34611111111' });
 
     const shares = resolution().openShares(rig.idOf('r1'), luis);
 
-    expect(shares.map(s => s.gameId)).toEqual([nearer, older]);
+    expect(shares.map(s => s.gameId)).toEqual([nearer, older, upcoming]);
+  });
+
+  it('adds the games after the booking date, earliest first and marked, once the earlier ones are listed', async () => {
+    const earlier = rig.owes(luis, '2026-10-05');
+    const later = rig.owes(luis, '2026-10-20');
+    const latest = rig.owes(luis, '2026-10-27');
+    await arrive('r1', 800, { phone: '+34611111111' });
+
+    const shares = resolution().openShares(rig.idOf('r1'), luis);
+
+    expect(shares.map(s => [s.gameId, s.afterBooking])).toEqual([
+      [earlier, false],
+      [later, true],
+      [latest, true],
+    ]);
   });
 
   it('rules for an unpaired sender without pairing it', async () => {
@@ -48,7 +63,7 @@ describe('BizumResolutionService', () => {
 
     resolution().rule(rig.idOf('r1'), luis, 1);
 
-    expect(rig.flow.players.bizumNameOf(luis)).toBeNull();
+    expect(rig.flow.players.bizumNamesOf(luis)).toEqual([]);
     expect(rig.handlingOf('r1')).toMatchObject({
       settledHow: 'organiser',
       unallocatedCents: 400,
@@ -92,7 +107,7 @@ describe('BizumResolutionService', () => {
 
   it('reevaluates only what still waits, and settles each against what the ones before took', async () => {
     rig.owes(luis, '2026-10-05');
-    rig.flow.senderPairing.setBizumName(luis, 'Luis P.R.');
+    rig.flow.senderPairing.addBizumName(luis, 'Luis P.R.');
     await arrive('a', 400, { name: 'Luis P.R.' }, null, '2026-10-08');
     await arrive('b', 400, { name: 'Luis P.R.' }, null, '2026-10-09');
     const [a, b] = [rig.idOf('a'), rig.idOf('b')];
@@ -100,5 +115,102 @@ describe('BizumResolutionService', () => {
     expect(resolution().reevaluate([999, a, b, a])).toEqual([
       { bizumId: b, status: 'waiting' },
     ]);
+  });
+
+  describe('a Bizum booked before the games it pays', () => {
+    const adam = () => rig.player('Adam');
+
+    it('waits, and says which later games the sender owes', async () => {
+      const a = adam();
+      rig.flow.senderPairing.addBizumName(a, 'ADAM RON B.');
+      const g1 = rig.owes(a, '2026-09-07');
+      const g2 = rig.owes(a, '2026-09-14');
+      void [g1, g2];
+      await arrive(
+        'r1',
+        1200,
+        { name: 'ADAM RON B.' },
+        '3 furgol',
+        '2026-09-02'
+      );
+
+      const [waiting] = resolution().waiting();
+
+      expect(waiting.reason).toMatchObject({
+        code: 'not_enough_debts',
+        shares: 3,
+        debts: 0,
+      });
+      expect(waiting.laterGames).toEqual(['2026-09-07', '2026-09-14']);
+    });
+
+    it('lets the organiser pay the later games, earliest first', async () => {
+      const a = adam();
+      const g1 = rig.owes(a, '2026-09-07');
+      const g2 = rig.owes(a, '2026-09-14');
+      const g3 = rig.owes(a, '2026-09-21');
+      await arrive(
+        'r1',
+        1200,
+        { name: 'ADAM RON B.' },
+        '3 furgol',
+        '2026-09-02'
+      );
+
+      resolution().rule(rig.idOf('r1'), a, 3);
+
+      expect(rig.payments().map(p => p.game_id)).toEqual([g1, g2, g3]);
+      expect(rig.handlingOf('r1')).toMatchObject({
+        status: 'settled',
+        settledHow: 'organiser',
+        unallocatedCents: 0,
+      });
+    });
+
+    it('pays the earlier games first, nearest first, and then the later ones', async () => {
+      const a = adam();
+      const before = rig.owes(a, '2026-09-01');
+      const after = rig.owes(a, '2026-09-07');
+      await arrive('r1', 800, { name: 'ADAM RON B.' }, null, '2026-09-02');
+
+      resolution().rule(rig.idOf('r1'), a, 2);
+
+      expect(rig.payments().map(p => p.game_id)).toEqual([before, after]);
+    });
+
+    it('never pays more shares than the player has open, whenever they were played', async () => {
+      const a = adam();
+      rig.owes(a, '2026-09-07');
+      await arrive('r1', 1200, { name: 'ADAM RON B.' }, null, '2026-09-02');
+
+      expect(() => resolution().rule(rig.idOf('r1'), a, 2)).toThrow(
+        'Solo tiene 1 cuota abierta en esa temporada'
+      );
+    });
+
+    it('leaves the money that pays nothing on the Bizum, unassigned, unless the organiser dismisses it', async () => {
+      const a = adam();
+      rig.owes(a, '2026-09-07');
+      rig.owes(a, '2026-09-14');
+      rig.owes(a, '2026-09-21');
+      await arrive('keep', 1200, { name: 'ADAM RON B.' }, null, '2026-09-02');
+      await arrive('drop', 1200, { name: 'ADAM RON B.' }, null, '2026-09-02');
+
+      const kept = resolution().rule(rig.idOf('keep'), a, 2);
+      const dropped = resolution().rule(rig.idOf('drop'), a, 1, 'dismiss');
+
+      expect(kept).toEqual({ shares: 2, unallocatedCents: 400 });
+      expect(dropped).toEqual({ shares: 1, unallocatedCents: 0 });
+    });
+
+    it('refuses a way of leaving the rest that is not one of the two', async () => {
+      const a = adam();
+      rig.owes(a, '2026-09-07');
+      await arrive('r1', 800, { name: 'ADAM RON B.' }, null, '2026-09-02');
+
+      expect(() =>
+        resolution().rule(rig.idOf('r1'), a, 1, 'whatever' as never)
+      ).toThrow('Indica qué se hace con el resto del Bizum');
+    });
   });
 });

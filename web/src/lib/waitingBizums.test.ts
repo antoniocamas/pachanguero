@@ -5,9 +5,11 @@ import {
   defaultPlayerId,
   identifiedAs,
   pairResultLines,
+  pairingText,
   playerChoices,
   reasonLines,
   senderText,
+  suggestedPlayer,
   waitingActions,
 } from './waitingBizums';
 
@@ -21,6 +23,7 @@ const bizum = (over: Partial<WaitingBizum>): WaitingBizum => ({
   reason: { code: 'kept' },
   players: {},
   senderIdentity: { kind: 'unknown', suggestions: [] },
+  laterGames: [],
   ...over,
 });
 
@@ -53,6 +56,31 @@ const ambiguous = bizum({
 });
 
 describe('reasonLines', () => {
+  it('says which later games the sender owes when the Bizum was booked before them', () => {
+    const prepaid = bizum({
+      reason: { code: 'not_enough_debts', playerId: 1, shares: 3, debts: 0 },
+      players: { 1: 'Adam' },
+      senderIdentity: { kind: 'player', playerId: 1 },
+      laterGames: ['2026-09-28', '2026-10-05'],
+    });
+    expect(reasonLines(prepaid)).toEqual([
+      'Adam debe 0 cuotas y el Bizum son 3.',
+      'Debe 2 cuotas de partidos posteriores al Bizum: 28 sept y 5 oct.',
+    ]);
+  });
+
+  it('says it in the singular for one later game', () => {
+    const prepaid = bizum({
+      reason: { code: 'not_enough_debts', playerId: 1, shares: 2, debts: 0 },
+      players: { 1: 'Adam' },
+      senderIdentity: { kind: 'player', playerId: 1 },
+      laterGames: ['2026-09-28'],
+    });
+    expect(reasonLines(prepaid)[1]).toBe(
+      'Debe 1 cuota de partidos posteriores al Bizum: 28 sept.'
+    );
+  });
+
   it('says how many shares are owed and how many the Bizum is', () => {
     expect(reasonLines(luis)).toEqual([
       'Luis Pérez debe 2 cuotas y el Bizum son 3.',
@@ -237,5 +265,53 @@ describe('pairResultLines', () => {
     );
     expect(lines[0]).toBe('No se liquidó ningún Bizum.');
     expect(lines[lines.length - 1]).toContain('Marta Gómez');
+  });
+});
+
+describe('suggestedPlayer', () => {
+  const suggested = (ids: number[]) =>
+    bizum({
+      reason: { code: 'sender_unknown' },
+      players: { 1: 'Adam', 2: 'Adán' },
+      senderIdentity: { kind: 'unknown', suggestions: ids },
+    });
+
+  it('is the one player suggested for an unknown sender, to be accepted with one tap', () => {
+    expect(suggestedPlayer(suggested([1]))).toEqual({ id: 1, name: 'Adam' });
+  });
+
+  it('is nobody when two players are suggested: the organiser chooses', () => {
+    expect(suggestedPlayer(suggested([1, 2]))).toBeNull();
+  });
+
+  it('is nobody when nobody is suggested, when the sender is already a player and when it is ambiguous', () => {
+    expect(suggestedPlayer(suggested([]))).toBeNull();
+    expect(suggestedPlayer(luis)).toBeNull();
+    expect(suggestedPlayer(ambiguous)).toBeNull();
+  });
+});
+
+describe('pairingText', () => {
+  const named = bizum({ sender: { name: 'ADAM RON B.R.', phone: null } });
+  const phoned = bizum({ sender: { name: null, phone: '+34611111111' } });
+
+  it('says the name will be saved as his Bizum name when he has none', () => {
+    expect(pairingText(named, 'Adam', [])).toBe(
+      'Se guardará «ADAM RON B.R.» como su nombre de Bizum y se volverán a aplicar las reglas a los Bizums en espera de Adam.'
+    );
+  });
+
+  it('says the name is added next to the ones he has, and replaces none', () => {
+    const text = pairingText(named, 'Adam', ['ADAM RON B.', 'Adam R.']);
+    expect(text).toBe(
+      'Se guardará «ADAM RON B.R.» como otro nombre de Bizum de Adam, que ya tiene «ADAM RON B.» y «Adam R.», y se volverán a aplicar las reglas a los Bizums en espera de Adam.'
+    );
+    expect(text).not.toContain('Sustituirá');
+  });
+
+  it('says the phone will be saved as his phone', () => {
+    expect(pairingText(phoned, 'Adam', ['ADAM RON B.'])).toBe(
+      'Se guardará su teléfono +34611111111 y se volverán a aplicar las reglas a los Bizums en espera de Adam.'
+    );
   });
 });

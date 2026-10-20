@@ -26,29 +26,43 @@ export class PlayerRepository {
       .all() as { id: number; name: string }[];
   }
 
-  /** The name the bank shows for each player who has one paired, as stored. */
+  /** Every name the bank shows for a player, as stored: a player may have several. */
   listBizumNames(): { playerId: number; bizumName: string }[] {
     return this.conn
       .prepare(
-        `SELECT id AS playerId, bizum_name AS bizumName FROM players
-          WHERE bizum_name IS NOT NULL ORDER BY id`
+        `SELECT player_id AS playerId, bizum_name AS bizumName FROM player_bizum_names
+          ORDER BY player_id, rowid`
       )
       .all() as { playerId: number; bizumName: string }[];
   }
 
-  /** How the bank shows this player, or null when no name is paired. */
-  bizumNameOf(playerId: number): string | null {
-    const row = this.conn
-      .prepare('SELECT bizum_name FROM players WHERE id = ?')
-      .get(playerId) as { bizum_name: string | null } | undefined;
-    return row?.bizum_name ?? null;
+  /** The names the bank shows this player under, in the order they were paired. */
+  bizumNamesOf(playerId: number): string[] {
+    return (
+      this.conn
+        .prepare(
+          'SELECT bizum_name FROM player_bizum_names WHERE player_id = ? ORDER BY rowid'
+        )
+        .all(playerId) as { bizum_name: string }[]
+    ).map(row => row.bizum_name);
   }
 
-  /** Pairs the name the bank shows with a player, or clears it with null. */
-  setBizumName(playerId: number, bizumName: string | null): void {
+  /** Pairs one more name the bank shows with a player; a name already paired is left as it is. */
+  addBizumName(playerId: number, bizumName: string): void {
     this.conn
-      .prepare('UPDATE players SET bizum_name = ? WHERE id = ?')
-      .run(bizumName, playerId);
+      .prepare(
+        'INSERT OR IGNORE INTO player_bizum_names (player_id, bizum_name) VALUES (?, ?)'
+      )
+      .run(playerId, bizumName);
+  }
+
+  /** Unpairs that name from the player; their other names stay. */
+  removeBizumName(playerId: number, bizumName: string): void {
+    this.conn
+      .prepare(
+        'DELETE FROM player_bizum_names WHERE player_id = ? AND bizum_name = ?'
+      )
+      .run(playerId, bizumName);
   }
 
   /** Create a player without enrolling them in any season. */

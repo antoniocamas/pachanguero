@@ -1,4 +1,5 @@
 import type { PairResult, WaitingBizum } from '../api';
+import { fmtDate } from './dates';
 import { euros } from './money';
 
 /** `a`, `a o b`, `a, b o c`. */
@@ -6,6 +7,15 @@ const orList = (names: readonly string[]) =>
   names.length < 2
     ? names.join('')
     : `${names.slice(0, -1).join(', ')} o ${names[names.length - 1]}`;
+
+/** `a`, `a y b`, `a, b y c`. */
+const andList = (items: readonly string[]) =>
+  items.length < 2
+    ? items.join('')
+    : `${items.slice(0, -1).join(', ')} y ${items[items.length - 1]}`;
+
+/** `28 sept`: a game's day without the weekday. */
+const gameDay = (iso: string) => fmtDate(iso).replace(/^\S+,\s*/, '');
 
 const nameOf = (item: WaitingBizum, playerId: number) =>
   item.players[playerId] ?? `Jugador ${playerId}`;
@@ -37,6 +47,11 @@ export const reasonLines = (item: WaitingBizum): string[] => {
     case 'not_enough_debts':
       return [
         `${nameOf(item, reason.playerId)} debe ${shares(reason.debts)} y el Bizum son ${reason.shares}.`,
+        ...(item.laterGames.length > 0
+          ? [
+              `Debe ${shares(item.laterGames.length)} de partidos posteriores al Bizum: ${andList(item.laterGames.map(gameDay))}.`,
+            ]
+          : []),
       ];
     case 'include_word':
       return [
@@ -100,6 +115,18 @@ export const playerChoices = <P extends { id: number }>(
   };
 };
 
+/** The one player suggested for an unknown sender, who the organiser can accept with one tap. */
+export const suggestedPlayer = (
+  item: WaitingBizum
+): { id: number; name: string } | null =>
+  item.senderIdentity.kind === 'unknown' &&
+  item.senderIdentity.suggestions.length === 1
+    ? {
+        id: item.senderIdentity.suggestions[0],
+        name: nameOf(item, item.senderIdentity.suggestions[0]),
+      }
+    : null;
+
 /** The player the ruling starts from: the identified one, else the first suggestion. */
 export const defaultPlayerId = (item: WaitingBizum): number | null => {
   const identity = item.senderIdentity;
@@ -108,19 +135,19 @@ export const defaultPlayerId = (item: WaitingBizum): number | null => {
   return identity.playerIds[0] ?? null;
 };
 
-/** What pairing saves, in words: the Bizum name, or the phone. */
+/** What pairing saves, in words: the phone, or the name next to the ones the player already has. */
 export const pairingText = (
   item: WaitingBizum,
   playerName: string,
-  current: string | null
+  current: readonly string[]
 ) => {
-  const phone = item.sender.phone !== null;
-  const saved = phone
-    ? `Se guardará su teléfono ${item.sender.phone}`
-    : `Se guardará «${item.sender.name ?? ''}» como su nombre de Bizum`;
-  const replaced =
-    current !== null && !phone ? ` Sustituirá «${current}».` : '';
-  return `${saved} y se volverán a aplicar las reglas a los Bizums en espera de ${playerName}.${replaced}`;
+  const saved =
+    item.sender.phone !== null
+      ? `Se guardará su teléfono ${item.sender.phone}`
+      : current.length === 0
+        ? `Se guardará «${item.sender.name ?? ''}» como su nombre de Bizum`
+        : `Se guardará «${item.sender.name ?? ''}» como otro nombre de Bizum de ${playerName}, que ya tiene ${andList(current.map(name => `«${name}»`))},`;
+  return `${saved} y se volverán a aplicar las reglas a los Bizums en espera de ${playerName}.`;
 };
 
 /** What pairing did, one line each: what settled, what still waits and who else shares the name. */

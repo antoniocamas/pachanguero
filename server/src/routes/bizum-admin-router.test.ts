@@ -121,19 +121,58 @@ describe('the Bizum routes', () => {
     });
   });
 
-  it('sets, lists and clears a pairing by hand', async () => {
-    const set = await call('PUT', `/bizums/pairings/${luis}`, {
+  it('refuses a ruling that says nothing sensible of the rest of the Bizum', async () => {
+    const reply = await call('POST', `/bizums/${bizumId}/rule`, {
+      playerId: luis,
+      shares: 1,
+      rest: 'tirar',
+    });
+
+    expect(reply).toMatchObject({
+      status: 400,
+      body: { error: 'Indica qué se hace con el resto del Bizum' },
+    });
+  });
+
+  it('adds, lists and removes a pairing by hand, one name at a time', async () => {
+    const first = await call('PUT', `/bizums/pairings/${luis}`, {
       bizumName: 'Luis P.R.',
+    });
+    const second = await call('PUT', `/bizums/pairings/${luis}`, {
+      bizumName: 'Luis Pérez R.',
     });
     const wrong = await call('PUT', `/bizums/pairings/${luis}`, {
       bizumName: 3,
     });
-    const cleared = await call('DELETE', `/bizums/pairings/${luis}`);
+    const blank = await call('PUT', `/bizums/pairings/${luis}`, {
+      bizumName: '  ',
+    });
+    const removed = await call(
+      'DELETE',
+      `/bizums/pairings/${luis}?name=${encodeURIComponent('Luis P.R.')}`
+    );
+    const noName = await call('DELETE', `/bizums/pairings/${luis}`);
+    const cleared = await call(
+      'DELETE',
+      `/bizums/pairings/${luis}?name=${encodeURIComponent('Luis Pérez R.')}`
+    );
 
-    expect(set.body).toEqual([
+    expect(first.body).toEqual([
       { playerId: luis, playerName: 'Luis Pérez', bizumName: 'Luis P.R.' },
     ]);
+    expect(second.body).toEqual([
+      { playerId: luis, playerName: 'Luis Pérez', bizumName: 'Luis P.R.' },
+      { playerId: luis, playerName: 'Luis Pérez', bizumName: 'Luis Pérez R.' },
+    ]);
     expect(wrong.status).toBe(400);
+    expect(blank).toMatchObject({
+      status: 400,
+      body: { error: 'Indica el nombre de Bizum' },
+    });
+    expect(removed.body).toEqual([
+      { playerId: luis, playerName: 'Luis Pérez', bizumName: 'Luis Pérez R.' },
+    ]);
+    expect(noName.status).toBe(400);
     expect(cleared.body).toEqual([]);
   });
 

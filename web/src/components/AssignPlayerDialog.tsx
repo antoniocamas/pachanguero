@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import type { PairResult, Pairing, Player, WaitingBizum } from '../api';
-import { pairResultLines, pairingText } from '../lib/waitingBizums';
+import { pairingText } from '../lib/waitingBizums';
 import { BizumFacts } from './BizumFacts';
+import { PairResultBody } from './PairResultBody';
 import { PlayerSelect } from './PlayerSelect';
 import { ResolveDialog } from './ResolveDialog';
 
@@ -52,23 +53,12 @@ function AssignBody({
   const [playerId, setPlayerId] = useState<number | null>(null);
   const [result, setResult] = useState<PairResult | null>(null);
   const chosen = players.find(p => p.id === playerId);
-  const current =
-    pairings.find(p => p.playerId === playerId)?.bizumName ?? null;
+  const current = pairings
+    .filter(p => p.playerId === playerId)
+    .map(p => p.bizumName);
 
-  if (result !== null) {
-    return (
-      <div className="dialog-body" data-testid="pair-result">
-        {pairResultLines(result).map(line => (
-          <p key={line}>{line}</p>
-        ))}
-        <div className="actions">
-          <button className="btn primary" onClick={onClose}>
-            Hecho
-          </button>
-        </div>
-      </div>
-    );
-  }
+  if (result !== null)
+    return <PairResultBody result={result} onClose={onClose} />;
   return (
     <div className="dialog-body">
       <BizumFacts item={item} />

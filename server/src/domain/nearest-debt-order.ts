@@ -3,7 +3,8 @@ import type { OpenShare } from './bizum-rules.js';
 /**
  * Which of a player's open shares a Bizum pays first: those of games played on or before the
  * Bizum's date, the latest game first; within a game the player's own share, then the shares
- * they hold for guests by ordinal, then by debt.
+ * they hold for guests by ordinal, then by debt. The games after the Bizum's date come after
+ * those, earliest first, and only a ruling of the organiser pays them.
  */
 export class NearestDebtOrder {
   order(
@@ -17,6 +18,24 @@ export class NearestDebtOrder {
         (a, b) =>
           b.playedOn.localeCompare(a.playedOn) ||
           b.gameId - a.gameId ||
+          this.rank(a, playerId) - this.rank(b, playerId) ||
+          this.ordinal(a) - this.ordinal(b) ||
+          a.debtId - b.debtId
+      );
+  }
+
+  /** The shares of games played after the booking date, the earliest game first. */
+  later(
+    shares: readonly OpenShare[],
+    playerId: number,
+    bookedOn: string
+  ): OpenShare[] {
+    return shares
+      .filter(share => share.playedOn > bookedOn)
+      .sort(
+        (a, b) =>
+          a.playedOn.localeCompare(b.playedOn) ||
+          a.gameId - b.gameId ||
           this.rank(a, playerId) - this.rank(b, playerId) ||
           this.ordinal(a) - this.ordinal(b) ||
           a.debtId - b.debtId

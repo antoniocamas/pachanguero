@@ -1,7 +1,7 @@
 import type Database from 'better-sqlite3';
 
 /** The schema version this application writes. Raise it with each new `MigrationStep`. */
-export const LATEST_SCHEMA_VERSION = 5;
+export const LATEST_SCHEMA_VERSION = 6;
 
 /** Something that can write a copy of the database before it is changed. */
 export interface MigrationBackup {

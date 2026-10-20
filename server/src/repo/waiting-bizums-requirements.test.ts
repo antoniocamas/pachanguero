@@ -175,7 +175,7 @@ describe('the waiting Bizums requirements', () => {
         [older, 'bizum', '2026-10-09', rig.idOf('b')],
       ]);
       expect(rig.handlingOf('a')).toMatchObject({ settledHow: 'automatic' });
-      expect(rig.flow.players.bizumNameOf(luisId)).toBe('Luis P.R.');
+      expect(rig.flow.players.bizumNamesOf(luisId)).toEqual(['Luis P.R.']);
     });
 
     it('pairs with 1 debt: the 8.00 waits with its new reason and the 4.00 settles', async () => {
@@ -218,17 +218,20 @@ describe('the waiting Bizums requirements', () => {
       });
       expect(rig.flow.bizumResolution.waiting()).toEqual([]);
       expect(rig.payments()).toHaveLength(2);
-      expect(rig.flow.players.bizumNameOf(luisId)).toBeNull();
+      expect(rig.flow.players.bizumNamesOf(luisId)).toEqual([]);
     });
 
-    it('says what a new pairing replaces', async () => {
+    it('adds a new name next to the one he had, and replaces nothing', async () => {
       const luisId = luis('Luis Pérez R.');
       await rig.arrive(bizum('a', '2026-10-08', 400, { name: 'Luis P.R.' }));
 
       const result = rig.flow.senderPairing.pair(rig.idOf('a'), luisId);
 
-      expect(result.replaced).toBe('Luis Pérez R.');
-      expect(rig.flow.players.bizumNameOf(luisId)).toBe('Luis P.R.');
+      expect(result.replaced).toBeNull();
+      expect(rig.flow.players.bizumNamesOf(luisId)).toEqual([
+        'Luis Pérez R.',
+        'Luis P.R.',
+      ]);
     });
   });
 
@@ -334,9 +337,9 @@ describe('the waiting Bizums requirements', () => {
       ]);
       const paid = rig.payments();
 
-      rig.flow.senderPairing.clearBizumName(luisId);
+      rig.flow.senderPairing.removeBizumName(luisId, 'Luis P.R.');
 
-      expect(rig.flow.players.bizumNameOf(luisId)).toBeNull();
+      expect(rig.flow.players.bizumNamesOf(luisId)).toEqual([]);
       expect(rig.flow.senderPairing.pairings()).toEqual([]);
       expect(rig.payments()).toEqual(paid);
       await rig.arrive(bizum('b', '2026-10-09', 400, { name: 'Luis P.R.' }));
@@ -347,7 +350,7 @@ describe('the waiting Bizums requirements', () => {
       const guti = rig.player('Guti');
       rig.owes(guti, '2026-10-05');
 
-      rig.flow.senderPairing.setBizumName(guti, '  Jorge G.A. ');
+      rig.flow.senderPairing.addBizumName(guti, '  Jorge G.A. ');
       await rig.arrive(bizum('a', '2026-10-08', 400, { name: 'Jorge G.A.' }));
 
       expect(rig.handlingOf('a')).toMatchObject({ status: 'settled' });
@@ -425,7 +428,7 @@ describe('the waiting Bizums requirements', () => {
     });
 
     it('is not settled when a game of the player is played', () => {
-      rig.flow.senderPairing.setBizumName(luisId, 'Luis P.R.');
+      rig.flow.senderPairing.addBizumName(luisId, 'Luis P.R.');
 
       rig.owes(luisId, '2026-10-05');
 

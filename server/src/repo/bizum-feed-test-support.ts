@@ -205,9 +205,7 @@ export class BizumFeedRig {
   player(name: string, bizumName: string | null = null): number {
     const id = this.flow.players.add(this.flow.seasonId, name, 1).id;
     if (bizumName !== null) {
-      this.conn
-        .prepare('UPDATE players SET bizum_name = ? WHERE id = ?')
-        .run(bizumName, id);
+      this.flow.players.addBizumName(id, bizumName);
     }
     return id;
   }

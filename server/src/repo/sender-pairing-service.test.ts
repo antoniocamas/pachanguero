@@ -14,7 +14,7 @@ describe('SenderPairingService', () => {
   });
 
   it('says nothing was replaced when the player already had the same name', async () => {
-    rig.flow.senderPairing.setBizumName(luis, 'Luis P.R.');
+    rig.flow.senderPairing.addBizumName(luis, 'Luis P.R.');
     await rig.arrive(
       FakeBankEntries.incoming('r1', '2026-10-08', 800, { name: 'Luis P.R.' })
     );
@@ -58,26 +58,27 @@ describe('SenderPairingService', () => {
     expect(() => pairing().pair(rig.idOf('r1'), 999)).toThrow(
       'No existe ese jugador'
     );
-    expect(() => pairing().setBizumName(999, 'x')).toThrow('No existe');
-    expect(() => pairing().clearBizumName(999)).toThrow('No existe');
+    expect(() => pairing().addBizumName(999, 'x')).toThrow('No existe');
+    expect(() => pairing().removeBizumName(999, 'x')).toThrow('No existe');
   });
 
-  it('keeps a typed name trimmed, clears a blank one, and refuses one over 80 characters', () => {
-    pairing().setBizumName(luis, '  Jorge G.A. ');
-    expect(rig.flow.players.bizumNameOf(luis)).toBe('Jorge G.A.');
+  it('keeps a typed name trimmed, refuses a blank one and one over 80 characters', () => {
+    pairing().addBizumName(luis, '  Jorge G.A. ');
+    expect(rig.flow.players.bizumNamesOf(luis)).toEqual(['Jorge G.A.']);
 
-    pairing().setBizumName(luis, '   ');
-    expect(rig.flow.players.bizumNameOf(luis)).toBeNull();
-
-    expect(() => pairing().setBizumName(luis, 'x'.repeat(81))).toThrow(
+    expect(() => pairing().addBizumName(luis, '   ')).toThrow(
+      'Indica el nombre de Bizum'
+    );
+    expect(() => pairing().addBizumName(luis, 'x'.repeat(81))).toThrow(
       'no puede pasar de 80'
     );
+    expect(rig.flow.players.bizumNamesOf(luis)).toEqual(['Jorge G.A.']);
   });
 
   it('lists the pairings by player name', () => {
     const ana = rig.player('Ana');
-    pairing().setBizumName(luis, 'Luis P.R.');
-    pairing().setBizumName(ana, 'Ana M.');
+    pairing().addBizumName(luis, 'Luis P.R.');
+    pairing().addBizumName(ana, 'Ana M.');
 
     expect(
       pairing()
@@ -92,8 +93,84 @@ describe('SenderPairingService', () => {
       FakeBankEntries.incoming('r1', '2026-10-08', 400, { name: 'Luis P.R.' })
     );
 
-    pairing().setBizumName(luis, 'Luis P.R.');
+    pairing().addBizumName(luis, 'Luis P.R.');
 
     expect(rig.handlingOf('r1')).toMatchObject({ status: 'waiting' });
+  });
+
+  describe('a player the bank shows under several names', () => {
+    const adam = () => rig.player('Adam', 'ADAM RON B.');
+
+    it('keeps the name he had and adds the new one, replacing nothing', async () => {
+      const a = adam();
+      await rig.arrive(
+        FakeBankEntries.incoming('r1', '2026-10-08', 800, {
+          name: 'ADAM RON B.R.',
+        })
+      );
+
+      const result = pairing().pair(rig.idOf('r1'), a);
+
+      expect(result.replaced).toBeNull();
+      expect(rig.flow.players.bizumNamesOf(a)).toEqual([
+        'ADAM RON B.',
+        'ADAM RON B.R.',
+      ]);
+      expect(pairing().pairings()).toEqual([
+        { playerId: a, playerName: 'Adam', bizumName: 'ADAM RON B.' },
+        { playerId: a, playerName: 'Adam', bizumName: 'ADAM RON B.R.' },
+      ]);
+    });
+
+    it('identifies both senders as him, and settles the Bizums of each', async () => {
+      const a = adam();
+      rig.owes(a, '2026-10-05');
+      rig.owes(a, '2026-10-06');
+      await rig.arrive(
+        FakeBankEntries.incoming('r1', '2026-10-08', 400, {
+          name: 'ADAM RON B.R.',
+        }),
+        FakeBankEntries.incoming('r2', '2026-10-09', 400, {
+          name: 'ADAM RON B.',
+        })
+      );
+
+      pairing().pair(rig.idOf('r1'), a);
+
+      expect(rig.handlingOf('r1')).toMatchObject({ status: 'settled' });
+      expect(rig.handlingOf('r2')).toMatchObject({ status: 'settled' });
+    });
+
+    it('does not add a name he already has in other capitals or accents', () => {
+      const a = adam();
+
+      pairing().addBizumName(a, 'adam ron b.');
+
+      expect(rig.flow.players.bizumNamesOf(a)).toEqual(['ADAM RON B.']);
+    });
+
+    it('removes one name and keeps the other, and the payments stay', async () => {
+      const a = adam();
+      pairing().addBizumName(a, 'ADAM RON B.R.');
+
+      pairing().removeBizumName(a, 'ADAM RON B.');
+
+      expect(rig.flow.players.bizumNamesOf(a)).toEqual(['ADAM RON B.R.']);
+    });
+
+    it('is not ambiguous with himself when two of his names look alike', async () => {
+      const a = adam();
+      rig.flow.players.addBizumName(a, 'Adam Ron B.');
+      await rig.arrive(
+        FakeBankEntries.incoming('r1', '2026-10-08', 400, {
+          name: 'ADAM RON B.',
+        })
+      );
+
+      expect(rig.flow.bizumResolution.waiting()[0].senderIdentity).toEqual({
+        kind: 'player',
+        playerId: a,
+      });
+    });
   });
 });

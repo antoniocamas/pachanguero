@@ -66,4 +66,42 @@ test.describe('the waiting Bizums', () => {
     const row = await openGameRow(page, gameId, 'Zespera Uno');
     await expect(row).toContainText('Pagado 4 € · Bizum');
   });
+
+  test('the one suggested player is accepted with a single button, and the Bizum pays their share', async ({
+    page,
+    request,
+  }) => {
+    const { gameId } = await new PayableGame(request).played([
+      'Zacepta Uno',
+      'Zacepta Dos',
+    ]);
+    await new ConnectedBank(request).ensure();
+    await new FakeBank().addEntry(
+      incomingBizum({
+        reference: 'E2E-ACCEPT-1',
+        amount: '4.00',
+        sender: 'Zacepta U.N.',
+        subject: '',
+      })
+    );
+    new ReadGap().reopen();
+
+    await page.goto('/');
+    await tab(page, 'Deudas').click();
+    const waiting = page.getByTestId('waiting-bizums');
+    await waiting.getByRole('button', { name: 'Leer ahora' }).click();
+    const item = waiting
+      .getByTestId('waiting-bizum')
+      .filter({ hasText: 'Zacepta U.N.' });
+    await item.getByRole('button', { name: 'Sí, es Zacepta Uno' }).click();
+    await expect(page.getByTestId('pair-result')).toContainText(
+      'Se liquidó 1 Bizum.'
+    );
+    await page.getByRole('button', { name: 'Hecho' }).click();
+    await expect(waiting.getByTestId('waiting-bizum')).toHaveCount(0);
+
+    await tab(page, 'Partido').click();
+    const row = await openGameRow(page, gameId, 'Zacepta Uno');
+    await expect(row).toContainText('Pagado 4 € · Bizum');
+  });
 });

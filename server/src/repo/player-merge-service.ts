@@ -73,7 +73,7 @@ export class PlayerMergeService {
         }
         this.aliases.add(intoId, from);
         this.mergeContacts(intoId, fromId);
-        this.mergeBizumName(intoId, fromId);
+        this.mergeBizumNames(intoId, fromId);
         // The account follows the person, before the absorbed player row goes.
         this.users.movePlayer(fromId, intoId);
         // Cascades whatever was left (the absorbed player's own seasons rows).
@@ -148,13 +148,13 @@ export class PlayerMergeService {
       .run({ into: intoId, from: fromId });
   }
 
-  /** The survivor's Bizum name stands; the absorbed player's fills the gap. */
-  private mergeBizumName(intoId: number, fromId: number): void {
+  /** The survivor keeps their Bizum names and takes the absorbed player's too. */
+  private mergeBizumNames(intoId: number, fromId: number): void {
     this.conn
       .prepare(
-        `UPDATE players SET bizum_name = (
-           SELECT bizum_name FROM players WHERE id = @from)
-          WHERE id = @into AND bizum_name IS NULL`
+        `INSERT OR IGNORE INTO player_bizum_names (player_id, bizum_name)
+           SELECT @into, bizum_name FROM player_bizum_names WHERE player_id = @from
+            ORDER BY rowid`
       )
       .run({ into: intoId, from: fromId });
   }

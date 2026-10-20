@@ -1,7 +1,12 @@
 import { useState } from 'react';
-import type { Player, WaitingBizum } from '../api';
+import type { Player, RestOfBizum, WaitingBizum } from '../api';
 import { useOpenShares } from '../hooks/useOpenShares';
-import { maxShares, rulingPreview, sharesLabel } from '../lib/rulingPreview';
+import {
+  defaultShares,
+  maxShares,
+  rulingPreview,
+  sharesLabel,
+} from '../lib/rulingPreview';
 import { defaultPlayerId } from '../lib/waitingBizums';
 import { BizumFacts } from './BizumFacts';
 import { PlayerSelect } from './PlayerSelect';
@@ -20,7 +25,7 @@ export function RuleSharesDialog({
   open: boolean;
   players: Pick<Player, 'id' | 'name'>[];
   busy: boolean;
-  onRule: (playerId: number, shares: number) => void;
+  onRule: (playerId: number, shares: number, rest: RestOfBizum) => void;
   onClose: () => void;
 }) {
   return (
@@ -44,11 +49,18 @@ function RuleBody({
   onClose,
 }: Omit<Parameters<typeof RuleSharesDialog>[0], 'open'>) {
   const [playerId, setPlayerId] = useState(defaultPlayerId(item));
-  const [wanted, setWanted] = useState(1);
+  const [wanted, setWanted] = useState<number | null>(null);
+  const [rest, setRest] = useState<RestOfBizum>('keep');
   const { data: open, error } = useOpenShares(item.id, playerId);
   const shares = open ?? [];
   const most = maxShares(shares, item.amountCents);
-  const count = Math.min(Math.max(wanted, 1), Math.max(most, 1));
+  const asked =
+    item.reason.code === 'not_enough_debts' ? item.reason.shares : null;
+  const count =
+    wanted === null
+      ? defaultShares(asked, shares, item.amountCents)
+      : Math.min(Math.max(wanted, 1), Math.max(most, 1));
+  const preview = rulingPreview(shares, item.amountCents, count);
 
   return (
     <div className="dialog-body">
@@ -60,7 +72,7 @@ function RuleBody({
         label="Jugador"
         onChange={id => {
           setPlayerId(id);
-          setWanted(1);
+          setWanted(null);
         }}
       />
       {error && <p className="err">{error}</p>}
@@ -86,9 +98,30 @@ function RuleBody({
               ))}
             </select>
           </label>
-          <p className="muted">
-            {rulingPreview(shares, item.amountCents, count).text}
-          </p>
+          <p className="muted">{preview.text}</p>
+          {preview.restCents > 0 && (
+            <fieldset className="field">
+              <legend>El resto del Bizum</legend>
+              <label>
+                <input
+                  type="radio"
+                  name="rest"
+                  checked={rest === 'keep'}
+                  onChange={() => setRest('keep')}
+                />{' '}
+                Dejarlo sin asignar, para próximos partidos
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name="rest"
+                  checked={rest === 'dismiss'}
+                  onChange={() => setRest('dismiss')}
+                />{' '}
+                Descartarlo
+              </label>
+            </fieldset>
+          )}
         </>
       )}
       <div className="actions">
@@ -96,7 +129,8 @@ function RuleBody({
           className="btn primary"
           disabled={busy || playerId === null || most === 0}
           onClick={() => {
-            if (playerId !== null) onRule(playerId, count);
+            if (playerId !== null)
+              onRule(playerId, count, preview.restCents > 0 ? rest : 'keep');
           }}
         >
           {count === 1 ? 'Pagar 1 cuota' : `Pagar ${count} cuotas`}

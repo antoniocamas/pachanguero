@@ -3,13 +3,16 @@ import type { BankEntryLedger } from '../bizum/feed.js';
 import type { BizumStore, StoredBizum } from '../bizum/ports.js';
 import type {
   BizumRuleSet,
-  OpenShare,
+  RulableShare,
   SenderIdentity,
   WaitReason,
 } from '../domain/bizum-rules.js';
 import type { BizumFactsReader } from './bizum-facts-reader.js';
 import type { BizumHandlingRepository } from './bizum-handling-repository.js';
-import type { BizumSettlementService } from './bizum-settlement-service.js';
+import type {
+  BizumSettlementService,
+  RestOfBizum,
+} from './bizum-settlement-service.js';
 import type { PlayerRepository } from './player-repository.js';
 
 /** A refusal the organiser reads: what was asked cannot be done, and why. */
@@ -30,6 +33,11 @@ export interface WaitingBizum {
   players: Record<number, string>;
   /** Who the sender is now: suggestions are fresh, they decide nothing. */
   senderIdentity: SenderIdentity;
+  /**
+   * When the Bizum waits for lack of debts: the dates of the games after its booking that the
+   * player still owes, earliest first. The organiser may pay those; the rules never do.
+   */
+  laterGames: string[];
 }
 
 export interface Reevaluated {
@@ -88,31 +96,44 @@ export class BizumResolutionService {
             })
           ),
           senderIdentity,
+          laterGames: this.laterGames(handling.reason, bizum),
         },
       ];
     });
   }
 
-  /** The shares this player owes that the Bizum could pay, nearest first. */
-  openShares(bizumId: number, playerId: number): OpenShare[] {
+  /**
+   * The shares this player owes that the organiser may pay with the Bizum: the nearest first
+   * among the games up to its booking, then the games after it, earliest first.
+   */
+  openShares(bizumId: number, playerId: number): RulableShare[] {
     const stored = this.waitingBizum(bizumId);
     this.requirePlayer(playerId);
-    return this.facts.openSharesOf(playerId, stored.bizum);
+    return this.facts.candidateSharesOf(playerId, stored.bizum);
   }
 
   /**
    * The organiser rules that the Bizum pays this many of the player's shares, nearest first,
-   * whatever its amount: the rest is left on the Bizum. It decides this Bizum only, and never
-   * pays shares worth more than the Bizum.
+   * whatever its amount, among those of games up to its booking and, after them, the later ones.
+   * The rest is left on the Bizum unassigned, or dismissed when the organiser says so. It decides
+   * this Bizum only, and never pays shares worth more than the Bizum.
    */
-  rule(bizumId: number, playerId: number, shares: number): Ruling {
+  rule(
+    bizumId: number,
+    playerId: number,
+    shares: number,
+    rest: RestOfBizum = 'keep'
+  ): Ruling {
     return this.conn.transaction(() => {
       const stored = this.waitingBizum(bizumId);
       this.requirePlayer(playerId);
       if (!Number.isInteger(shares) || shares < 1) {
         throw new BizumRefusal('Indica cuántas cuotas paga el Bizum');
       }
-      const open = this.facts.openSharesOf(playerId, stored.bizum);
+      if (rest !== 'keep' && rest !== 'dismiss') {
+        throw new BizumRefusal('Indica qué se hace con el resto del Bizum');
+      }
+      const open = this.facts.candidateSharesOf(playerId, stored.bizum);
       if (shares > open.length) {
         throw new BizumRefusal(
           open.length === 1
@@ -129,7 +150,7 @@ export class BizumResolutionService {
             : `El Bizum no cubre ${shares} cuotas`
         );
       }
-      this.settlement.settle(stored, playerId, chosen, 'organiser');
+      this.settlement.settle(stored, playerId, chosen, 'organiser', rest);
       const settled = this.handling.get(bizumId);
       return { shares, unallocatedCents: settled?.unallocatedCents ?? 0 };
     })();
@@ -168,6 +189,17 @@ export class BizumResolutionService {
       const status = this.handling.get(bizumId)?.status ?? 'waiting';
       return [{ bizumId, status }];
     });
+  }
+
+  private laterGames(
+    reason: WaitReason,
+    bizum: StoredBizum['bizum']
+  ): string[] {
+    return reason.code === 'not_enough_debts'
+      ? this.facts
+          .laterSharesOf(reason.playerId, bizum)
+          .map(share => share.playedOn)
+      : [];
   }
 
   private waitingBizum(bizumId: number): StoredBizum {

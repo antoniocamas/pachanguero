@@ -22,8 +22,15 @@ CREATE TABLE IF NOT EXISTS players (
   id         INTEGER PRIMARY KEY,
   name       TEXT    NOT NULL UNIQUE,
   introduced_by INTEGER REFERENCES players(id),  -- the player who brought them along
-  created_at TEXT    NOT NULL DEFAULT (datetime('now')),
-  bizum_name TEXT                                -- how the bank shows them as a Bizum sender; not unique
+  created_at TEXT    NOT NULL DEFAULT (datetime('now'))
+);
+
+-- The names the bank shows a player under as a Bizum sender, one row each. A player may have
+-- several; two players may hold the same one (then it identifies neither).
+CREATE TABLE IF NOT EXISTS player_bizum_names (
+  player_id  INTEGER NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  bizum_name TEXT    NOT NULL,
+  PRIMARY KEY (player_id, bizum_name)
 );
 
 -- Seniority is per season: a player has N seasons behind them in this season.

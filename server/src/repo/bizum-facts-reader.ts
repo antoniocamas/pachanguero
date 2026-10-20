@@ -2,6 +2,7 @@ import type { Bizum, BizumParty } from '../bizum/model.js';
 import type {
   BizumFacts,
   OpenShare,
+  RulableShare,
   SenderIdentity,
 } from '../domain/bizum-rules.js';
 import { KeywordList } from '../domain/keyword-list.js';
@@ -70,6 +71,36 @@ export class BizumFactsReader {
     const season = this.seasons.current(bizum.bookedOn);
     if (!season) return [];
     return this.order.order(
+      this.debts
+        .openInSeason(playerId, season.id)
+        .map(share => this.openShare(share)),
+      playerId,
+      bizum.bookedOn
+    );
+  }
+
+  /**
+   * What the organiser may pay with the Bizum: the shares the rules would use, then the shares of
+   * games played after the booking date, earliest first, marked as such.
+   */
+  candidateSharesOf(playerId: number, bizum: Bizum): RulableShare[] {
+    return [
+      ...this.openSharesOf(playerId, bizum).map(share => ({
+        ...share,
+        afterBooking: false,
+      })),
+      ...this.laterSharesOf(playerId, bizum).map(share => ({
+        ...share,
+        afterBooking: true,
+      })),
+    ];
+  }
+
+  /** The shares of games played after the booking date, in the Bizum's season, earliest first. */
+  laterSharesOf(playerId: number, bizum: Bizum): OpenShare[] {
+    const season = this.seasons.current(bizum.bookedOn);
+    if (!season) return [];
+    return this.order.later(
       this.debts
         .openInSeason(playerId, season.id)
         .map(share => this.openShare(share)),
