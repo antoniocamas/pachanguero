@@ -36,12 +36,28 @@ import { BillingPlanner } from '../domain/billing-planner.js';
 import { BillingEffect } from './billing-effect.js';
 import { PaymentRepository } from './payment-repository.js';
 import { PaymentService } from './payment-service.js';
+import { ShareSettler } from './share-settler.js';
 import { TeamAssignmentService } from './team-assignment-service.js';
 import { TeamPasteService } from './team-paste-service.js';
 import { GameViewService } from './game-view-service.js';
 import { PlayedDerivation } from '../domain/played-derivation.js';
 import { PlayedOutcomeEffect } from './played-outcome-effect.js';
 import { ConvocatoriaService } from './convocatoria-service.js';
+import { SystemClock } from '../domain/clock.js';
+import { BizumRuleSet } from '../domain/bizum-rules.js';
+import { SqliteBankEntryLedger } from '../bizum/sqlite/sqlite-bank-entry-ledger.js';
+import { SqliteBizumStore } from '../bizum/sqlite/sqlite-bizum-store.js';
+import { BankSettingsRepository } from './bank-settings-repository.js';
+import { BizumFactsReader } from './bizum-facts-reader.js';
+import { BizumHandlingRepository } from './bizum-handling-repository.js';
+import { BizumReevaluationEffect } from './bizum-reevaluation-effect.js';
+import { BizumUndoService } from './bizum-undo-service.js';
+import { PaymentDetailService } from './payment-detail-service.js';
+import { BizumResolutionService } from './bizum-resolution-service.js';
+import { BizumSettlementService } from './bizum-settlement-service.js';
+import { ContactRepository } from './contact-repository.js';
+import { KeywordRepository } from './keyword-repository.js';
+import { SenderPairingService } from './sender-pairing-service.js';
 import { UserRepository } from './user-repository.js';
 import { RefreshTokenRepository } from './refresh-token-repository.js';
 
@@ -85,6 +101,55 @@ export const convocatoriaRepository = new ConvocatoriaRepository(db());
 
 export const paymentRepository = new PaymentRepository(db());
 
+export const shareSettler = new ShareSettler(
+  games,
+  debtRepository,
+  paymentRepository,
+  participations,
+  players,
+  seasons
+);
+
+const bizumClock = new SystemClock();
+export const bizumHandling = new BizumHandlingRepository(db());
+const bizumStore = new SqliteBizumStore(db(), bizumClock);
+const contactRepository = new ContactRepository(db());
+const bizumFacts = new BizumFactsReader(
+  seasons,
+  players,
+  aliases,
+  contactRepository,
+  debtRepository,
+  new KeywordRepository(db(), new BankSettingsRepository(db()))
+);
+
+const bizumSettlement = new BizumSettlementService(
+  shareSettler,
+  bizumHandling,
+  bizumClock
+);
+
+export const bizumResolution = new BizumResolutionService(
+  bizumStore,
+  new SqliteBankEntryLedger(db(), bizumClock),
+  bizumHandling,
+  bizumFacts,
+  new BizumRuleSet(),
+  bizumSettlement,
+  players,
+  db()
+);
+
+export const senderPairing = new SenderPairingService(
+  bizumStore,
+  bizumHandling,
+  bizumResolution,
+  bizumFacts,
+  players,
+  contactRepository,
+  db()
+);
+
 export const gameLifecycle = new GameLifecycleService(
   games,
   new GameLifecycle(),
@@ -104,6 +169,7 @@ export const gameLifecycle = new GameLifecycleService(
       seasons,
       new BillingPlanner()
     ),
+    new BizumReevaluationEffect(bizumHandling, bizumResolution),
   ],
   db()
 );
@@ -119,14 +185,29 @@ export const playerReport = new PlayerReportService(
 );
 
 export const paymentService = new PaymentService(
-  games,
   gameLifecycle,
-  debtRepository,
   paymentRepository,
-  participations,
-  players,
-  seasons,
+  shareSettler,
   db()
+);
+
+export const bizumUndo = new BizumUndoService(
+  gameLifecycle,
+  paymentRepository,
+  shareSettler,
+  paymentService,
+  bizumStore,
+  bizumFacts,
+  bizumSettlement,
+  db()
+);
+
+export const paymentDetail = new PaymentDetailService(
+  paymentRepository,
+  games,
+  players,
+  bizumStore,
+  bizumHandling
 );
 
 export const convocatoriaEdit = new ConvocatoriaEditService(

@@ -41,10 +41,10 @@ Per the Test Methodology of F4 and F6:
 
 ## Definition of Done
 
-- [ ] Every test above passes.
-- [ ] **Graduation:** the listed scenarios → marked tests. The comparison against a real read is in task 11.
-- [ ] **Hard requirements:** the marked tests exist and pass.
-- [ ] **Documentation:** none outside the work package (the panel's text is documented with task 09; the settings are not environment variables).
-- [ ] **Tests:** `npm test`.
-- [ ] **Regression:** `npm test`.
-- [ ] **Code checks:** `npm run lint`, `npm run format:check`; the coding standard.
+- [x] Every test above passes.
+- [x] **Graduation:** the listed scenarios → marked tests. The comparison against a real read is in task 11.
+- [x] **Hard requirements:** the marked tests exist and pass.
+- [x] **Documentation:** none outside the work package (the panel's text is documented with task 09; the settings are not environment variables).
+- [x] **Tests:** `npm test`.
+- [x] **Regression:** `npm test`.
+- [x] **Code checks:** `npm run lint`, `npm run format:check`; the coding standard.

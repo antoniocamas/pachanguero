@@ -32,6 +32,7 @@ describe('OwnDisclosure', () => {
     beneficiaryId: CARLOS,
     amountCents: 500,
     paidOn: '2026-10-08',
+    method: 'efectivo',
     ...over,
   });
 
@@ -102,6 +103,7 @@ describe('OwnDisclosure', () => {
           label: null,
           amountCents: 500,
           paidOn: '2026-10-08',
+          method: 'efectivo',
           kind: 'own',
           paidBy: null,
         },
@@ -129,6 +131,40 @@ describe('OwnDisclosure', () => {
       ]);
       expect(row.paidBy).toBe('other');
       expect(JSON.stringify(row)).not.toContain('Luis');
+    });
+
+    it.each(['efectivo', 'bizum', 'otro'] as const)(
+      'copies the method %s',
+      method => {
+        expect(carlos.payments([payment({ method })])[0].method).toBe(method);
+      }
+    );
+
+    it('copies nothing of a Bizum, whatever the input carries', () => {
+      const [row] = carlos.payments([
+        {
+          ...payment({ method: 'bizum' }),
+          bizumId: 9137,
+          sender: 'Luis P.R.',
+          subject: 'pachanga',
+          reference: 'ref-1',
+          unallocatedCents: 50,
+        } as PaymentInput,
+      ]);
+
+      expect(Object.keys(row).sort()).toEqual(
+        [
+          'amountCents',
+          'gameId',
+          'kind',
+          'label',
+          'method',
+          'paidBy',
+          'paidOn',
+          'playedOn',
+        ].sort()
+      );
+      expect(JSON.stringify(row)).not.toMatch(/Luis|pachanga|ref-1|9137/);
     });
 
     it('leaves out payments that are neither by nor for the player', () => {

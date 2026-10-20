@@ -69,6 +69,9 @@ organizes its logic as classes.
 - `server/src/routes/api.ts` handlers stay thin, per the existing `route()` wrapper convention, but
   call into classes rather than into `repo.ts` free functions.
 - `web/src/**` is unaffected (Scope, above).
+- The Bizum core in `server/src/bizum/` imports nothing outside itself but Node built-ins (and
+  `better-sqlite3` under `sqlite/`), and only `server/src/bank/` may name a particular bank;
+  `architecture-boundaries.test.ts` fails the suite otherwise.
 
 ## Enforcement
 

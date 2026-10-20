@@ -11,6 +11,7 @@ describe('Marking a game played and paying its 14', () => {
     flow.played(gameId);
     for (const id of playing)
       flow.paymentService.pay(gameId, {
+        method: 'efectivo',
         shares: [{ playerId: id }],
         payerPlayerId: id,
       });

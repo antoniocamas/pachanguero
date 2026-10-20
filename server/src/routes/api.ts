@@ -1,4 +1,5 @@
 import { LocalCalendar } from '../domain/local-calendar.js';
+import { PaymentMethods } from '../domain/payment-method.js';
 import { CandidateLineReader } from '../repo/candidate-line-reader.js';
 import {
   Router,
@@ -22,6 +23,8 @@ import {
   gameLifecycle,
   debtRepository,
   paymentRepository,
+  bizumUndo,
+  paymentDetail,
   paymentService,
   teamAssignment,
   teamPaste,
@@ -30,6 +33,7 @@ import {
 
 export const api = Router();
 const candidateLines = new CandidateLineReader();
+const paymentMethods = new PaymentMethods();
 
 /** Wrap a handler so a thrown error becomes a 400 instead of an unhandled crash. */
 const route =
@@ -387,7 +391,8 @@ const memberOf = (v: unknown) => {
 api.post(
   '/games/:gameId/payments',
   route((req, res) => {
-    const { shares, payerPlayerId, amountCents, paidOn } = req.body ?? {};
+    const { shares, payerPlayerId, amountCents, paidOn, method } =
+      req.body ?? {};
     if (!Array.isArray(shares)) throw new Error('shares must be a list');
     const gameId = id(req.params.gameId);
     paymentService.pay(gameId, {
@@ -395,6 +400,7 @@ api.post(
       payerPlayerId: id(payerPlayerId),
       amountCents,
       paidOn,
+      method: paymentMethods.parse(method),
     });
     res.status(201).json({
       debts: debtRepository.list(gameId),
@@ -407,11 +413,18 @@ api.delete(
   '/games/:gameId/payments/:paymentId',
   route((req, res) => {
     const gameId = id(req.params.gameId);
-    paymentService.undo(gameId, id(req.params.paymentId));
+    bizumUndo.undoPayment(gameId, id(req.params.paymentId));
     res.json({
       debts: debtRepository.list(gameId),
       payments: paymentRepository.list(gameId),
     });
+  })
+);
+
+api.get(
+  '/payments/:paymentId/bizum',
+  route((req, res) => {
+    res.json(paymentDetail.detail(id(req.params.paymentId)));
   })
 );
 

@@ -9,18 +9,19 @@ game are in [`domain-model/`](domain-model/); who can do what is in
 
 Run from the repository root.
 
-| Command                                         | What it does                                                                                                                                                    |
-| ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `npm install`                                   | Installs both workspaces (`server`, `web`) and the E2E one                                                                                                      |
-| `npm run dev`                                   | The API on :8787 (`tsx watch`) and the web on :5173 (Vite, proxying `/api`). Needs `JWT_SECRET`, see [Configuration](#configuration)                            |
-| `npm run build`                                 | Compiles the web and the server (`web/dist`, `server/dist`)                                                                                                     |
-| `npm start`                                     | Production: one port, Express serves the SPA and the API                                                                                                        |
-| `npm test`                                      | Domain and route tests (server) and `lib/` tests (web)                                                                                                          |
-| `npm run test:e2e`                              | Full-stack browser tests, against an isolated database ([`test-strategy.md`](test-strategy.md))                                                                 |
-| `npm run lint` / `lint:fix`                     | ESLint                                                                                                                                                          |
-| `npm run format` / `format:check`               | Prettier                                                                                                                                                        |
-| `npm run seed`                                  | Imports the 2024/2025 season from `data/seed/*.csv`; `-- --reset` first wipes the imported season's rows. See [Trying the app by hand](#trying-the-app-by-hand) |
-| `npm run admin --workspace=server -- <command>` | The operator tool, see [The admin tool](#the-admin-tool)                                                                                                        |
+| Command                                         | What it does                                                                                                                                                                                                   |
+| ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm install`                                   | Installs both workspaces (`server`, `web`) and the E2E one                                                                                                                                                     |
+| `npm run dev`                                   | The API on :8787 (`tsx watch`) and the web on :5173 (Vite, proxying `/api`). Needs `JWT_SECRET`, see [Configuration](#configuration)                                                                           |
+| `npm run build`                                 | Compiles the web and the server (`web/dist`, `server/dist`)                                                                                                                                                    |
+| `npm start`                                     | Production: one port, Express serves the SPA and the API                                                                                                                                                       |
+| `npm test`                                      | Domain and route tests (server) and `lib/` tests (web)                                                                                                                                                         |
+| `npm run test:e2e`                              | Full-stack browser tests, against an isolated database ([`test-strategy.md`](test-strategy.md))                                                                                                                |
+| `npm run test:sandbox`                          | Opt-in: the bank connector's read-only contract against the bank's sandbox, from a standing session. Skipped, with a message, unless the sandbox variables of `.env.example` are set; never part of `npm test` |
+| `npm run lint` / `lint:fix`                     | ESLint                                                                                                                                                                                                         |
+| `npm run format` / `format:check`               | Prettier                                                                                                                                                                                                       |
+| `npm run seed`                                  | Imports the 2024/2025 season from `data/seed/*.csv`; `-- --reset` first wipes the imported season's rows. See [Trying the app by hand](#trying-the-app-by-hand)                                                |
+| `npm run admin --workspace=server -- <command>` | The operator tool, see [The admin tool](#the-admin-tool)                                                                                                                                                       |
 
 A single server test file or case, from `server/`:
 
@@ -33,16 +34,24 @@ npx vitest run -t "reproduces the legacy remainder bug"
 
 The server and the admin tool are configured by environment variables.
 
-| Variable               | Default                         |                                                                                      |
-| ---------------------- | ------------------------------- | ------------------------------------------------------------------------------------ |
-| `JWT_SECRET`           | — (required)                    | Secret for the sessions, 32 characters or more. Without it the server does not start |
-| `ACCESS_TOKEN_MINUTES` | `30`                            | How long an access token lasts before it is renewed                                  |
-| `REFRESH_TOKEN_DAYS`   | `30`                            | How long a session lasts without asking for the password again                       |
-| `COOKIE_SECURE`        | `true` in production            | `false` to serve over plain http on a trusted network                                |
-| `PORT`                 | `8787`                          |                                                                                      |
-| `HOST`                 | `0.0.0.0`                       | Set it to `127.0.0.1` behind Caddy                                                   |
-| `PACHANGUERO_DB`       | `data/pachanguero.db`           | Path of the SQLite file                                                              |
-| `PACHANGUERO_BACKUPS`  | `backups/` next to the database | Folder for the backups                                                               |
+| Variable                     | Default                         |                                                                                                                                                                                                        |
+| ---------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `JWT_SECRET`                 | — (required)                    | Secret for the sessions, 32 characters or more. Without it the server does not start                                                                                                                   |
+| `ACCESS_TOKEN_MINUTES`       | `30`                            | How long an access token lasts before it is renewed                                                                                                                                                    |
+| `REFRESH_TOKEN_DAYS`         | `30`                            | How long a session lasts without asking for the password again                                                                                                                                         |
+| `COOKIE_SECURE`              | `true` in production            | `false` to serve over plain http on a trusted network                                                                                                                                                  |
+| `PORT`                       | `8787`                          |                                                                                                                                                                                                        |
+| `HOST`                       | `0.0.0.0`                       | Set it to `127.0.0.1` behind Caddy                                                                                                                                                                     |
+| `PACHANGUERO_DB`             | `data/pachanguero.db`           | Path of the SQLite file                                                                                                                                                                                |
+| `PACHANGUERO_BACKUPS`        | `backups/` next to the database | Folder for the backups                                                                                                                                                                                 |
+| `PACHANGUERO_PUBLIC_URL`     | — (the bank access needs it)    | Address the browser reaches the app at, `https://…` (or `http://localhost:<port>`). The bank sends the browser back to `<it>/api/bank/callback`, which must be registered at the bank's developer side |
+| `ENABLE_BANKING_APP_ID`      | — (the bank access needs it)    | The application's id at Enable Banking                                                                                                                                                                 |
+| `ENABLE_BANKING_PRIVATE_KEY` | — (the bank access needs it)    | The PEM private key of the application (PKCS#8), on one line with `\n` for line breaks in a `.env` file. A secret                                                                                      |
+| `ENABLE_BANKING_API_URL`     | `https://api.enablebanking.com` | The aggregator's address. Leave it unset: only the end-to-end tests set it, to reach a fake bank                                                                                                       |
+
+The three bank settings are optional: without them the server starts, manual payments
+work, and the Banco panel names what is missing (by setting name, never by value). The
+sandbox suite has its own variables, listed in `.env.example`.
 
 The admin tool needs only `PACHANGUERO_DB` and `PACHANGUERO_BACKUPS`; it never
 reads `JWT_SECRET`.

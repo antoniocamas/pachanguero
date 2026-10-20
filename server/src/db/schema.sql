@@ -22,7 +22,8 @@ CREATE TABLE IF NOT EXISTS players (
   id         INTEGER PRIMARY KEY,
   name       TEXT    NOT NULL UNIQUE,
   introduced_by INTEGER REFERENCES players(id),  -- the player who brought them along
-  created_at TEXT    NOT NULL DEFAULT (datetime('now'))
+  created_at TEXT    NOT NULL DEFAULT (datetime('now')),
+  bizum_name TEXT                                -- how the bank shows them as a Bizum sender; not unique
 );
 
 -- Seniority is per season: a player has N seasons behind them in this season.
@@ -197,6 +198,9 @@ CREATE TABLE IF NOT EXISTS payments (
   payer_player_id       INTEGER NOT NULL REFERENCES players(id) ON DELETE CASCADE,
   amount_cents          INTEGER NOT NULL CHECK (amount_cents > 0),
   paid_on               TEXT    NOT NULL,
+  method                TEXT    NOT NULL DEFAULT 'otro'
+                        CHECK (method IN ('efectivo', 'bizum', 'otro')),
+  bizum_id              INTEGER REFERENCES bizums(id),   -- the Bizum that paid it; null for a manual payment
   CHECK ((beneficiary_player_id IS NULL) != (guest_ordinal IS NULL))
 );
 CREATE INDEX IF NOT EXISTS idx_payments_game  ON payments(game_id);
@@ -252,4 +256,105 @@ CREATE TABLE IF NOT EXISTS player_contacts (
   player_id INTEGER PRIMARY KEY REFERENCES players(id) ON DELETE CASCADE,
   email     TEXT,
   phone     TEXT
+);
+
+-- A bank authorisation the organiser started and the bank has not yet sent the browser back from.
+-- Only the SHA-256 of the state is stored; a used row stays a day past its expiry so a second
+-- use can be told from a state that was never issued.
+CREATE TABLE IF NOT EXISTS bank_authorizations (
+  state_hash TEXT PRIMARY KEY,
+  bank_id    TEXT NOT NULL,
+  purpose    TEXT NOT NULL CHECK (purpose IN ('connect','renew')),
+  created_at TEXT NOT NULL,                  -- ISO-8601 UTC
+  expires_at TEXT NOT NULL,
+  used_at    TEXT
+);
+
+-- The one bank access: at most one row. The session id is kept as is, because every read needs
+-- it; the accounts only as a summary (currency, type, last 4 characters), never a holder's name.
+CREATE TABLE IF NOT EXISTS bank_connection (
+  id             INTEGER PRIMARY KEY CHECK (id = 1),
+  bank_id        TEXT    NOT NULL,
+  session_id     TEXT    NOT NULL,
+  valid_until    TEXT    NOT NULL,           -- ISO-8601 UTC
+  state          TEXT    NOT NULL CHECK (state IN ('connected','reconnect_needed')),
+  reason         TEXT,                       -- the bank's error code, or EXPIRED, when reconnecting is needed
+  connected_at   TEXT    NOT NULL,
+  accounts_json  TEXT    NOT NULL,
+  deep_read_done INTEGER NOT NULL DEFAULT 0 CHECK (deep_read_done IN (0,1))
+);
+
+-- What the organiser chose to read: at most one row, written once by the first read of the
+-- settings. A null bank means none was chosen yet and the catalogue's default is offered; the
+-- account is kept by its stable id, which survives renewals.
+CREATE TABLE IF NOT EXISTS bank_settings (
+  id                INTEGER PRIMARY KEY CHECK (id = 1),
+  bank_id           TEXT,
+  currency          TEXT NOT NULL DEFAULT 'EUR' CHECK (length(currency) = 3),
+  account_stable_id TEXT,
+  start_date        TEXT                       -- YYYY-MM-DD; null: not set
+);
+
+-- The two lists of words that keep or discard a Bizum, as the organiser typed them; they are
+-- compared folded, so "futbol" and "fútbol" are two rows that match the same subjects.
+CREATE TABLE IF NOT EXISTS bank_keywords (
+  list TEXT NOT NULL CHECK (list IN ('include','exclude')),
+  word TEXT NOT NULL,
+  PRIMARY KEY (list, word)
+);
+
+-- The Bizum core's own tables: nothing here knows a player, a debt or a payment.
+-- Every bank entry handled, by the bank's own identification and what became of it; the key
+-- holds no sender, subject or amount, so a discarded entry leaves no personal data.
+CREATE TABLE IF NOT EXISTS bizum_entries (
+  account     TEXT NOT NULL,
+  reference   TEXT NOT NULL,
+  outcome     TEXT NOT NULL CHECK (outcome IN ('kept','discarded','not_bizum','dismissed')),
+  recorded_at TEXT NOT NULL,                 -- ISO-8601 UTC
+  PRIMARY KEY (account, reference)
+);
+
+-- The Bizums kept, one column per field of the model.
+CREATE TABLE IF NOT EXISTS bizums (
+  id             INTEGER PRIMARY KEY,
+  account        TEXT    NOT NULL,
+  reference      TEXT    NOT NULL,
+  direction      TEXT    NOT NULL CHECK (direction IN ('incoming','outgoing')),
+  booked_on      TEXT    NOT NULL,           -- YYYY-MM-DD
+  amount_cents   INTEGER NOT NULL CHECK (amount_cents > 0),
+  currency       TEXT    NOT NULL,
+  sender_name    TEXT,
+  sender_phone   TEXT,
+  receiver_name  TEXT,
+  receiver_phone TEXT,
+  subject        TEXT,
+  kept_at        TEXT    NOT NULL,
+  UNIQUE (account, reference)
+);
+
+-- How the last read ended: codes and counts only. At most one row.
+CREATE TABLE IF NOT EXISTS bizum_feed_state (
+  id                 INTEGER PRIMARY KEY CHECK (id = 1),
+  started_at         TEXT    NOT NULL,
+  finished_at        TEXT    NOT NULL,
+  result             TEXT    NOT NULL,       -- 'ok', a bank failure code, or 'internal'
+  code               TEXT,
+  entries            INTEGER NOT NULL,
+  kept               INTEGER NOT NULL,
+  discarded          INTEGER NOT NULL,
+  not_bizum          INTEGER NOT NULL,
+  pending            INTEGER NOT NULL,
+  unidentified       INTEGER NOT NULL,
+  known              INTEGER NOT NULL,
+  rate_limited_until TEXT
+);
+
+-- What the group decided about a kept Bizum: waiting for the organiser, or settled, and how.
+CREATE TABLE IF NOT EXISTS bizum_handling (
+  bizum_id          INTEGER PRIMARY KEY REFERENCES bizums(id) ON DELETE CASCADE,
+  status            TEXT    NOT NULL CHECK (status IN ('waiting','settled')),
+  reason_json       TEXT,                    -- the wait reason and the sender; null once settled
+  unallocated_cents INTEGER NOT NULL DEFAULT 0 CHECK (unallocated_cents >= 0),
+  settled_how       TEXT    CHECK (settled_how IN ('automatic','organiser')),
+  updated_at        TEXT    NOT NULL
 );

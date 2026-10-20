@@ -60,13 +60,13 @@ Per F7's Test Methodology:
 
 ## Definition of Done
 
-- [ ] Every test above passes.
-- [ ] **Graduation:** UC-006-02-S1–S10, UC-006-03-S5, S6, UC-006-04-S3 → marked tests. UC-006-02-S8 (within a day) is marked through the poller's interval test.
-- [ ] **Hard requirements:** the marked tests exist and pass.
-- [ ] **Documentation:**
+- [x] Every test above passes.
+- [x] **Graduation:** UC-006-02-S1–S10, UC-006-03-S5, S6, UC-006-04-S3 → marked tests. UC-006-02-S8 (within a day) is marked through the poller's interval test.
+- [x] **Hard requirements:** the marked tests exist and pass.
+- [x] **Documentation:**
   - `docs/domain-model/ciclo-del-partido.md`: a payment can be made by the system from a Bizum, by the rules in order;
   - `docs/domain-model/glossary.md`: *Bizum*, *Bizums en espera*;
   - `AGENTS.md`: the poller started by `index.ts`, the services, and the invariants "a Bizum payment links its Bizum" and "a Bizum is processed once".
-- [ ] **Tests:** `npm test`; `npm run test:e2e`, with the existing journeys unaffected now that the poller starts in the dev server.
-- [ ] **Regression:** `npm test`.
-- [ ] **Code checks:** `npm run lint`, `npm run format:check`; the coding standard.
+- [x] **Tests:** `npm test`; `npm run test:e2e`, with the existing journeys unaffected now that the poller starts in the dev server.
+- [x] **Regression:** `npm test`.
+- [x] **Code checks:** `npm run lint`, `npm run format:check`; the coding standard.

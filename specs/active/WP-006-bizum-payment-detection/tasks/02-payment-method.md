@@ -41,14 +41,14 @@ Per F1's Test Methodology:
 
 ## Definition of Done
 
-- [ ] Every test above passes.
-- [ ] `fixtures/schema-v2.sql` equals the `schema.sql` of commit `49090ea`.
-- [ ] **Graduation:** UC-006-08-S1, S3, S5 and UC-006-07-S1, S5 → marked tests in `payment-method-requirements.test.ts`.
-- [ ] **Hard requirements:** the marked tests exist and pass.
-- [ ] **Documentation:**
+- [x] Every test above passes.
+- [x] `fixtures/schema-v2.sql` equals the `schema.sql` of commit `49090ea`.
+- [x] **Graduation:** UC-006-08-S1, S3, S5 and UC-006-07-S1, S5 → marked tests in `payment-method-requirements.test.ts`.
+- [x] **Hard requirements:** the marked tests exist and pass.
+- [x] **Documentation:**
   - `docs/domain-model/glossary.md`: *método de pago*.
   - `docs/domain-model/ciclo-del-partido.md` § "Pago después de jugar": a payment records its method.
   - `AGENTS.md` Domain invariants: every payment has a method.
-- [ ] **Tests:** `npm test`; `npm run test:e2e`.
-- [ ] **Regression:** `npm test`.
-- [ ] **Code checks:** `npm run lint`, `npm run format:check`; both coding standards.
+- [x] **Tests:** `npm test`; `npm run test:e2e`.
+- [x] **Regression:** `npm test`.
+- [x] **Code checks:** `npm run lint`, `npm run format:check`; both coding standards.

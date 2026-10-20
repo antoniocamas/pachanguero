@@ -8,6 +8,10 @@ image:
   name: pachanguero
   tag: '' # empty = the chart's appVersion
 
+# The address the browser reaches the app at. The bank sends the browser back to
+# <publicUrl>/api/bank/callback, which must be registered exactly at the bank's developer side.
+publicUrl: 'https://pachanguero.duckdns.org'
+
 service:
   nodePort: 9400 # where Caddy on numenor connects: 192.168.1.87:9400
 
@@ -31,3 +35,6 @@ resources:
 
 secrets:
   jwtSecret: '' # required, 32+ characters; set it in values.secrets.yaml
+  # Optional: without them the app starts and the Banco panel names what is missing.
+  enableBankingAppId: '' # the application id; set it in values.secrets.yaml
+  enableBankingPrivateKey: '' # the PEM private key (a YAML block); set it in values.secrets.yaml

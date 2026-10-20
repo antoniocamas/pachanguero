@@ -1,3 +1,5 @@
+import type { PaymentMethod } from './payment-method.js';
+
 /** A share still owed, as the debt read returns it. */
 export interface DebtInput {
   gameId: number;
@@ -21,6 +23,7 @@ export interface PaymentInput {
   beneficiaryId: number | null;
   amountCents: number;
   paidOn: string;
+  method: PaymentMethod;
 }
 
 export interface OwnDebtRow {
@@ -51,6 +54,8 @@ export interface OwnPaymentRow {
   label: string | null;
   amountCents: number;
   paidOn: string;
+  /** How it was paid; nothing else of where the money came from. */
+  method: PaymentMethod;
   kind: 'own' | 'guest';
   /** Null when the player paid; a name only when the share's holder paid; else "other". */
   paidBy: { name: string } | 'other' | null;
@@ -114,6 +119,7 @@ export class OwnDisclosure {
         label: p.gameLabel,
         amountCents: p.amountCents,
         paidOn: p.paidOn,
+        method: p.method,
         kind: own ? 'own' : 'guest',
         paidBy: this.paidBy(p),
       });

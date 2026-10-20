@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { PaymentCell } from '../components/PaymentCell';
+import { WaitingBizums } from '../components/WaitingBizums';
 import { useCopy } from '../hooks/useCopy';
 import { useDebtPayments } from '../hooks/useDebtPayments';
 import { useDebts } from '../hooks/useDebts';
@@ -18,7 +19,7 @@ import { euros } from '../lib/money';
 import { paymentCell } from '../lib/paymentCell';
 
 /** Who still owes what, for which games; filterable and ready for WhatsApp. */
-export function Debts() {
+export function Debts({ canRead }: { canRead: boolean }) {
   const { shares, error, reload } = useDebts();
   const [alert, setAlert] = useState<string | null>(null);
   const payments = useDebtPayments(reload, setAlert);
@@ -42,6 +43,8 @@ export function Debts() {
   return (
     <>
       {(alert ?? error) && <div className="err">{alert ?? error}</div>}
+
+      <WaitingBizums canRead={canRead} onSettled={reload} />
 
       <div className="card" data-testid="debts-filters">
         <h2>
@@ -135,10 +138,11 @@ export function Debts() {
                     names
                   )}
                   busy={payments.busy}
-                  onPay={(shared, payerId, cents) =>
-                    void payments.pay(s.gameId, shared, payerId, cents)
+                  onPay={(shared, payerId, method, cents) =>
+                    void payments.pay(s.gameId, shared, payerId, method, cents)
                   }
                   onUndo={() => undefined}
+                  report={setAlert}
                 />
               </div>
             ))}

@@ -59,6 +59,7 @@ export function PlayedView({
               busy={payments.busy}
               onPay={payments.pay}
               onUndo={payments.undo}
+              report={report}
             />
           )}
         />

@@ -25,6 +25,7 @@ export function OwnPayments({ payments }: { payments: OwnPaymentRow[] }) {
               {l.date}
               {l.label && <small>{l.label}</small>}
             </span>
+            {l.method && <span className="tag method">{l.method}</span>}
             {l.tag && <span className="tag">{l.tag}</span>}
             <span className="amount">{l.amount}</span>
           </div>

@@ -27,6 +27,7 @@ describe('Debt read cost', () => {
       if (i < GAMES - 1)
         for (const id of playerIds)
           flow.paymentService.pay(gameId, {
+            method: 'efectivo',
             shares: [{ playerId: id }],
             payerPlayerId: id,
           });

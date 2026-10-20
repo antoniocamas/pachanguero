@@ -118,6 +118,10 @@ const LEFT_TO_APPLICATION_DEFAULT = new Map<string, string>([
   ['ACCESS_TOKEN_MINUTES', 'default 30; no production need to change it yet'],
   ['REFRESH_TOKEN_DAYS', 'default 30; no production need to change it yet'],
   [
+    'ENABLE_BANKING_API_URL',
+    'the real host is the default; only the end-to-end tests point it at the fake bank',
+  ],
+  [
     'COOKIE_SECURE',
     'defaults to true when NODE_ENV=production, which the image sets',
   ],

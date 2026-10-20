@@ -7,7 +7,7 @@ import { ManualClock } from '../domain/clock-test-support.js';
 import { PasswordHasher } from '../domain/password-hasher.js';
 import type { Role, View } from '../domain/types.js';
 import type { ApiRoutes } from './api-routes.js';
-import type { ServerApp } from '../server-app.js';
+import type { BankSettings, ServerApp } from '../server-app.js';
 import type { UserRecord } from '../repo/user-repository.js';
 
 /** A hasher that counts how many passwords were actually checked. */
@@ -47,6 +47,8 @@ export interface ApiRequest {
   token?: string;
   cookie?: string;
   body?: unknown;
+  /** `manual` answers a redirect as it is, instead of following it. */
+  redirect?: 'manual';
 }
 
 /**
@@ -68,7 +70,11 @@ export class AuthTestApp {
   ) {}
 
   static async start(
-    options: { webDist?: string | null } = {}
+    options: {
+      webDist?: string | null;
+      /** Builds the bank settings from the clock the app will run on. */
+      bank?: (clock: ManualClock) => BankSettings;
+    } = {}
   ): Promise<AuthTestApp> {
     const dir = mkdtempSync(join(tmpdir(), 'pachanguero-auth-'));
     process.env.PACHANGUERO_DB = join(dir, 'test.db');
@@ -85,7 +91,8 @@ export class AuthTestApp {
       config,
       clock,
       hasher,
-      options.webDist ?? null
+      options.webDist ?? null,
+      options.bank?.(clock)
     );
     const http = await new Promise<Server>(resolve => {
       const listening = server
@@ -141,6 +148,7 @@ export class AuthTestApp {
       headers,
       body:
         options.body === undefined ? undefined : JSON.stringify(options.body),
+      redirect: options.redirect,
     });
     const text = await res.text();
     return {

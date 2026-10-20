@@ -41,8 +41,9 @@ In the folder named by `PACHANGUERO_BACKUPS`. When it is not set, that is
   the same second get `-2`, `-3`… Clearing out old ones is up to the operator. (On erebor the
   `backup` sidecar prunes its daily backups, never the `…-before-migration.db` ones: see
   [`deployment.md`](deployment.md#data-and-backups).)
-- **Each backup holds the users with their password hashes and the contact
-  data**, so it is created readable by its owner only (mode `0600`), in a folder
+- **Each backup holds the users with their password hashes, the contact
+  data and the bank connection** (the session the app reads the account with, and the Bizums
+  read from it), so it is created readable by its owner only (mode `0600`), in a folder
   with mode `0700`. Treat it like the database: never put it anywhere public.
 - A backup file is a complete database. Any SQLite client can open it.
 

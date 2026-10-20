@@ -1,4 +1,4 @@
-import { createSessionClient } from './lib/sessionClient';
+import { ApiError, createSessionClient } from './lib/sessionClient';
 
 export interface Season {
   id: number;
@@ -187,6 +187,8 @@ export interface OwnPaymentRow {
   label: string | null;
   amountCents: number;
   paidOn: string;
+  /** How it was paid; the player is told nothing else of where the money came from. */
+  method: PaymentMethod;
   kind: 'own' | 'guest';
   /** Null when the player paid; a name when the one who answers for the share paid it. */
   paidBy: { name: string } | 'other' | null;
@@ -197,10 +199,45 @@ export interface Contact {
   phone: string | null;
 }
 
-/** A share settled: who paid it, how much and when. */
+/** How a payment was made. */
+export type PaymentMethod = 'efectivo' | 'bizum' | 'otro';
+
+/** A share settled: who paid it, how much, when and how. */
 export interface Payment extends Debt {
   payer_player_id: number;
   paid_on: string;
+  method: PaymentMethod;
+}
+
+/** What the organiser may know of a payment and the Bizum behind it. */
+export interface PaymentDetail {
+  payment: {
+    id: number;
+    gameId: number;
+    playedOn: string;
+    amountCents: number;
+    paidOn: string;
+    method: PaymentMethod;
+    payerName: string;
+    beneficiaryName: string | null;
+  };
+  resolved: 'manual' | 'automatic' | 'organiser';
+  bizum: null | {
+    bookedOn: string;
+    sender: { name: string | null; phone: string | null };
+    amountCents: number;
+    currency: string;
+    subject: string | null;
+    reference: string;
+    unallocatedCents: number;
+    payments: {
+      id: number;
+      gameId: number;
+      playedOn: string;
+      beneficiaryName: string | null;
+      amountCents: number;
+    }[];
+  };
 }
 
 /** A matched line of the saved candidate list, in the order it arrived. */
@@ -319,6 +356,166 @@ export interface TeamPasteResult {
 export type TeamResolveResult =
   | { outcome: 'assigned'; member: TeamMember }
   | { outcome: 'unresolved'; entry: TeamUnresolved };
+
+/** How a connection to the bank stands; the panel and the banner read it. */
+export type ConnectionState = 'connected' | 'reconnect_needed';
+
+/** An account of the connection: only what lets the organiser tell them apart. */
+export interface BankAccount {
+  stableId: string;
+  currency: string;
+  /** The bank's own code of the account's type. */
+  kind: string;
+  last4: string;
+}
+
+/** What the last read did, as codes and counts. */
+export interface ReadCounts {
+  entries: number;
+  kept: number;
+  discarded: number;
+  notBizum: number;
+  pending: number;
+  unidentified: number;
+  known: number;
+}
+
+export interface LastRead {
+  startedAt: string;
+  finishedAt: string;
+  /** `ok`, a bank failure code or `internal`. */
+  result: string;
+  code: string | null;
+  counts: ReadCounts;
+  rateLimitedUntil: string | null;
+  nextAt: string | null;
+}
+
+export type ReadingMissing =
+  | 'not_connected'
+  | 'reconnect_needed'
+  | 'no_start_date'
+  | 'choose_account'
+  | 'no_account_in_currency';
+
+/** The Banco panel: the connection, what is read and how. Never a secret, a state or a session. */
+export interface BankPanel {
+  setup: { code: string; setting: string }[];
+  bank: {
+    chosenId: string | null;
+    options: { id: string; displayName: string }[];
+    editable: boolean;
+  };
+  canConnect: boolean;
+  connection: {
+    state: ConnectionState;
+    validUntil: string;
+    daysLeft: number;
+    renewSuggested: boolean;
+    reason: string | null;
+    accounts: BankAccount[];
+  } | null;
+  currency: string;
+  accounts: (BankAccount & { chosen: boolean })[];
+  selection: {
+    kind: 'account' | 'choose' | 'none_in_currency' | 'not_connected';
+    stableId: string | null;
+  };
+  startDate: string | null;
+  words: { include: string[]; exclude: string[] };
+  readiness: { ready: boolean; missing: ReadingMissing[] };
+  lastRead: LastRead | null;
+}
+
+export interface BankBanner {
+  show: boolean;
+  state: ConnectionState | 'none';
+  daysLeft: number | null;
+  canRead: boolean;
+}
+
+export interface BankSettingsChange {
+  bankId?: string;
+  currency?: string;
+  accountStableId?: string;
+  startDate?: string;
+}
+
+/** How a forced read ended: it read, it was refused before it began, or it failed. */
+export type ReadAnswer =
+  | { kind: 'read'; counts: ReadCounts }
+  | {
+      kind: 'refused';
+      code: 'in_progress' | 'too_soon' | 'rate_limited' | 'not_ready';
+      until: string | null;
+    }
+  | { kind: 'failed'; failure: string; code: string };
+
+/** A player and the name their Bizums show. */
+export interface Pairing {
+  playerId: number;
+  playerName: string;
+  bizumName: string;
+}
+
+export type WaitReason =
+  | {
+      code: 'not_enough_debts';
+      playerId: number;
+      shares: number;
+      debts: number;
+    }
+  | { code: 'include_word'; word: string; wholeShares: boolean }
+  | { code: 'sender_unknown' }
+  | { code: 'sender_ambiguous'; playerIds: number[] }
+  | { code: 'no_season' }
+  | { code: 'kept' }
+  | { code: 'amounts_differ' }
+  | { code: 'undone' };
+
+export type SenderIdentity =
+  | { kind: 'player'; playerId: number }
+  | { kind: 'ambiguous'; playerIds: number[] }
+  | { kind: 'unknown'; suggestions: number[] };
+
+/** A Bizum the rules could not settle with certainty, as the organiser sees it. */
+export interface WaitingBizum {
+  id: number;
+  bookedOn: string;
+  amountCents: number;
+  currency: string;
+  sender: { name: string | null; phone: string | null };
+  subject: string | null;
+  reason: WaitReason;
+  /** Names of every player the reason or the sender mentions. */
+  players: Record<number, string>;
+  senderIdentity: SenderIdentity;
+}
+
+/** A debt a Bizum could pay. */
+export interface OpenShare {
+  debtId: number;
+  gameId: number;
+  playedOn: string;
+  member: MemberKey;
+  holderId: number;
+  amountCents: number;
+}
+
+export interface PairResult {
+  /** What the player had before, when it was something else. */
+  replaced: string | null;
+  /** The other players who now hold the same Bizum name or phone. */
+  sharedWith: { playerId: number; name: string }[];
+  results: { bizumId: number; status: 'settled' | 'waiting' }[];
+  waiting: WaitingBizum[];
+}
+
+export interface Ruling {
+  shares: number;
+  unallocatedCents: number;
+  waiting: WaitingBizum[];
+}
 
 export type GameAction = 'play' | 'reopen' | 'cancel' | 'uncancel';
 
@@ -500,15 +697,83 @@ export const api = {
       shares: MemberKey[];
       payerPlayerId: number;
       amountCents?: number;
+      method: PaymentMethod;
     }
   ) =>
     call<{ debts: Debt[]; payments: Payment[] }>(`/games/${gameId}/payments`, {
       method: 'POST',
       body: body(request),
     }),
+  paymentDetail: (paymentId: number) =>
+    call<PaymentDetail>(`/payments/${paymentId}/bizum`),
   undoPayment: (gameId: number, paymentId: number) =>
     call<{ debts: Debt[]; payments: Payment[] }>(
       `/games/${gameId}/payments/${paymentId}`,
       { method: 'DELETE' }
     ),
+  bank: () => call<BankPanel>('/bank'),
+  bankBanner: () => call<BankBanner>('/bank/banner'),
+  bankSettings: (change: BankSettingsChange) =>
+    call<BankPanel>('/bank/settings', { method: 'PUT', body: body(change) }),
+  bankWords: (include: string[], exclude: string[]) =>
+    call<BankPanel>('/bank/words', {
+      method: 'PUT',
+      body: body({ include, exclude }),
+    }),
+  /** Where the bank's own page is, to send the browser to. */
+  connectBank: () => call<{ url: string }>('/bank/connect', { method: 'POST' }),
+  disconnectBank: () => call<BankPanel>('/bank/disconnect', { method: 'POST' }),
+  /** Reads the account now; a refusal and a failure are answers, not errors. */
+  readBank: async (): Promise<ReadAnswer> => {
+    try {
+      const counts = await call<ReadCounts>('/bank/read', { method: 'POST' });
+      return { kind: 'read', counts };
+    } catch (e) {
+      if (!(e instanceof ApiError)) throw e;
+      const { extra } = e;
+      if (e.status === 409 && typeof extra.refusal === 'string') {
+        return {
+          kind: 'refused',
+          code: extra.refusal as Extract<
+            ReadAnswer,
+            { kind: 'refused' }
+          >['code'],
+          until: typeof extra.until === 'string' ? extra.until : null,
+        };
+      }
+      if (e.status === 502 && typeof extra.failure === 'string') {
+        return {
+          kind: 'failed',
+          failure: extra.failure,
+          code: String(extra.code ?? ''),
+        };
+      }
+      throw e;
+    }
+  },
+  pairings: () => call<Pairing[]>('/bizums/pairings'),
+  setBizumName: (playerId: number, bizumName: string) =>
+    call<Pairing[]>(`/bizums/pairings/${playerId}`, {
+      method: 'PUT',
+      body: body({ bizumName }),
+    }),
+  clearBizumName: (playerId: number) =>
+    call<Pairing[]>(`/bizums/pairings/${playerId}`, { method: 'DELETE' }),
+  waitingBizums: () => call<WaitingBizum[]>('/bizums/waiting'),
+  openShares: (bizumId: number, playerId: number) =>
+    call<OpenShare[]>(`/bizums/${bizumId}/open-shares?playerId=${playerId}`),
+  pairBizum: (bizumId: number, playerId: number) =>
+    call<PairResult>(`/bizums/${bizumId}/pair`, {
+      method: 'POST',
+      body: body({ playerId }),
+    }),
+  ruleBizum: (bizumId: number, playerId: number, shares: number) =>
+    call<Ruling>(`/bizums/${bizumId}/rule`, {
+      method: 'POST',
+      body: body({ playerId, shares }),
+    }),
+  dismissBizum: (bizumId: number) =>
+    call<{ waiting: WaitingBizum[] }>(`/bizums/${bizumId}/dismiss`, {
+      method: 'POST',
+    }),
 };

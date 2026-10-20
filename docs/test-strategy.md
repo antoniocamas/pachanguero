@@ -121,6 +121,17 @@ logs in as each account in a fresh browser context at a 375 px viewport: the thr
 no organiser tab, contact data surviving a reload, the password change ending the session, and an
 admin's switch to the player view and back across a reload.
 
+The bank access has three specs, run against a fake Enable Banking server that the config starts as
+a third `webServer` (`server/src/bank/fake/`, driven over HTTP by `e2e/support/fake-bank.ts`): the
+Banco panel (`the-bank-panel.spec.ts`: connect through the fake's consent page and the real
+callback, choose the account, set the start date, read, disconnect), the waiting Bizums in Deudas
+(`the-waiting-bizums.spec.ts`) and the correction of a Bizum (`the-bizum-correction.spec.ts`).
+The panel spec leaves the bank disconnected; the other two connect it through the API with
+`e2e/support/bank-setup.ts`. The server keeps five minutes between two reads, which a run cannot
+wait for, so `ReadGap` removes the record of the last read from the run's database before a
+journey reads. Production lists one bank, so the run lists one; the second, fake bank is exercised
+by the integration tests.
+
 The game screen has a spec of its own that walks one game through every state and reads the state
 and next action from the screen; then, for each state, at a desktop (1280 × 800) and a phone
 (390 × 844) viewport, checks what is visible (the bar staying in view, the columns, no horizontal

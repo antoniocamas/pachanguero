@@ -6,6 +6,9 @@ import { SystemClock } from '../domain/clock.js';
 import { LocalCalendar } from '../domain/local-calendar.js';
 import { DatabaseBackup } from './database-backup.js';
 import { LATEST_SCHEMA_VERSION, SchemaMigrator } from './schema-migrator.js';
+import { PaymentMethodMigration } from './payment-method-migration.js';
+import { PaymentBizumLinkMigration } from './payment-bizum-link-migration.js';
+import { PlayerBizumNameMigration } from './player-bizum-name-migration.js';
 import { ViewAsMigration } from './view-as-migration.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -37,7 +40,12 @@ export function db(): Database.Database {
       conn,
       schema,
       LATEST_SCHEMA_VERSION,
-      [new ViewAsMigration()],
+      [
+        new ViewAsMigration(),
+        new PaymentMethodMigration(),
+        new PlayerBizumNameMigration(),
+        new PaymentBizumLinkMigration(),
+      ],
       backup
     ).run();
   } catch (error) {

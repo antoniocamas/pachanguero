@@ -59,10 +59,10 @@ Per F2's and F3's Test Methodology:
 
 ## Definition of Done
 
-- [ ] Every test above passes, and the boundary test fails on each temporary violation before it is removed (noted in the commit message).
-- [ ] **Graduation:** UC-006-03-S1–S4, S7, S8, UC-006-04-S5, UC-006-11-S1, S2 → marked tests.
-- [ ] **Hard requirements:** the marked tests exist and pass.
-- [ ] **Documentation:** `.agents/rules/coding-standard.md`: one line on the core's boundary (section 4 of the design).
-- [ ] **Tests:** `npm test`.
-- [ ] **Regression:** `npm test`.
-- [ ] **Code checks:** `npm run lint`, `npm run format:check`; the coding standard.
+- [x] Every test above passes, and the boundary test fails on each temporary violation before it is removed (noted in the commit message).
+- [x] **Graduation:** UC-006-03-S1–S4, S7, S8, UC-006-04-S5, UC-006-11-S1, S2 → marked tests.
+- [x] **Hard requirements:** the marked tests exist and pass.
+- [x] **Documentation:** `.agents/rules/coding-standard.md`: one line on the core's boundary (section 4 of the design).
+- [x] **Tests:** `npm test`.
+- [x] **Regression:** `npm test`.
+- [x] **Code checks:** `npm run lint`, `npm run format:check`; the coding standard.

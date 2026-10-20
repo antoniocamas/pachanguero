@@ -135,9 +135,64 @@ Al marcar el partido como jugado se **factura**: una deuda por cada parte de
 quien juega (el anfitrión responde por sus `+1` y por sus invitados con nombre).
 Se paga después, parte a parte: paga quien responde de ella o su beneficiario, y
 el punto de asistencia es del beneficiario. Una cantidad rara para una sola parte
-es un ajuste (3,75 € salda la parte, sin saldo pendiente). Deshacer un pago
+es un ajuste (3,75 € salda la parte, sin saldo pendiente). Todo pago guarda su
+**método** (Efectivo, Bizum u Otro), que el organizador elige al registrarlo
+(Efectivo viene preseleccionado); los pagos anteriores a esta función dicen
+Otro, y el método no se edita: se deshace el pago y se registra de nuevo. Deshacer un pago
 devuelve la parte a deuda y borra la fecha de pago. Reabrir o cancelar el
 partido conserva deudas y pagos, y volver a jugarlo no factura nada dos veces.
+
+### Pago hecho por el sistema, a partir de un Bizum
+
+Un pago también lo puede hacer el sistema, sin que nadie lo registre: cada 6 horas
+(o cuando el organizador pulsa «Leer ahora») lee los ingresos de la cuenta y, de
+cada Bizum entrante no procesado, aplica estas reglas **en orden**; la primera que
+se cumple decide:
+
+1. el mensaje contiene una palabra de la lista de exclusión: se descarta;
+2. son más de siete partes: se descarta;
+3. el remitente es un jugador conocido, pagó un número entero de partes y tiene
+   deudas abiertas para cubrirlas: **paga esas partes**, las más cercanas a la fecha
+   del Bizum primero;
+4. el remitente es conocido, pagó un número entero de partes y debe menos: espera;
+5. el mensaje contiene una palabra de la lista de inclusión: espera;
+6. no es un número entero de partes: se descarta;
+7. número entero de partes de un remitente que no se conoce (o que se confunde con
+   otro jugador): espera.
+
+Lo que se descarta no se guarda. Lo que espera queda en «Bizums en espera» hasta que
+el organizador lo resuelva o aparezca la deuda. Cada Bizum se procesa **una sola
+vez**, por la identificación del propio banco. El pago que deja el sistema tiene
+método Bizum, la fecha en que llegó el dinero (no la del partido) y el enlace a su
+Bizum; el importe que sobra de las partes pagadas se anota como «sin asignar».
+
+Un Bizum que espera se vuelve a juzgar en tres momentos, siempre con las mismas
+reglas pero **sin descartar nunca** (lo que ya se guardó no se borra en silencio):
+
+- al **emparejar** a su remitente con un jugador, se juzgan todos los Bizums que
+  esperan de ese remitente, el más antiguo primero;
+- al **marcar un partido como jugado**, se juzgan los que esperan de su temporada y
+  llevan fecha igual o posterior a la del partido, el más antiguo primero. Las deudas
+  del partido ya existen, así que los que ahora cubren una deuda la pagan, en la
+  misma operación que marca el partido. Si falla algo, el partido no queda jugado.
+  Reabrir el partido no deshace esos pagos;
+- cuando el organizador **dictamina** cuántas partes paga: se pagan las más cercanas,
+  nunca más de lo que cubre el Bizum, y lo que sobra queda sin asignar. El dictamen
+  no empareja al remitente.
+
+El organizador también puede **descartar** un Bizum que espera, para siempre: del
+Bizum solo queda la identificación del banco y que se descartó. Uno ya pagado no se
+descarta; antes se deshacen sus pagos.
+
+Deshacer un pago hecho a partir de un Bizum **deshace todos los pagos de ese Bizum**
+(aunque sean de varios partidos), en una sola operación; si alguno de esos partidos
+ya no está jugado, no se deshace nada. El Bizum vuelve a «Bizums en espera» con sus
+datos originales y el motivo «Se deshizo su pago»; puede volver a pagar solo si más
+tarde las reglas, un emparejamiento o un partido jugado lo permiten, así que conviene
+quitar el emparejamiento equivocado. Un pago hecho a mano se deshace como siempre.
+
+Las deudas no pasan de una temporada a otra, ni por un Bizum ni por un dictamen: un
+Bizum solo paga deudas de la temporada de su fecha.
 
 ## Equipos (opcional)
 

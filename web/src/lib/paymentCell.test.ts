@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { DetailFixture } from './detailFixture';
 import { buildRows } from './gameRows';
-import { paymentCell } from './paymentCell';
+import { opensDetail, paymentCell } from './paymentCell';
 
 const ANA = 1;
 const MARTA = 2;
@@ -101,8 +101,9 @@ describe('paymentCell', () => {
     expect(parts).toEqual([
       {
         kind: 'paid',
-        label: 'Pagado 4 € por Ana',
+        label: 'Pagado 4 € por Ana · Efectivo',
         paymentId: expect.any(Number),
+        method: 'efectivo',
       },
     ]);
   });
@@ -111,7 +112,12 @@ describe('paymentCell', () => {
     const parts = cell(game().payment(LUIS, LUIS, LUIS, 375), 'Luis');
 
     expect(parts).toEqual([
-      { kind: 'paid', label: 'Pagado 3,75 €', paymentId: expect.any(Number) },
+      {
+        kind: 'paid',
+        label: 'Pagado 3,75 € · Efectivo',
+        paymentId: expect.any(Number),
+        method: 'efectivo',
+      },
     ]);
   });
 
@@ -133,7 +139,12 @@ describe('paymentCell', () => {
     const parts = cell(game().payment(DANI, null, DANI), 'Invitado de Dani');
 
     expect(parts).toEqual([
-      { kind: 'paid', label: 'Pagado 4 €', paymentId: expect.any(Number) },
+      {
+        kind: 'paid',
+        label: 'Pagado 4 € · Efectivo',
+        paymentId: expect.any(Number),
+        method: 'efectivo',
+      },
     ]);
   });
 
@@ -145,5 +156,48 @@ describe('paymentCell', () => {
 
     expect(parts.map(p => p.kind)).toEqual(['paid', 'pay']);
     expect(parts[1]).toMatchObject({ label: 'Pagar 4 €' });
+  });
+});
+
+describe('paymentCell, the method of a settled share', () => {
+  it.each([
+    ['efectivo', 'Efectivo'],
+    ['bizum', 'Bizum'],
+    ['otro', 'Otro'],
+  ] as const)(
+    'ends the label with %s as %s, with and without "por"',
+    (method, label) => {
+      const own = cell(
+        game().payment(LUIS, LUIS, LUIS, 400, 1, method),
+        'Luis'
+      );
+      const other = cell(
+        game().payment(ANA, MARTA, ANA, 400, 1, method),
+        'Marta'
+      );
+
+      expect(own).toEqual([
+        expect.objectContaining({ label: `Pagado 4 € · ${label}` }),
+      ]);
+      expect(other).toEqual([
+        expect.objectContaining({ label: `Pagado 4 € por Ana · ${label}` }),
+      ]);
+    }
+  );
+});
+
+describe('paymentCell, which settled shares open a detail', () => {
+  it.each([
+    ['efectivo', false],
+    ['bizum', true],
+    ['otro', false],
+  ] as const)('carries %s, so the cell opens a detail: %s', (method, opens) => {
+    const [part] = cell(
+      game().payment(LUIS, LUIS, LUIS, 400, 1, method),
+      'Luis'
+    );
+
+    expect(part).toMatchObject({ kind: 'paid', method });
+    expect(opensDetail(part)).toBe(opens);
   });
 });

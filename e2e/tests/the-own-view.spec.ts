@@ -31,7 +31,10 @@ class Backend {
     return this.send('post', '/seasons', { name: `${start}/${start + 1}` });
   }
 
-  /** Two players who played together, `owner` having paid one of the two games. */
+  /**
+   * Two players who played together, `owner` having paid one of the two games. Answers the games
+   * and the players' ids.
+   */
   async twoGames(owner: string, other: string) {
     const season = await this.season();
     const year = Number(season.name.slice(0, 4));
@@ -59,6 +62,17 @@ class Backend {
     await this.send('post', `/games/${played[0]}/payments`, {
       shares: [{ playerId: ids[owner] }],
       payerPlayerId: ids[owner],
+      method: 'efectivo',
+    });
+    return { played, ids };
+  }
+
+  /** The owner's share of a game, settled with this method. */
+  async pay(gameId: number, playerId: number, method: 'bizum' | 'otro') {
+    await this.send('post', `/games/${gameId}/payments`, {
+      shares: [{ playerId }],
+      payerPlayerId: playerId,
+      method,
     });
   }
 }
@@ -120,6 +134,33 @@ test.describe('the player own view', () => {
 
     await expect(page.locator('body')).not.toContainText('Zowna Otro');
     expect(await noHorizontalScroll(page)).toBe(true);
+    await page.context().close();
+  });
+
+  test('Pagos shows how each share was paid, and nothing of the Bizum behind one', async ({
+    browser,
+    request,
+  }) => {
+    const backend = new Backend(request);
+    const { played, ids } = await backend.twoGames(
+      'Zmetodo Dueño',
+      'Zmetodo Otro'
+    );
+    await backend.pay(played[1], ids['Zmetodo Dueño'], 'bizum');
+    createAccount({
+      username: 'e2e-zmetodo',
+      password: PASSWORD,
+      role: 'regular',
+      player: 'Zmetodo Dueño',
+    });
+    const page = await signIn(browser, 'e2e-zmetodo');
+    await tab(page, 'Pagos').click();
+
+    const payments = page.getByTestId('own-payments');
+    await expect(payments).toContainText('Efectivo');
+    await expect(payments).toContainText('Bizum');
+    for (const hidden of ['Remitente', 'Referencia', 'sin asignar', 'Asunto'])
+      await expect(page.locator('body')).not.toContainText(hidden);
     await page.context().close();
   });
 

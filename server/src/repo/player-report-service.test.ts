@@ -26,6 +26,7 @@ describe('PlayerReportService', () => {
     flow.played(second.gameId);
     const [id] = first.playerIds;
     flow.paymentService.pay(first.gameId, {
+      method: 'efectivo',
       shares: [{ playerId: id }],
       payerPlayerId: id,
       paidOn: '2026-10-08',

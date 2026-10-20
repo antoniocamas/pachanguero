@@ -29,6 +29,15 @@ describe('ContactRepository', () => {
     expect(contacts.get(ana)).toEqual({ email: null, phone: null });
   });
 
+  it('lists the phones on file with their players, leaving out rows with no phone', () => {
+    contacts.save(ana, { email: 'ana@example.com' });
+    contacts.save(luis, { phone: '611 11 11 11' });
+
+    expect(contacts.listPhones()).toEqual([
+      { playerId: luis, phone: '611 11 11 11' },
+    ]);
+  });
+
   it('saves and reads back the values, per player', () => {
     contacts.save(ana, { email: 'ana@example.com', phone: '600123456' });
 

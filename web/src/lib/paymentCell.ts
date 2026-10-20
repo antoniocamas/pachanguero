@@ -1,7 +1,8 @@
-import type { Debt, MemberKey, Payment } from '../api';
+import type { Debt, MemberKey, Payment, PaymentMethod } from '../api';
 import type { GameRow } from './gameRows';
 import { debtOf, heldBy } from './holdings';
 import { euros } from './money';
+import { paymentMethodLabel } from './paymentMethod';
 import { keyOf, memberOf } from './shares';
 
 /** One thing the payment cell of a row offers or says. */
@@ -13,7 +14,12 @@ export type PaymentPart =
   /** Whose debt a share of this row is, when it is not their own. */
   | { kind: 'tag'; label: string }
   /** A settled share, which can be undone. */
-  | { kind: 'paid'; label: string; paymentId: number };
+  | {
+      kind: 'paid';
+      label: string;
+      paymentId: number;
+      method: PaymentMethod;
+    };
 
 /**
  * What a row's payment cell shows. A holder's button pays everything they
@@ -39,8 +45,9 @@ export const paymentCell = (
         : ` por ${nameOf(ownPayment.payer_player_id)}`;
     parts.push({
       kind: 'paid',
-      label: `Pagado ${euros(ownPayment.amount_cents)}${by}`,
+      label: `Pagado ${euros(ownPayment.amount_cents)}${by} · ${paymentMethodLabel(ownPayment.method)}`,
       paymentId: ownPayment.id,
+      method: ownPayment.method,
     });
   }
 
@@ -99,3 +106,7 @@ const settleOne = (
   },
   { kind: 'adjust', share, payerId },
 ];
+
+/** Whether this part is a settled share whose method is Bizum, which has a detail to open. */
+export const opensDetail = (part: PaymentPart): boolean =>
+  part.kind === 'paid' && part.method === 'bizum';

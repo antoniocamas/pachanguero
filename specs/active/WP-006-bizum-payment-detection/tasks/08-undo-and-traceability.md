@@ -47,12 +47,12 @@ Per the Test Methodology of F10 and F11:
 
 ## Definition of Done
 
-- [ ] Every test above passes.
-- [ ] **Graduation:** UC-006-06-S1–S3, UC-006-07-S2–S4 → marked tests.
-- [ ] **Hard requirements:** the marked tests exist and pass.
-- [ ] **Documentation:**
+- [x] Every test above passes.
+- [x] **Graduation:** UC-006-06-S1–S3, UC-006-07-S2–S4 → marked tests.
+- [x] **Hard requirements:** the marked tests exist and pass.
+- [x] **Documentation:**
   - `docs/users-and-roles.md`: a player sees the method of each payment, and nothing of the Bizum.
   - `docs/domain-model/ciclo-del-partido.md`: undoing a payment from a Bizum undoes all of its payments and returns it to the list.
-- [ ] **Tests:** `npm test`; `npm run test:e2e`.
-- [ ] **Regression:** `npm test`.
-- [ ] **Code checks:** `npm run lint`, `npm run format:check`; both coding standards.
+- [x] **Tests:** `npm test`; `npm run test:e2e`.
+- [x] **Regression:** `npm test`.
+- [x] **Code checks:** `npm run lint`, `npm run format:check`; both coding standards.

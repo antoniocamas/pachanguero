@@ -1,6 +1,7 @@
 import type { HeldRow, OwnDebtRow, OwnPaymentRow } from '../api';
 import { fmtDate } from './dates';
 import { euros } from './money';
+import { paymentMethodLabel } from './paymentMethod';
 import type { SessionUser } from './sessionClient';
 
 /** One line of a list the player reads: the date, an optional game label, an amount and a tag. */
@@ -10,6 +11,8 @@ export interface MoneyLine {
   label: string | null;
   amount: string;
   tag: string | null;
+  /** How a payment was made; null for a debt. */
+  method: string | null;
 }
 
 /** What the player owes, as lines: their own share or "invitado". */
@@ -20,6 +23,7 @@ export const debtLines = (rows: readonly OwnDebtRow[]): MoneyLine[] =>
     label: r.label,
     amount: euros(r.amountCents),
     tag: r.kind === 'own' ? 'tu parte' : 'invitado',
+    method: null,
   }));
 
 /** The shares another player pays for this one: they do not add to what is owed. */
@@ -30,6 +34,7 @@ export const heldLines = (rows: readonly HeldRow[]): MoneyLine[] =>
     label: r.label,
     amount: euros(r.amountCents),
     tag: `lo paga ${r.holderName}`,
+    method: null,
   }));
 
 const paidByNote = (paidBy: OwnPaymentRow['paidBy']): string | null => {
@@ -47,6 +52,7 @@ export const paymentLines = (rows: readonly OwnPaymentRow[]): MoneyLine[] =>
     label: r.label,
     amount: euros(r.amountCents),
     tag: paidByNote(r.paidBy) ?? (r.kind === 'guest' ? 'invitado' : null),
+    method: paymentMethodLabel(r.method),
   }));
 
 /** What the account settings offer about the admin's player view. */

@@ -76,6 +76,7 @@ class Scenario {
         payerId: playerId,
         amountCents: 400,
         paidOn: date,
+        method: 'efectivo',
       });
       flow.participations.set(gameId, playerId, {
         paid_cents: 400,

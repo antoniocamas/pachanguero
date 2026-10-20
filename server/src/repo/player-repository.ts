@@ -26,6 +26,31 @@ export class PlayerRepository {
       .all() as { id: number; name: string }[];
   }
 
+  /** The name the bank shows for each player who has one paired, as stored. */
+  listBizumNames(): { playerId: number; bizumName: string }[] {
+    return this.conn
+      .prepare(
+        `SELECT id AS playerId, bizum_name AS bizumName FROM players
+          WHERE bizum_name IS NOT NULL ORDER BY id`
+      )
+      .all() as { playerId: number; bizumName: string }[];
+  }
+
+  /** How the bank shows this player, or null when no name is paired. */
+  bizumNameOf(playerId: number): string | null {
+    const row = this.conn
+      .prepare('SELECT bizum_name FROM players WHERE id = ?')
+      .get(playerId) as { bizum_name: string | null } | undefined;
+    return row?.bizum_name ?? null;
+  }
+
+  /** Pairs the name the bank shows with a player, or clears it with null. */
+  setBizumName(playerId: number, bizumName: string | null): void {
+    this.conn
+      .prepare('UPDATE players SET bizum_name = ? WHERE id = ?')
+      .run(bizumName, playerId);
+  }
+
   /** Create a player without enrolling them in any season. */
   register(name: string, introducedBy?: number): RegisteredPlayer {
     const trimmed = name.trim();

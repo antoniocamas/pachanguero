@@ -16,11 +16,25 @@ export function useGameDetail(gameId: number | null) {
     }
   }, [gameId]);
 
+  // Choosing another game while one is being read must not let the first answer replace the
+  // second's: an answer for a game that is no longer chosen is dropped.
   useEffect(() => {
+    if (!gameId) return;
+    let chosen = true;
     void (async () => {
-      await reload();
+      try {
+        const read = await api.game(gameId);
+        if (!chosen) return;
+        setDetail(read);
+        setError(null);
+      } catch (e) {
+        if (chosen) setError((e as Error).message);
+      }
     })();
-  }, [reload]);
+    return () => {
+      chosen = false;
+    };
+  }, [gameId]);
 
   const clear = useCallback(() => setDetail(null), []);
 

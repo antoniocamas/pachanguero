@@ -17,6 +17,16 @@ export class ContactRepository {
     return row ?? { email: null, phone: null };
   }
 
+  /** Every phone on file, with the player it belongs to. */
+  listPhones(): { playerId: number; phone: string }[] {
+    return this.conn
+      .prepare(
+        `SELECT player_id AS playerId, phone FROM player_contacts
+          WHERE phone IS NOT NULL ORDER BY player_id`
+      )
+      .all() as { playerId: number; phone: string }[];
+  }
+
   /** Changes only the fields the patch names. */
   save(playerId: number, patch: ContactPatch): Contact {
     const next = { ...this.get(playerId), ...patch };

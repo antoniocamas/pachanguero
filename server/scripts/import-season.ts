@@ -212,6 +212,7 @@ function main() {
             payerId: player.id,
             amountCents: ownCents,
             paidOn,
+            method: 'otro',
           });
         } else if (cell.includes('*')) {
           // Played, never settled. This is the debt the '*' encoded.

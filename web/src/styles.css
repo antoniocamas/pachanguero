@@ -995,3 +995,143 @@ header.top .top-action {
   padding: 0 4px;
   font-size: 13px;
 }
+
+/* -------------------------------------------------------------------- bank */
+
+.bank-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  background: color-mix(in srgb, var(--warn) 18%, transparent);
+  border: 1px solid var(--warn);
+  border-radius: 9px;
+  padding: 8px 12px;
+  margin-bottom: 14px;
+  font-size: 14px;
+}
+.bank-body {
+  padding: 12px 14px;
+  display: grid;
+  gap: 10px;
+}
+.bank-body p,
+.bank-body h3 {
+  margin: 0;
+}
+.bank-body h3 {
+  font-size: 13px;
+  color: var(--muted);
+}
+.bank-body .row {
+  padding-left: 0;
+  padding-right: 0;
+}
+.bank-body .actions,
+.dialog-body .actions {
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.setting {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: end;
+}
+.setting label {
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.chips.wrap {
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+.chips.wrap .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: default;
+}
+.chips.wrap .chip .btn.link {
+  padding: 0 2px;
+}
+label.choice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+}
+.note.ok {
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  border: 1px solid var(--accent);
+  border-radius: 9px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  font-size: 14px;
+}
+.read-now {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.card > h2 .count {
+  font-weight: 400;
+}
+.waiting-item {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+  display: grid;
+  gap: 6px;
+}
+.waiting-item:last-child {
+  border-bottom: 0;
+}
+.waiting-item .row {
+  padding: 0;
+  border: 0;
+}
+.waiting-item p.reason {
+  margin: 0;
+  font-size: 13px;
+}
+.waiting-item .actions {
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.dialog-body {
+  padding: 12px 14px;
+  display: grid;
+  gap: 10px;
+}
+.dialog-body p,
+.dialog-body h3 {
+  margin: 0;
+}
+.dialog-body h3 {
+  font-size: 13px;
+  color: var(--muted);
+}
+.dialog-body .row {
+  padding-left: 0;
+  padding-right: 0;
+}
+label.choice input {
+  width: auto;
+}
+.setting input,
+.setting select {
+  width: auto;
+  flex: 1 1 140px;
+}

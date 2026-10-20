@@ -70,9 +70,22 @@ else's debts, nor anyone's identifier. These rules live in a single class,
 `OwnDisclosure`; the player's routes take no player identifier: who the player is
 comes from their session.
 
+A player sees the **method** of each of their payments (Efectivo, Bizum or Otro) and
+nothing of the Bizum behind it: not its booking date, sender, subject, the bank's
+identification of it nor what was left unallocated. The server leaves those out of the
+answer, for the player and for an admin looking as them. The organiser, in the payment
+cell, opens the detail of a Bizum payment.
+
 They do see, and can change, their own **contact data**: email and phone, both
 optional. The application sends nothing with them; they are there so the organiser
-knows how to reach them.
+knows how to reach them. A phone also identifies its player as the sender of a
+Bizum, so changing it changes whose Bizums the system recognises; the player is never
+shown that, nor any other bank datum.
+
+Bank data is admin only: the Banco panel, the Bizums waiting for the organiser and the
+names senders appear under on Bizum (a player's "Bizum name") are never sent to a
+player, and every route that serves them refuses a regular user and an admin using
+"Ver como jugador" or "Ver como otro jugador".
 
 ## The admin's view
 

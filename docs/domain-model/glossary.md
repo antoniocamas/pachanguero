@@ -105,6 +105,48 @@ el anfitrión responde por sus `+1` y por los invitados con nombre. Cualquiera d
 los dos puede pagarla y el pago guarda quién lo hizo. Al pagarse deja de ser
 deuda y pasa a ser un pago; la deuda de un titular cuenta cada parte una sola vez.
 
+## Método de pago
+
+Cómo se pagó una parte: **Efectivo**, **Bizum** u **Otro**. Todo pago lo guarda
+(`payments.method`; se guarda en minúsculas y sin tilde: `efectivo`, `bizum`,
+`otro`). El organizador lo elige al registrar el pago a mano, con Efectivo
+preseleccionado; los pagos anteriores a esta función dicen Otro. No se edita: la
+corrección es deshacer el pago y registrarlo otra vez.
+
+## Bizum
+
+Un ingreso en la cuenta del organizador hecho por Bizum: llega con un importe, la
+fecha en que el banco lo apuntó, quien lo envía (un nombre abreviado, como
+`Marta G.L.`, o un teléfono) y un mensaje. El sistema lo lee solo, una sola vez cada
+uno, y lo descarta, lo guarda a la espera o paga con él las partes que cubre (ver
+«Pago hecho por el sistema» en el ciclo del partido). Solo cuentan los Bizums
+entrantes en la moneda leída y desde la fecha de inicio que fija el organizador.
+
+## Bizums en espera
+
+Los Bizums guardados que el sistema no pudo atribuir a deudas: remitente
+desconocido o ambiguo, un mensaje de inclusión sin partes que pagar, un jugador sin
+deudas todavía, o un importe que no cuadra con las deudas. Siguen ahí, sin caducar,
+hasta que el organizador los resuelve o aparece la deuda; solo los ve el
+organizador.
+
+## Nombre de Bizum
+
+Cómo aparece un jugador cuando paga por Bizum (`Jorge G.A.` para «Guti»): una
+propiedad del jugador, distinta de sus alias al apuntarse. Se guarda al emparejar a
+un remitente con un jugador o a mano, y se puede quitar; los pagos ya hechos no
+cambian. Un remitente solo se reconoce por este nombre o por el teléfono del jugador,
+nunca por parecido; un nombre de Bizum que tienen dos jugadores no identifica a
+ninguno.
+
+## Descartar
+
+Dos cosas distintas. El sistema **descarta** un Bizum que no es para el grupo (con una
+palabra de exclusión, de más de siete partes o que no es un número entero de partes):
+no guarda nada de él. El organizador **descarta** un Bizum en espera para siempre: se
+borran su remitente, mensaje e importe, y solo queda la identificación del banco para
+no leerlo otra vez.
+
 ## Marcas de la hoja `Pagos`
 
 Una celda por jugador y por semana:

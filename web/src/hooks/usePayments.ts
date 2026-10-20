@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { api, type MemberKey } from '../api';
+import { api, type MemberKey, type PaymentMethod } from '../api';
 import { useGuarded } from './useGuarded';
 
 /** Recording and undoing payments of the shares of a played game. */
@@ -11,9 +11,14 @@ export function usePayments(
   const { busy, run } = useGuarded(report);
 
   const pay = useCallback(
-    (shares: MemberKey[], payerPlayerId: number, amountCents?: number) =>
+    (
+      shares: MemberKey[],
+      payerPlayerId: number,
+      method: PaymentMethod,
+      amountCents?: number
+    ) =>
       run(async () => {
-        await api.pay(gameId, { shares, payerPlayerId, amountCents });
+        await api.pay(gameId, { shares, payerPlayerId, amountCents, method });
         await reload();
       }),
     [gameId, run, reload]

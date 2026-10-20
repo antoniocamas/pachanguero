@@ -7,6 +7,7 @@ import type {
   Outcome,
   Participation,
   Payment,
+  PaymentMethod,
   Team,
 } from '../api';
 
@@ -156,7 +157,8 @@ export class DetailFixture {
     beneficiary: number | null,
     payer: number,
     cents = 400,
-    ordinal = 1
+    ordinal = 1,
+    method: PaymentMethod = 'efectivo'
   ): this {
     const payment: Payment = {
       id: this.nextId++,
@@ -167,6 +169,7 @@ export class DetailFixture {
       amount_cents: cents,
       payer_player_id: payer,
       paid_on: '2026-10-07',
+      method,
     };
     this.detail.payments.push(payment);
     return this;

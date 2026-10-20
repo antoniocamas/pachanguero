@@ -22,6 +22,7 @@ const payment = (over: Partial<OwnPaymentRow> = {}): OwnPaymentRow => ({
   label: null,
   amountCents: 500,
   paidOn: '2026-10-09',
+  method: 'efectivo',
   kind: 'own',
   paidBy: null,
   ...over,
@@ -83,6 +84,31 @@ describe('paymentLines', () => {
       'pagado por Ana López',
       'pagado por otra persona',
     ]);
+  });
+});
+
+describe('paymentLines, the method tag', () => {
+  it.each([
+    ['efectivo', 'Efectivo'],
+    ['bizum', 'Bizum'],
+    ['otro', 'Otro'],
+  ] as const)('shows %s as %s', (method, label) => {
+    expect(paymentLines([payment({ method })])[0].method).toBe(label);
+  });
+
+  it('keeps the method apart from the note about who paid', () => {
+    const [line] = paymentLines([
+      payment({ method: 'bizum', paidBy: { name: 'Ana López' } }),
+    ]);
+
+    expect(line).toMatchObject({
+      method: 'Bizum',
+      tag: 'pagado por Ana López',
+    });
+  });
+
+  it('has no method on a debt', () => {
+    expect(debtLines([debt()])[0].method).toBeNull();
   });
 });
 

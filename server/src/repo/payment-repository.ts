@@ -1,4 +1,5 @@
 import type Database from 'better-sqlite3';
+import type { PaymentMethod } from '../domain/payment-method.js';
 import type { MemberKey } from '../domain/types.js';
 import { ShareKey } from '../domain/share-key.js';
 import { ShareRowMember, type ShareRow } from './share-rows.js';
@@ -7,6 +8,9 @@ export interface PaymentRow extends ShareRow {
   id: number;
   payer_player_id: number;
   paid_on: string;
+  method: PaymentMethod;
+  /** The Bizum that paid it; null for a payment made by hand. */
+  bizum_id: number | null;
 }
 
 /** A settled share with the game and the payer's name a player's own list needs. */
@@ -21,6 +25,7 @@ export interface PaidShare {
   beneficiaryId: number | null;
   amountCents: number;
   paidOn: string;
+  method: PaymentMethod;
 }
 
 /** Shares settled: who paid each, how much and when. Append-only except for undo. */
@@ -41,6 +46,13 @@ export class PaymentRepository {
         .prepare('SELECT * FROM payments WHERE id = ?')
         .get(paymentId) as PaymentRow | undefined) ?? null
     );
+  }
+
+  /** Every payment a Bizum made, in the order they were made. */
+  byBizum(bizumId: number): PaymentRow[] {
+    return this.conn
+      .prepare('SELECT * FROM payments WHERE bizum_id = ? ORDER BY id')
+      .all(bizumId) as PaymentRow[];
   }
 
   findByMember(gameId: number, member: MemberKey): PaymentRow | null {
@@ -67,14 +79,16 @@ export class PaymentRepository {
     payerId: number;
     amountCents: number;
     paidOn: string;
+    method: PaymentMethod;
+    bizumId?: number;
   }): PaymentRow {
     const [beneficiary, ordinal] = this.members.columnsOf(payment.member);
     const info = this.conn
       .prepare(
         `INSERT INTO payments
            (game_id, holder_player_id, beneficiary_player_id, guest_ordinal,
-            payer_player_id, amount_cents, paid_on)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`
+            payer_player_id, amount_cents, paid_on, method, bizum_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
       )
       .run(
         payment.gameId,
@@ -83,7 +97,9 @@ export class PaymentRepository {
         ordinal,
         payment.payerId,
         payment.amountCents,
-        payment.paidOn
+        payment.paidOn,
+        payment.method,
+        payment.bizumId ?? null
       );
     return this.find(Number(info.lastInsertRowid))!;
   }
@@ -95,7 +111,8 @@ export class PaymentRepository {
         `SELECT p.game_id AS gameId, g.played_on AS playedOn, g.label AS gameLabel,
                 p.holder_player_id AS holderId, p.payer_player_id AS payerId,
                 q.name AS payerName, p.beneficiary_player_id AS beneficiaryId,
-                p.amount_cents AS amountCents, p.paid_on AS paidOn
+                p.amount_cents AS amountCents, p.paid_on AS paidOn,
+                p.method AS method
            FROM payments p
            JOIN games g   ON g.id = p.game_id
            JOIN players q ON q.id = p.payer_player_id

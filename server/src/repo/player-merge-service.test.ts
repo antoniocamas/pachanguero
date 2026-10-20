@@ -164,4 +164,40 @@ describe('PlayerMergeService', () => {
       expect(contact(santi)).toBeUndefined();
     });
   });
+
+  describe('the Bizum name', () => {
+    const setBizumName = (playerId: number, name: string | null) =>
+      conn
+        .prepare('UPDATE players SET bizum_name = ? WHERE id = ?')
+        .run(name, playerId);
+    const bizumName = (playerId: number) =>
+      (
+        conn
+          .prepare('SELECT bizum_name AS name FROM players WHERE id = ?')
+          .get(playerId) as { name: string | null }
+      ).name;
+
+    it('survives a merge when only the absorbed player has one', () => {
+      setBizumName(santo, 'Santi Z.');
+
+      merge.merge(santi, santo);
+
+      expect(bizumName(santi)).toBe('Santi Z.');
+    });
+
+    it("keeps the survivor's own when both have one", () => {
+      setBizumName(santi, 'Santiago Z.');
+      setBizumName(santo, 'Santi Z.');
+
+      merge.merge(santi, santo);
+
+      expect(bizumName(santi)).toBe('Santiago Z.');
+    });
+
+    it('stays empty when neither has one', () => {
+      merge.merge(santi, santo);
+
+      expect(bizumName(santi)).toBeNull();
+    });
+  });
 });

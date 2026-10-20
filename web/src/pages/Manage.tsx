@@ -10,7 +10,10 @@ const SECTIONS = [
   { key: 'rules', label: 'Reglas' },
   { key: 'season', label: 'Temporada' },
   { key: 'account', label: 'Mi cuenta' },
+  { key: 'bank', label: 'Banco' },
 ] as const;
+
+export type ManageSection = (typeof SECTIONS)[number]['key'];
 
 /** Players and season rules, one section at a time. Not the everyday screen — set up and forget. */
 export function Manage({
@@ -20,6 +23,9 @@ export function Manage({
   onChanged,
   onSelectSeason,
   account,
+  bank,
+  section,
+  onSection,
 }: {
   season: Season;
   seasons: Season[];
@@ -28,9 +34,12 @@ export function Manage({
   onSelectSeason: (season: Season) => void;
   /** The signed-in user's own account settings; Manage knows nothing of users. */
   account: ReactNode;
+  /** The bank access panel; Manage knows nothing of the bank. */
+  bank: ReactNode;
+  /** Controlled, so the banner and the bank's redirect can open a section from outside. */
+  section: ManageSection;
+  onSection: (section: ManageSection) => void;
 }) {
-  const [section, setSection] =
-    useState<(typeof SECTIONS)[number]['key']>('players');
   const [error, setError] = useState<string | null>(null);
 
   const guard = async (fn: () => Promise<unknown>) => {
@@ -49,7 +58,7 @@ export function Manage({
         sections={SECTIONS}
         current={section}
         onChange={key => {
-          setSection(key);
+          onSection(key);
           setError(null);
         }}
       />
@@ -65,6 +74,8 @@ export function Manage({
         <RulesSection season={season} guard={guard} />
       ) : section === 'account' ? (
         account
+      ) : section === 'bank' ? (
+        bank
       ) : (
         <SeasonSection
           season={season}

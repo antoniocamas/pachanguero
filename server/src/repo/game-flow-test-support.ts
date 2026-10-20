@@ -6,6 +6,22 @@ import { GuestSlotAllocator } from '../domain/guest-slot-allocator.js';
 import { PlayedDerivation } from '../domain/played-derivation.js';
 import { PointsCalculator } from '../domain/points.js';
 import { TestDatabase } from '../db/test-support.js';
+import { SqliteBankEntryLedger } from '../bizum/sqlite/sqlite-bank-entry-ledger.js';
+import { SqliteBizumStore } from '../bizum/sqlite/sqlite-bizum-store.js';
+import { BizumRuleSet } from '../domain/bizum-rules.js';
+import { ManualClock } from '../domain/clock-test-support.js';
+import { AliasRepository } from './alias-repository.js';
+import { BankSettingsRepository } from './bank-settings-repository.js';
+import { BizumFactsReader } from './bizum-facts-reader.js';
+import { BizumHandlingRepository } from './bizum-handling-repository.js';
+import { BizumReevaluationEffect } from './bizum-reevaluation-effect.js';
+import { BizumResolutionService } from './bizum-resolution-service.js';
+import { BizumSettlementService } from './bizum-settlement-service.js';
+import { ContactRepository } from './contact-repository.js';
+import { KeywordRepository } from './keyword-repository.js';
+import { BizumUndoService } from './bizum-undo-service.js';
+import { PaymentDetailService } from './payment-detail-service.js';
+import { SenderPairingService } from './sender-pairing-service.js';
 import { BillingEffect } from './billing-effect.js';
 import { ConvocatoriaEditService } from './convocatoria-edit-service.js';
 import { ConvocatoriaRepository } from './convocatoria-repository.js';
@@ -18,6 +34,7 @@ import { GuestCandidateRepository } from './guest-candidate-repository.js';
 import { ParticipationRepository } from './participation-repository.js';
 import { PaymentRepository } from './payment-repository.js';
 import { PaymentService } from './payment-service.js';
+import { ShareSettler } from './share-settler.js';
 import { PlayedOutcomeEffect } from './played-outcome-effect.js';
 import { PlayerRepository } from './player-repository.js';
 import { SeasonRepository } from './season-repository.js';
@@ -43,8 +60,58 @@ export class GameFlow {
     new PointsCalculator(),
     this.conn
   );
-  readonly payments = new PaymentRepository(this.conn);
   readonly guests = new GuestCandidateRepository(this.conn);
+  readonly payments = new PaymentRepository(this.conn);
+  readonly settler = new ShareSettler(
+    this.games,
+    this.debts,
+    this.payments,
+    this.participations,
+    this.players,
+    this.seasons
+  );
+  readonly clock = new ManualClock(new Date('2026-10-19T10:00:00.000Z'));
+  readonly aliases = new AliasRepository(this.conn);
+  readonly contacts = new ContactRepository(this.conn);
+  readonly keywords = new KeywordRepository(
+    this.conn,
+    new BankSettingsRepository(this.conn)
+  );
+  readonly bizumStore = new SqliteBizumStore(this.conn, this.clock);
+  readonly bizumLedger = new SqliteBankEntryLedger(this.conn, this.clock);
+  readonly bizumHandling = new BizumHandlingRepository(this.conn);
+  readonly bizumFacts = new BizumFactsReader(
+    this.seasons,
+    this.players,
+    this.aliases,
+    this.contacts,
+    this.debts,
+    this.keywords
+  );
+  readonly bizumSettlement = new BizumSettlementService(
+    this.settler,
+    this.bizumHandling,
+    this.clock
+  );
+  readonly bizumResolution = new BizumResolutionService(
+    this.bizumStore,
+    this.bizumLedger,
+    this.bizumHandling,
+    this.bizumFacts,
+    new BizumRuleSet(),
+    this.bizumSettlement,
+    this.players,
+    this.conn
+  );
+  readonly senderPairing = new SenderPairingService(
+    this.bizumStore,
+    this.bizumHandling,
+    this.bizumResolution,
+    this.bizumFacts,
+    this.players,
+    this.contacts,
+    this.conn
+  );
   readonly lifecycle = new GameLifecycleService(
     this.games,
     new GameLifecycle(),
@@ -64,18 +131,32 @@ export class GameFlow {
         this.seasons,
         new BillingPlanner()
       ),
+      new BizumReevaluationEffect(this.bizumHandling, this.bizumResolution),
     ],
     this.conn
   );
   readonly paymentService = new PaymentService(
-    this.games,
     this.lifecycle,
-    this.debts,
     this.payments,
-    this.participations,
-    this.players,
-    this.seasons,
+    this.settler,
     this.conn
+  );
+  readonly bizumUndo = new BizumUndoService(
+    this.lifecycle,
+    this.payments,
+    this.settler,
+    this.paymentService,
+    this.bizumStore,
+    this.bizumFacts,
+    this.bizumSettlement,
+    this.conn
+  );
+  readonly paymentDetail = new PaymentDetailService(
+    this.payments,
+    this.games,
+    this.players,
+    this.bizumStore,
+    this.bizumHandling
   );
   readonly convocatoria = new ConvocatoriaService(
     this.games,

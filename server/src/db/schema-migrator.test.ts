@@ -13,6 +13,9 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { Clock } from '../domain/clock.js';
 import { LocalCalendar } from '../domain/local-calendar.js';
 import { DatabaseBackup } from './database-backup.js';
+import { PaymentBizumLinkMigration } from './payment-bizum-link-migration.js';
+import { PaymentMethodMigration } from './payment-method-migration.js';
+import { PlayerBizumNameMigration } from './player-bizum-name-migration.js';
 import {
   LATEST_SCHEMA_VERSION,
   SchemaMigrator,
@@ -22,6 +25,9 @@ import {
 
 const here = dirname(fileURLToPath(import.meta.url));
 const currentSchema = readFileSync(join(here, 'schema.sql'), 'utf8');
+const schemaV2 = readFileSync(join(here, 'fixtures/schema-v2.sql'), 'utf8');
+const schemaV3 = readFileSync(join(here, 'fixtures/schema-v3.sql'), 'utf8');
+const schemaV4 = readFileSync(join(here, 'fixtures/schema-v4.sql'), 'utf8');
 const legacySchema = readFileSync(join(here, 'fixtures/schema-v0.sql'), 'utf8');
 
 class FixedClock implements Clock {
@@ -160,9 +166,23 @@ describe('SchemaMigrator', () => {
     migrator(fresh).run();
 
     const legacy = legacyDatabase();
-    migrator(legacy).run();
+    migrator(legacy, [
+      new PaymentMethodMigration(),
+      new PlayerBizumNameMigration(),
+      new PaymentBizumLinkMigration(),
+    ]).run();
 
-    expect(tables(legacy)).toEqual(tables(fresh));
+    // ALTER TABLE words an added column's definition differently from schema.sql, so the tables
+    // a step alters are compared by their columns, the rest by definition.
+    const altered = ['payments', 'players'];
+    const apartFromAltered = (conn: Database.Database) =>
+      tables(conn).filter(t => !altered.includes((t as { name: string }).name));
+    expect(apartFromAltered(legacy)).toEqual(apartFromAltered(fresh));
+    for (const table of altered) {
+      expect(legacy.pragma(`table_info(${table})`)).toEqual(
+        fresh.pragma(`table_info(${table})`)
+      );
+    }
   });
 
   it('adds the account tables, empty, to a file written before they existed', () => {
@@ -266,6 +286,104 @@ describe('SchemaMigrator', () => {
     expect(tables(conn).map(t => (t as { name: string }).name)).not.toContain(
       'half'
     );
+  });
+
+  it('migrates a version 2 file with payments: backup, latest version, rows unchanged and read "otro", same columns as a new file', () => {
+    const conn = connect();
+    conn.exec(schemaV2);
+    conn.pragma('user_version = 2');
+    conn.exec(`
+      INSERT INTO seasons (id, name, starts_on, ends_on, price_cents) VALUES (1, '2026/2027', '2026-09-01', '2027-08-31', 5600);
+      INSERT INTO players (id, name) VALUES (1, 'Ana López'), (2, 'Beto Ruiz'), (3, 'Carlos García');
+      INSERT INTO games (id, season_id, played_on, status) VALUES (1, 1, '2026-10-07', 'played');
+      INSERT INTO payments (game_id, holder_player_id, beneficiary_player_id, payer_player_id, amount_cents, paid_on)
+        VALUES (1, 1, 1, 1, 400, '2026-10-07'), (1, 2, 2, 2, 400, '2026-10-08'), (1, 3, 3, 3, 400, '2026-10-09');
+    `);
+    const before = conn
+      .prepare('SELECT * FROM payments ORDER BY id')
+      .all() as Record<string, unknown>[];
+
+    migrator(conn, [
+      new PaymentMethodMigration(),
+      new PlayerBizumNameMigration(),
+      new PaymentBizumLinkMigration(),
+    ]).run();
+
+    expect(readdirSync(backupDir)).toHaveLength(1);
+    expect(version(conn)).toBe(LATEST_SCHEMA_VERSION);
+    expect(conn.prepare('SELECT * FROM payments ORDER BY id').all()).toEqual(
+      before.map(row => ({ ...row, method: 'otro', bizum_id: null }))
+    );
+
+    const fresh = new Database(':memory:');
+    open.push(fresh);
+    migrator(fresh).run();
+    const columns = (c: Database.Database) => c.pragma('table_info(payments)');
+    expect(columns(conn)).toEqual(columns(fresh));
+  });
+
+  it('migrates a version 3 file with players: backup, latest version, rows unchanged and no Bizum name, same columns as a new file', () => {
+    const conn = connect();
+    conn.exec(schemaV3);
+    conn.pragma('user_version = 3');
+    conn.exec(`
+      INSERT INTO players (id, name) VALUES (1, 'Ana López'), (2, 'Beto Ruiz');
+    `);
+    const before = conn
+      .prepare('SELECT * FROM players ORDER BY id')
+      .all() as Record<string, unknown>[];
+
+    migrator(conn, [
+      new PlayerBizumNameMigration(),
+      new PaymentBizumLinkMigration(),
+    ]).run();
+
+    expect(readdirSync(backupDir)).toHaveLength(1);
+    expect(version(conn)).toBe(LATEST_SCHEMA_VERSION);
+    expect(conn.prepare('SELECT * FROM players ORDER BY id').all()).toEqual(
+      before.map(row => ({ ...row, bizum_name: null }))
+    );
+
+    const fresh = new Database(':memory:');
+    open.push(fresh);
+    migrator(fresh).run();
+    const columns = (c: Database.Database) => c.pragma('table_info(players)');
+    expect(columns(conn)).toEqual(columns(fresh));
+  });
+
+  it('migrates a version 4 file with payments: backup, version 5, rows unchanged and linked to no Bizum, same columns as a new file', () => {
+    const conn = connect();
+    conn.exec(schemaV4);
+    conn.pragma('user_version = 4');
+    conn.exec(`
+      INSERT INTO seasons (id, name, starts_on, ends_on, price_cents) VALUES (1, '2026/2027', '2026-09-01', '2027-08-31', 5600);
+      INSERT INTO players (id, name) VALUES (1, 'Ana López'), (2, 'Beto Ruiz');
+      INSERT INTO games (id, season_id, played_on, status) VALUES (1, 1, '2026-10-07', 'played');
+      INSERT INTO payments (game_id, holder_player_id, beneficiary_player_id, payer_player_id, amount_cents, paid_on, method)
+        VALUES (1, 1, 1, 1, 400, '2026-10-07', 'efectivo'), (1, 2, 2, 2, 400, '2026-10-08', 'bizum');
+    `);
+    const before = conn
+      .prepare('SELECT * FROM payments ORDER BY id')
+      .all() as Record<string, unknown>[];
+
+    migrator(conn, [new PaymentBizumLinkMigration()]).run();
+
+    expect(readdirSync(backupDir)).toHaveLength(1);
+    expect(version(conn)).toBe(5);
+    expect(conn.prepare('SELECT * FROM payments ORDER BY id').all()).toEqual(
+      before.map(row => ({ ...row, bizum_id: null }))
+    );
+
+    const fresh = new Database(':memory:');
+    open.push(fresh);
+    migrator(fresh).run();
+    const columns = (c: Database.Database) => c.pragma('table_info(payments)');
+    expect(columns(conn)).toEqual(columns(fresh));
+    for (const table of ['bizums', 'bizum_entries', 'bizum_handling']) {
+      expect(tables(conn).map(t => (t as { name: string }).name)).toContain(
+        table
+      );
+    }
   });
 
   it('refuses a file made by a newer application and touches nothing', () => {

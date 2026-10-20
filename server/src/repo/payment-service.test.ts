@@ -37,6 +37,7 @@ describe('PaymentService', () => {
 
     it('records the share paid on the given date and counts a paid game', () => {
       flow.paymentService.pay(gameId, {
+        method: 'efectivo',
         shares: [{ playerId: ana }],
         payerPlayerId: ana,
         paidOn: '2026-10-07',
@@ -55,7 +56,7 @@ describe('PaymentService', () => {
     it("stamps today's local date when none is given", () => {
       flow.paymentService.pay(
         gameId,
-        { shares: [{ playerId: ana }], payerPlayerId: ana },
+        { method: 'efectivo', shares: [{ playerId: ana }], payerPlayerId: ana },
         new Date(2026, 9, 7, 23, 30)
       );
 
@@ -64,6 +65,7 @@ describe('PaymentService', () => {
 
     it('shows who still owes and how much is outstanding', () => {
       flow.paymentService.pay(gameId, {
+        method: 'efectivo',
         shares: [{ playerId: ana }],
         payerPlayerId: ana,
       });
@@ -78,6 +80,7 @@ describe('PaymentService', () => {
 
     it('settles an odd amount as an adjustment with no balance left', () => {
       flow.paymentService.pay(gameId, {
+        method: 'efectivo',
         shares: [{ playerId: ana }],
         payerPlayerId: ana,
         amountCents: 375,
@@ -90,6 +93,7 @@ describe('PaymentService', () => {
     it('refuses an amount for more than one share', () => {
       expect(() =>
         flow.paymentService.pay(gameId, {
+          method: 'efectivo',
           shares: [{ playerId: ana }, { playerId: marta }],
           payerPlayerId: ana,
           amountCents: 375,
@@ -97,8 +101,20 @@ describe('PaymentService', () => {
       ).toThrow('Solo se puede ajustar el importe de una parte');
     });
 
+    it('records the method it was given', () => {
+      const [payment] = flow.paymentService.pay(gameId, {
+        method: 'bizum',
+        shares: [{ playerId: ana }],
+        payerPlayerId: ana,
+      });
+
+      expect(payment.method).toBe('bizum');
+      expect(flow.payments.list(gameId)[0].method).toBe('bizum');
+    });
+
     it('puts the debt back and clears the payment date on undo', () => {
       const [payment] = flow.paymentService.pay(gameId, {
+        method: 'efectivo',
         shares: [{ playerId: ana }],
         payerPlayerId: ana,
         paidOn: '2026-10-07',
@@ -119,7 +135,11 @@ describe('PaymentService', () => {
     });
 
     it('refuses to pay a share twice', () => {
-      const request = { shares: [{ playerId: ana }], payerPlayerId: ana };
+      const request = {
+        method: 'efectivo' as const,
+        shares: [{ playerId: ana }],
+        payerPlayerId: ana,
+      };
       flow.paymentService.pay(gameId, request);
 
       expect(() => flow.paymentService.pay(gameId, request)).toThrow(
@@ -130,6 +150,7 @@ describe('PaymentService', () => {
     it('refuses a payer who neither holds nor benefits from the share', () => {
       expect(() =>
         flow.paymentService.pay(gameId, {
+          method: 'efectivo',
           shares: [{ playerId: ana }],
           payerPlayerId: marta,
         })
@@ -143,6 +164,7 @@ describe('PaymentService', () => {
 
       expect(() =>
         flow.paymentService.pay(gameId, {
+          method: 'efectivo',
           shares: [{ playerId: outsider }],
           payerPlayerId: outsider,
         })
@@ -152,6 +174,7 @@ describe('PaymentService', () => {
     it('leaves the first share unpaid when the second cannot be settled', () => {
       expect(() =>
         flow.paymentService.pay(gameId, {
+          method: 'efectivo',
           shares: [{ playerId: ana }, { playerId: 9999 }],
           payerPlayerId: ana,
         })
@@ -169,6 +192,7 @@ describe('PaymentService', () => {
 
       expect(() =>
         flow.paymentService.pay(gameId, {
+          method: 'efectivo',
           shares: [{ playerId: ana }],
           payerPlayerId: ana,
         })
@@ -182,6 +206,7 @@ describe('PaymentService', () => {
 
       expect(() =>
         flow.paymentService.pay(gameId, {
+          method: 'efectivo',
           shares: [{ playerId: ana }],
           payerPlayerId: ana,
         })
@@ -207,6 +232,7 @@ describe('PaymentService', () => {
 
     it('lowers the host debt when the guest pays their own share', () => {
       flow.paymentService.pay(gameId, {
+        method: 'efectivo',
         shares: [{ playerId: marta }],
         payerPlayerId: marta,
       });
@@ -218,6 +244,7 @@ describe('PaymentService', () => {
 
     it('lets the host pay the guest share, and the point follows the guest', () => {
       flow.paymentService.pay(gameId, {
+        method: 'efectivo',
         shares: [{ playerId: marta }],
         payerPlayerId: ana,
       });
@@ -232,6 +259,7 @@ describe('PaymentService', () => {
 
     it('settles everything the host holds in one go', () => {
       flow.paymentService.pay(gameId, {
+        method: 'efectivo',
         shares: [{ playerId: ana }, { playerId: marta }],
         payerPlayerId: ana,
       });
@@ -245,6 +273,7 @@ describe('PaymentService', () => {
 
     it('bills a share once however often the game is played', () => {
       flow.paymentService.pay(gameId, {
+        method: 'efectivo',
         shares: [{ playerId: ana }, { playerId: marta }],
         payerPlayerId: ana,
       });
@@ -267,6 +296,7 @@ describe('PaymentService', () => {
 
     it('keeps debts and payments when the game is reopened or cancelled', () => {
       flow.paymentService.pay(gameId, {
+        method: 'efectivo',
         shares: [{ playerId: marta }],
         payerPlayerId: marta,
       });
@@ -295,6 +325,7 @@ describe('PaymentService', () => {
 
     it('pays the host own share while the plus-one share stays owed', () => {
       flow.paymentService.pay(gameId, {
+        method: 'efectivo',
         shares: [{ playerId: dani }],
         payerPlayerId: dani,
       });
@@ -306,10 +337,15 @@ describe('PaymentService', () => {
     it('lets only the host settle the plus-one share and undoes it as owed again', () => {
       const share = { hostPlayerId: dani, ordinal: 1 };
       expect(() =>
-        flow.paymentService.pay(gameId, { shares: [share], payerPlayerId: ana })
+        flow.paymentService.pay(gameId, {
+          method: 'efectivo',
+          shares: [share],
+          payerPlayerId: ana,
+        })
       ).toThrow('Solo puede pagar quien lo debe o a quien corresponde');
 
       const [payment] = flow.paymentService.pay(gameId, {
+        method: 'efectivo',
         shares: [share],
         payerPlayerId: dani,
       });

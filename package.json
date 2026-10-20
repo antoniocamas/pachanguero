@@ -14,6 +14,7 @@
     "start": "npm run start --workspace=server",
     "test": "npm run test --workspace=server && npm run test --workspace=web",
     "test:e2e": "npm run test --workspace=e2e",
+    "test:sandbox": "npm run test:sandbox --workspace=server",
     "seed": "npm run seed --workspace=server",
     "lint": "eslint . --cache --cache-location .eslintcache",
     "lint:fix": "eslint . --cache --cache-location .eslintcache --fix",

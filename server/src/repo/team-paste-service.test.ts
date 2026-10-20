@@ -71,6 +71,7 @@ describe('TeamPasteService', () => {
 
     it('gives each member the team of their line and changes nothing else', () => {
       flow.paymentService.pay(gameId, {
+        method: 'efectivo',
         shares: [{ playerId: ids[0] }],
         payerPlayerId: ids[0],
       });
@@ -191,6 +192,7 @@ describe('TeamPasteService', () => {
     it('does not ask for teams when a payment is recorded', () => {
       expect(() =>
         flow.paymentService.pay(gameId, {
+          method: 'efectivo',
           shares: [{ playerId: ids[0] }],
           payerPlayerId: ids[0],
         })

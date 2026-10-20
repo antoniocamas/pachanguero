@@ -836,6 +836,7 @@ describe('API', () => {
       const res = await send('POST', `/games/${gameId}/payments`, {
         shares: [{ playerId: ana }],
         payerPlayerId: ana,
+        method: 'efectivo',
       });
       expect(res.status).toBe(400);
       expect((await res.json()).error).toContain('jugado');
@@ -850,6 +851,7 @@ describe('API', () => {
         shares: [{ playerId: ana }],
         payerPlayerId: ana,
         paidOn: '2046-10-08',
+        method: 'otro',
       });
       expect(paid.status).toBe(201);
       const afterPay = await paid.json();
@@ -858,6 +860,7 @@ describe('API', () => {
         beneficiary_player_id: ana,
         amount_cents: 400,
         paid_on: '2046-10-08',
+        method: 'otro',
       });
 
       const undone = await send(
@@ -890,14 +893,32 @@ describe('API', () => {
       const unnamed = await send('POST', `/games/${gameId}/payments`, {
         shares: [{}],
         payerPlayerId: ana,
+        method: 'efectivo',
       });
       expect(unnamed.status).toBe(400);
 
       const wrongPayer = await send('POST', `/games/${gameId}/payments`, {
         shares: [{ playerId: ana }],
         payerPlayerId: bea,
+        method: 'efectivo',
       });
       expect((await wrongPayer.json()).error).toContain('Solo puede pagar');
+    });
+
+    it('refuses a payment with no method, or an unknown one, and records nothing', async () => {
+      await send('POST', `/games/${gameId}/state`, { action: 'play' });
+      for (const method of [undefined, 'cash', 'Efectivo', '']) {
+        const res = await send('POST', `/games/${gameId}/payments`, {
+          shares: [{ playerId: ana }],
+          payerPlayerId: ana,
+          method,
+        });
+        expect(res.status).toBe(400);
+        expect((await res.json()).error).toBe('Método de pago desconocido');
+      }
+      const game = await (await send('GET', `/games/${gameId}`)).json();
+      expect(game.payments).toHaveLength(0);
+      expect(game.debts).toHaveLength(2);
     });
   });
 

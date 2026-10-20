@@ -133,6 +133,7 @@ describe('the player own routes', () => {
       });
 
       repo.paymentService.pay(game, {
+        method: 'efectivo',
         shares: [{ playerId: carlos.playerId }],
         payerPlayerId: carlos.playerId,
       });
@@ -160,6 +161,7 @@ describe('the player own routes', () => {
         payerId: payer,
         amountCents: 500,
         paidOn,
+        method: 'efectivo',
       });
 
     it('lists what the player paid, newest first', async () => {
@@ -244,6 +246,80 @@ describe('the player own routes', () => {
       expect(text(reply.body)).not.toContain('Luis Tercero');
     });
 
+    it('shows the method of each payment and nothing of the Bizum behind it, to the player and to an admin looking as them', async () => {
+      const luis = await actor('Luis Bizum');
+      const boss = await app.createUser('bossbizum', 'admin', 'Boss Bizum');
+      const game = playedGame();
+      app.conn
+        .prepare(
+          `INSERT INTO bizums (account, reference, direction, booked_on, amount_cents, currency,
+                               sender_name, subject, kept_at)
+           VALUES ('h', 'ref-secreta', 'incoming', '2026-10-12', 450, 'EUR',
+                   'Remitente Secreto', 'asunto secreto', 'x')`
+        )
+        .run();
+      const bizumId = (
+        app.conn
+          .prepare('SELECT id FROM bizums WHERE reference = ?')
+          .get('ref-secreta') as { id: number }
+      ).id;
+      app.conn
+        .prepare(
+          `INSERT INTO bizum_handling (bizum_id, status, unallocated_cents, settled_how, updated_at)
+           VALUES (?, 'settled', 50, 'organiser', 'x')`
+        )
+        .run(bizumId);
+      repo.paymentRepository.append({
+        gameId: game,
+        member: { playerId: luis.playerId },
+        holderId: luis.playerId,
+        payerId: luis.playerId,
+        amountCents: 400,
+        paidOn: '2026-10-12',
+        method: 'bizum',
+        bizumId,
+      });
+      const viewers: Record<string, string> = {
+        'a player': luis.token,
+        'an admin using "Ver como otro jugador"':
+          await app.server.tokens.issueAccess(
+            {
+              userId: boss.id,
+              role: 'admin',
+              view: 'regular',
+              actingAs: luis.playerId,
+            },
+            app.clock.now()
+          ),
+      };
+
+      for (const token of Object.values(viewers)) {
+        const reply = await get('/api/me/payments', token);
+
+        expect(reply.body).toMatchObject([
+          { method: 'bizum', amountCents: 400 },
+        ]);
+        expect(text(reply.body)).not.toMatch(
+          /secret|ref-|unallocated|bizumId|bookedOn|sender|subject|"reference"/i
+        );
+      }
+    });
+
+    it('shows the method of a payment made by hand', async () => {
+      const luis = await actor('Luis Efectivo');
+      pay(
+        playedGame(),
+        luis.playerId,
+        { playerId: luis.playerId },
+        luis.playerId,
+        '2026-10-04'
+      );
+
+      expect((await get('/api/me/payments', luis.token)).body).toMatchObject([
+        { method: 'efectivo' },
+      ]);
+    });
+
     it('is an empty list when the player has paid nothing', async () => {
       const luis = await actor('Luis Sin Pagos');
       expect((await get('/api/me/payments', luis.token)).body).toEqual([]);
@@ -271,6 +347,7 @@ describe('the player own routes', () => {
         payerId: luis.playerId,
         amountCents: 500,
         paidOn: '2026-10-06',
+        method: 'efectivo',
       });
       owe(owedGame, ana.playerId, { playerId: carlos.playerId }, 500);
 

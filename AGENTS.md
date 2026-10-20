@@ -15,6 +15,7 @@ npm run admin --workspace=server -- <command>   # operator tool: create, list, r
 npm run seed         # import the 2024/2025 season from data/seed/*.csv (-- --reset to wipe first); with PACHANGUERO_DB set to a throwaway database it also creates `admin` (no player), `jefe` (admin and player) and `jugador` (regular), all with the password `Pachanguero-dev-1` (`DevAccountSeeder.PASSWORD`)
 npm test             # domain/route tests (vitest, server workspace) and the web lib/ tests (vitest, web workspace)
 npm run test:e2e     # full-stack browser tests (playwright, e2e workspace); specs share one database, see docs/test-strategy.md
+npm run test:sandbox # opt-in, never in `npm test`: the bank connector's read-only contract against the bank's sandbox from a standing session; skips with a message unless the sandbox variables of `.env.example` are set
 npm run build        # tsc for both workspaces; also copies schema.sql into server/dist/db
 npm start            # production: one port, Express serves the SPA + API
 ```
@@ -108,6 +109,24 @@ server/src/routes/    Express router; route() wrapper turns throws into 400s. `a
                       OwnRouter, under /me and for a user acting as a regular one, answers only
                       about the caller's own player (OwnPlayer reads it from the token; no route
                       takes a player id) and is where the disclosure rules are applied.
+server/src/bizum/     the bank-neutral Bizum core: the model (Bizum, BizumKey), the ports around it
+                      (BizumDialect, BankConnector, BizumPolicy, BizumStore, BankError) and the read
+                      loop (BizumFeed: one unit of work per entry; BankPoller: one read at a time,
+                      every 6 h and on request, started by `index.ts` after `listen`; the ledger of
+                      entries already handled; its SQLite stores under sqlite/). Imports nothing
+                      outside its own folder but Node built-ins (and better-sqlite3 under sqlite/);
+                      `architecture-boundaries.test.ts` enforces it
+server/src/bank/      everything that names a bank or an aggregator, and nothing else does: the
+                      Enable Banking connector, settings and token, the Revolut dialect and the bank
+                      catalogue, and the test support (fake bank, fake Enable Banking server, the
+                      connector contract, the opt-in sandbox suite in sandbox/). Setting up the bank:
+                      docs/deployment.md#the-bank-connection
+                      What a Bizum means for the group is in domain/ (BizumRuleSet, AccountSelection,
+                      ReadingReadiness) and repo/ (BankConnectionService, BankSettingsService,
+                      BizumHandler: the policy; BizumSettlementService: the one writer of what a
+                      verdict means, over ShareSettler; BizumHandlingRepository; BankFeedSource;
+                      BizumResolutionService and SenderPairingService: what the organiser does with a
+                      waiting Bizum; BizumReevaluationEffect: a played game settles what now qualifies)
 server/src/cli/       the `pachanguero-admin` command line (UserCli, TtyPasswordPrompt); a thin
                       shell over UserAdminService
 server/src/server-app.ts  builds the sign-in and guard classes and mounts /api, then serves
@@ -143,6 +162,10 @@ web/src/              React 19 + Vite, no router/state lib: App.tsx chooses the 
 - **A convocatoria is stored when created and stamped when confirmed**: it keeps `rules_json` plus every entry with the points it saw and the outcome the selection chose, so past selections stay auditable after late payments change current standings. Confirming only stamps `confirmed_at`; recreating recomputes and asks before discarding hand corrections. Hand corrections (`ConvocatoriaEditService`) change only an entry's `playing`, never its `outcome`, points or position; anonymous plus-ones are entries too, named by host and ordinal. Seeded played games get a confirmed convocatoria with `source = 'history'` (`ConvocatoriaHistoryConverter`).
 - **Rules are per-season** (columns on `seasons`, editable from Ajustes), so history is never rewritten when rules change.
 - **A player sees only their own data, and the server decides.** The two roles the admin's "Ver como jugador" view switch and "Ver como otro jugador" (the token carries the player; logged in `view_as_log`) are in `docs/users-and-roles.md`. The player's routes (`OwnRouter`) take no player id: the player comes from the token, and every disclosure rule is in `OwnDisclosure`. A route added to `api.ts` is admin-only; accounts exist only through `pachanguero-admin`.
+- **Every payment records its method** (`efectivo`, `bizum`, `otro`; `PaymentMethods`, `payments.method`). The route requires it and parses it, with no default at the boundary (the form preselects Efectivo); payments from before the column read `otro`; a recorded method is never edited, the correction is undo and record again.
+- **A Bizum payment links its Bizum.** A payment made from a Bizum has `method = 'bizum'`, `bizum_id` (the kept Bizum) and the date the money was booked; a manual payment has `bizum_id` null. Only `BizumSettlementService` writes the former, through `ShareSettler`, in the transaction of the entry that was read.
+- **A sender is identified only by a stored Bizum name or phone.** A Bizum's sender is a player only when it equals the player's Bizum name (`players.bizum_name`, how they appear on Bizum, not a sign-up alias) or their phone; the player's name, aliases and any similarity only _suggest_. A name held by two players identifies nobody. Pairing writes that name or phone; a waiting Bizum is judged again only by a pairing, a played game or the organiser's ruling, always in `review` mode (never discards), oldest booking first.
+- **A Bizum is processed once.** `BizumFeed` handles every bank entry in one transaction: its ledger row (`bizum_entries`, keyed by the bank's own identification, holding no sender, subject or amount), the kept Bizum and what the policy did with it commit together. A discarded entry keeps nothing but its key; nothing reads it again, also through a renewed connection.
 - **Money is integer cents** (`price_cents`, `paid_cents`).
 - Ties in the convocatoria sort break by name (`es` locale) so results are deterministic.
 

@@ -22,6 +22,12 @@ its [README](docs/domain-model/README.md).
   earns an exclusion point.
 - **Payment per share.** Every player, and every `+1`, is a share; payment comes
   later, share by share, and whoever brings guests answers for them.
+- **Bizums read from the bank.** The organiser connects the bank account once
+  (read-only, renewed from the same panel) and the app reads the Bizums that come
+  in, pays the shares they clearly cover, and lists the rest in Deudas as
+  "Bizums en espera" for the organiser to pair with a player, rule on or
+  dismiss. Every payment records how it was made, and a payment made by a Bizum
+  can be traced to it and undone.
 - **Teams (optional).** You paste the Claros and Oscuros teams after playing; only
   each player's team is stored.
 - **Points and debts.** Live standings and who owes how much.

@@ -1,0 +1,3037 @@
+[
+  {
+    "entry_reference": "SYN-0130",
+    "status": "BOOK",
+    "credit_debit_indicator": "DBIT",
+    "transaction_amount": {
+      "amount": "12.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-10-11",
+    "value_date": "2026-10-11",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["cena", "Bizum payment to: Paula D.R."]
+  },
+  {
+    "entry_reference": "SYN-0129",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "2.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-10-10",
+    "value_date": "2026-10-10",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": [
+      "pachanga miércoles",
+      "Bizum payment from: Álvaro B.X."
+    ]
+  },
+  {
+    "entry_reference": "SYN-0128",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-10-08",
+    "value_date": "2026-10-08",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["fútbol", "Bizum payment from: Sergio A.B."]
+  },
+  {
+    "entry_reference": "SYN-0127",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "28.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-10-07",
+    "value_date": "2026-10-07",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["", "Bizum payment from: +34611004964"]
+  },
+  {
+    "entry_reference": "SYN-0126",
+    "status": "BOOK",
+    "credit_debit_indicator": "DBIT",
+    "transaction_amount": {
+      "amount": "12.35",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-10-05",
+    "value_date": "2026-10-05",
+    "bank_transaction_code": {
+      "code": "CARD_PAYMENT",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["Compra en comercio ficticio"]
+  },
+  {
+    "entry_reference": "SYN-0125",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-10-04",
+    "value_date": "2026-10-04",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["partido", "Bizum payment from: Sergio A.B."]
+  },
+  {
+    "entry_reference": "SYN-0124",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "28.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-10-02",
+    "value_date": "2026-10-02",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["cancha", "Bizum payment from: Diego H.M."]
+  },
+  {
+    "entry_reference": "SYN-0123",
+    "status": "BOOK",
+    "credit_debit_indicator": "DBIT",
+    "transaction_amount": {
+      "amount": "12.35",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-10-01",
+    "value_date": "2026-10-01",
+    "bank_transaction_code": {
+      "code": "CARD_PAYMENT",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["Compra en comercio ficticio"]
+  },
+  {
+    "entry_reference": "SYN-0122",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.50",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-09-29",
+    "value_date": "2026-09-29",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["pachanga", "Bizum payment from: Elena R.V."]
+  },
+  {
+    "entry_reference": "SYN-0121",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "12.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-09-28",
+    "value_date": "2026-09-28",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["cancha", "Bizum payment from: Diego H.M."]
+  },
+  {
+    "entry_reference": "SYN-0120",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "2.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-09-26",
+    "value_date": "2026-09-26",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["", "Bizum payment from: Marta G.L."]
+  },
+  {
+    "entry_reference": "SYN-0119",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-09-25",
+    "value_date": "2026-09-25",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["pachanga", "Bizum payment from: Marta G.L."]
+  },
+  {
+    "entry_reference": "SYN-0118",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "28.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-09-23",
+    "value_date": "2026-09-23",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["cancha", "Bizum payment from: Pablo T.N."]
+  },
+  {
+    "entry_reference": "SYN-0117",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "8.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-09-22",
+    "value_date": "2026-09-22",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["pachanga", "Bizum payment from: Álvaro B.X."]
+  },
+  {
+    "entry_reference": "SYN-0116",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-09-20",
+    "value_date": "2026-09-20",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["futbol", "Bizum payment from: Elena R.V."]
+  },
+  {
+    "entry_reference": "SYN-0115",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "8.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-09-19",
+    "value_date": "2026-09-19",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["cena", "Bizum payment from: Jorge S.M."]
+  },
+  {
+    "entry_reference": "SYN-0114",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-09-17",
+    "value_date": "2026-09-17",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": [
+      "pachanga miércoles",
+      "Bizum payment from: Sergio A.B."
+    ]
+  },
+  {
+    "entry_reference": "SYN-0113",
+    "status": "BOOK",
+    "credit_debit_indicator": "DBIT",
+    "transaction_amount": {
+      "amount": "12.35",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-09-16",
+    "value_date": "2026-09-16",
+    "bank_transaction_code": {
+      "code": "CARD_PAYMENT",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["Compra en comercio ficticio"]
+  },
+  {
+    "entry_reference": "SYN-0112",
+    "status": "BOOK",
+    "credit_debit_indicator": "DBIT",
+    "transaction_amount": {
+      "amount": "2.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-09-14",
+    "value_date": "2026-09-14",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["cancha", "Bizum payment to: Ana B.C."]
+  },
+  {
+    "entry_reference": "SYN-0111",
+    "status": "BOOK",
+    "credit_debit_indicator": "DBIT",
+    "transaction_amount": {
+      "amount": "4.50",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-09-13",
+    "value_date": "2026-09-13",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["fútbol", "Bizum payment to: Diego H.M."]
+  },
+  {
+    "entry_reference": "SYN-0110",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "28.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-09-11",
+    "value_date": "2026-09-11",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["cancha", "Bizum payment from: Sergio A.B."]
+  },
+  {
+    "entry_reference": "SYN-0109",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "20.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-09-10",
+    "value_date": "2026-09-10",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["futbol", "Bizum payment from: Ana B.C."]
+  },
+  {
+    "entry_reference": "SYN-0108",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "12.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-09-08",
+    "value_date": "2026-09-08",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": [
+      "pachanga miércoles",
+      "Bizum payment from: Marta G.L."
+    ]
+  },
+  {
+    "entry_reference": "SYN-0107",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-09-07",
+    "value_date": "2026-09-07",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": [
+      "pachanga miércoles",
+      "Bizum payment from: Irene C.P."
+    ]
+  },
+  {
+    "entry_reference": "SYN-0106",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "5.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-09-05",
+    "value_date": "2026-09-05",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["", "Bizum payment from: Lucía F.D."]
+  },
+  {
+    "entry_reference": "SYN-0105",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "2.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-09-04",
+    "value_date": "2026-09-04",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["Gracias", "Bizum payment from: Ana B.C."]
+  },
+  {
+    "entry_reference": "SYN-0104",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-09-02",
+    "value_date": "2026-09-02",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["Gracias", "Bizum payment from: Jorge S.M."]
+  },
+  {
+    "entry_reference": "SYN-0103",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "12.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-09-01",
+    "value_date": "2026-09-01",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["pachanga", "Bizum payment from: +34611005341"]
+  },
+  {
+    "entry_reference": "SYN-0102",
+    "status": "BOOK",
+    "credit_debit_indicator": "DBIT",
+    "transaction_amount": {
+      "amount": "2.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-08-30",
+    "value_date": "2026-08-30",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["futbol", "Bizum payment to: Diego H.M."]
+  },
+  {
+    "entry_reference": "SYN-0101",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-08-29",
+    "value_date": "2026-08-29",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["Gracias", "Bizum payment from: Raúl M.T."]
+  },
+  {
+    "entry_reference": "SYN-0100",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-08-27",
+    "value_date": "2026-08-27",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["Gracias", "Bizum payment from: Marta G.L."]
+  },
+  {
+    "entry_reference": "SYN-0099",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "20.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-08-26",
+    "value_date": "2026-08-26",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": [
+      "pachanga miércoles",
+      "Bizum payment from: Sergio A.B."
+    ]
+  },
+  {
+    "entry_reference": "SYN-0098",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "5.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-08-24",
+    "value_date": "2026-08-24",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["Gracias", "Bizum payment from: Nuria S.G."]
+  },
+  {
+    "entry_reference": "SYN-0097",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "12.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-08-23",
+    "value_date": "2026-08-23",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["", "Bizum payment from: Raúl M.T."]
+  },
+  {
+    "entry_reference": "SYN-0096",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.50",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-08-21",
+    "value_date": "2026-08-21",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": [
+      "pachanga miércoles",
+      "Bizum payment from: Pablo T.N."
+    ]
+  },
+  {
+    "entry_reference": "SYN-0095",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "2.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-08-20",
+    "value_date": "2026-08-20",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["cena", "Bizum payment from: Álvaro B.X."]
+  },
+  {
+    "entry_reference": "SYN-0094",
+    "status": "BOOK",
+    "credit_debit_indicator": "DBIT",
+    "transaction_amount": {
+      "amount": "8.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-08-18",
+    "value_date": "2026-08-18",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["cancha", "Bizum payment to: Luis P.R."]
+  },
+  {
+    "entry_reference": "SYN-0093",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "8.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-08-17",
+    "value_date": "2026-08-17",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": [
+      "pachanga miércoles",
+      "Bizum payment from: Hugo L.C."
+    ]
+  },
+  {
+    "entry_reference": "SYN-0092",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "20.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-08-15",
+    "value_date": "2026-08-15",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["Gracias", "Bizum payment from: Jorge S.M."]
+  },
+  {
+    "entry_reference": "SYN-0091",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "20.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-08-14",
+    "value_date": "2026-08-14",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["Dinero de Nuria S.G."]
+  },
+  {
+    "entry_reference": "SYN-0090",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "12.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-08-12",
+    "value_date": "2026-08-12",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["", "Bizum payment from: Jorge S.M."]
+  },
+  {
+    "entry_reference": "SYN-0089",
+    "status": "BOOK",
+    "credit_debit_indicator": "DBIT",
+    "transaction_amount": {
+      "amount": "12.35",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-08-11",
+    "value_date": "2026-08-11",
+    "bank_transaction_code": {
+      "code": "CARD_PAYMENT",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["Compra en comercio ficticio"]
+  },
+  {
+    "entry_reference": "SYN-0088",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-08-09",
+    "value_date": "2026-08-09",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": [
+      "pachanga miércoles",
+      "Bizum payment from: Carmen O.L."
+    ]
+  },
+  {
+    "entry_reference": "SYN-0087",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-08-08",
+    "value_date": "2026-08-08",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["Dinero de Ana B.C."]
+  },
+  {
+    "entry_reference": "SYN-0086",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "12.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-08-06",
+    "value_date": "2026-08-06",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["Gracias", "Bizum payment from: Diego H.M."]
+  },
+  {
+    "entry_reference": "SYN-0085",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-08-05",
+    "value_date": "2026-08-05",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["futbol", "Bizum payment from: Lucía F.D."]
+  },
+  {
+    "entry_reference": "SYN-0084",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "12.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-08-03",
+    "value_date": "2026-08-03",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["pachanga", "Bizum payment from: Lucía F.D."]
+  },
+  {
+    "entry_reference": "SYN-0083",
+    "status": "BOOK",
+    "credit_debit_indicator": "DBIT",
+    "transaction_amount": {
+      "amount": "5.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-08-02",
+    "value_date": "2026-08-02",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["futbol", "Bizum payment to: Hugo L.C."]
+  },
+  {
+    "entry_reference": "SYN-0082",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "2.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-07-31",
+    "value_date": "2026-07-31",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": [
+      "pachanga miércoles",
+      "Bizum payment from: Álvaro B.X."
+    ]
+  },
+  {
+    "entry_reference": "SYN-0081",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-07-30",
+    "value_date": "2026-07-30",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": [
+      "pachanga miércoles",
+      "Bizum payment from: Raúl M.T."
+    ]
+  },
+  {
+    "entry_reference": "SYN-0080",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.50",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-07-28",
+    "value_date": "2026-07-28",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": [
+      "pachanga miércoles",
+      "Bizum payment from: Lucía F.D."
+    ]
+  },
+  {
+    "entry_reference": "SYN-0079",
+    "status": "BOOK",
+    "credit_debit_indicator": "DBIT",
+    "transaction_amount": {
+      "amount": "12.35",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-07-27",
+    "value_date": "2026-07-27",
+    "bank_transaction_code": {
+      "code": "CARD_PAYMENT",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["Compra en comercio ficticio"]
+  },
+  {
+    "entry_reference": "SYN-0078",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "28.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-07-25",
+    "value_date": "2026-07-25",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["pachanga", "Bizum payment from: +34611006474"]
+  },
+  {
+    "entry_reference": "SYN-0077",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-07-24",
+    "value_date": "2026-07-24",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": [
+      "pachanga miércoles",
+      "Bizum payment from: Hugo L.C."
+    ]
+  },
+  {
+    "entry_reference": "SYN-0076",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "8.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-07-22",
+    "value_date": "2026-07-22",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["pachanga", "Bizum payment from: Elena R.V."]
+  },
+  {
+    "entry_reference": "SYN-0075",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "20.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-07-21",
+    "value_date": "2026-07-21",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["Gracias", "Bizum payment from: Nuria S.G."]
+  },
+  {
+    "entry_reference": "SYN-0074",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "2.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-07-19",
+    "value_date": "2026-07-19",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["", "Bizum payment from: Sergio A.B."]
+  },
+  {
+    "entry_reference": "SYN-0073",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "5.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-07-18",
+    "value_date": "2026-07-18",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["Dinero de Sergio A.B."]
+  },
+  {
+    "entry_reference": "SYN-0072",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "12.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-07-16",
+    "value_date": "2026-07-16",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["Gracias", "Bizum payment from: Diego H.M."]
+  },
+  {
+    "entry_reference": "SYN-0071",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "28.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-07-15",
+    "value_date": "2026-07-15",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["futbol", "Bizum payment from: +34611005615"]
+  },
+  {
+    "entry_reference": "SYN-0070",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "8.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-07-13",
+    "value_date": "2026-07-13",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["cena", "Bizum payment from: Luis P.R."]
+  },
+  {
+    "entry_reference": "SYN-0069",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "28.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-07-12",
+    "value_date": "2026-07-12",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["cancha", "Bizum payment from: Marta G.L."]
+  },
+  {
+    "entry_reference": "SYN-0068",
+    "status": "BOOK",
+    "credit_debit_indicator": "DBIT",
+    "transaction_amount": {
+      "amount": "5.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-07-10",
+    "value_date": "2026-07-10",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["", "Bizum payment to: Elena R.V."]
+  },
+  {
+    "entry_reference": "SYN-0067",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "28.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-07-09",
+    "value_date": "2026-07-09",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["futbol", "Bizum payment from: Hugo L.C."]
+  },
+  {
+    "entry_reference": "SYN-0066",
+    "status": "BOOK",
+    "credit_debit_indicator": "DBIT",
+    "transaction_amount": {
+      "amount": "12.35",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-07-07",
+    "value_date": "2026-07-07",
+    "bank_transaction_code": {
+      "code": "CARD_PAYMENT",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["Compra en comercio ficticio"]
+  },
+  {
+    "entry_reference": "SYN-0065",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "28.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-07-06",
+    "value_date": "2026-07-06",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["cancha", "Bizum payment from: Irene C.P."]
+  },
+  {
+    "entry_reference": "SYN-0064",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-07-04",
+    "value_date": "2026-07-04",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["", "Bizum payment from: Paula D.R."]
+  },
+  {
+    "entry_reference": "SYN-0063",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-07-03",
+    "value_date": "2026-07-03",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["pachanga", "Bizum payment from: Ana B.C."]
+  },
+  {
+    "entry_reference": "SYN-0062",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.50",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-07-01",
+    "value_date": "2026-07-01",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["fútbol", "Bizum payment from: Álvaro B.X."]
+  },
+  {
+    "entry_reference": "SYN-0061",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-06-30",
+    "value_date": "2026-06-30",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["fútbol", "Bizum payment from: Marta G.L."]
+  },
+  {
+    "entry_reference": "SYN-0060",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-06-28",
+    "value_date": "2026-06-28",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["", "Bizum payment from: Álvaro B.X."]
+  },
+  {
+    "entry_reference": "SYN-0059",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "12.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-06-27",
+    "value_date": "2026-06-27",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["", "Bizum payment from: Luis P.R."]
+  },
+  {
+    "entry_reference": "SYN-0058",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "5.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-06-25",
+    "value_date": "2026-06-25",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["cancha", "Bizum payment from: Luis P.R."]
+  },
+  {
+    "entry_reference": "SYN-0057",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "5.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-06-24",
+    "value_date": "2026-06-24",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["cena", "Bizum payment from: Ana B.C."]
+  },
+  {
+    "entry_reference": "SYN-0056",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-06-22",
+    "value_date": "2026-06-22",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["", "Bizum payment from: Nuria S.G."]
+  },
+  {
+    "entry_reference": "SYN-0055",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "12.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-06-21",
+    "value_date": "2026-06-21",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["Dinero de Marta G.L."]
+  },
+  {
+    "entry_reference": "SYN-0054",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-06-19",
+    "value_date": "2026-06-19",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["fútbol", "Bizum payment from: Paula D.R."]
+  },
+  {
+    "entry_reference": "SYN-0053",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-06-18",
+    "value_date": "2026-06-18",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["partido", "Bizum payment from: Sergio A.B."]
+  },
+  {
+    "entry_reference": "SYN-0052",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-06-16",
+    "value_date": "2026-06-16",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["fútbol", "Bizum payment from: +34611009594"]
+  },
+  {
+    "entry_reference": "SYN-0051",
+    "status": "BOOK",
+    "credit_debit_indicator": "DBIT",
+    "transaction_amount": {
+      "amount": "12.35",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-06-15",
+    "value_date": "2026-06-15",
+    "bank_transaction_code": {
+      "code": "CARD_PAYMENT",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["Compra en comercio ficticio"]
+  },
+  {
+    "entry_reference": "SYN-0050",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "8.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-06-13",
+    "value_date": "2026-06-13",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["", "Bizum payment from: Ana B.C."]
+  },
+  {
+    "entry_reference": "SYN-0049",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-06-12",
+    "value_date": "2026-06-12",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["", "Bizum payment from: Luis P.R."]
+  },
+  {
+    "entry_reference": "SYN-0048",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "20.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-06-10",
+    "value_date": "2026-06-10",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["Gracias", "Bizum payment from: Diego H.M."]
+  },
+  {
+    "entry_reference": "SYN-0047",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-06-09",
+    "value_date": "2026-06-09",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["Dinero de Pablo T.N."]
+  },
+  {
+    "entry_reference": "SYN-0046",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "8.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-06-07",
+    "value_date": "2026-06-07",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["pachanga", "Bizum payment from: Ana B.C."]
+  },
+  {
+    "entry_reference": "SYN-0045",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "8.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-06-06",
+    "value_date": "2026-06-06",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["partido", "Bizum payment from: Lucía F.D."]
+  },
+  {
+    "entry_reference": "SYN-0044",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "2.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-06-04",
+    "value_date": "2026-06-04",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["fútbol", "Bizum payment from: Luis P.R."]
+  },
+  {
+    "entry_reference": "SYN-0043",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-06-03",
+    "value_date": "2026-06-03",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["", "Bizum payment from: Paula D.R."]
+  },
+  {
+    "entry_reference": "SYN-0042",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-06-01",
+    "value_date": "2026-06-01",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["Dinero de Lucía F.D."]
+  },
+  {
+    "entry_reference": "SYN-0041",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "28.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-05-31",
+    "value_date": "2026-05-31",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["Gracias", "Bizum payment from: Marta G.L."]
+  },
+  {
+    "entry_reference": "SYN-0040",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "28.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-05-29",
+    "value_date": "2026-05-29",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["fútbol", "Bizum payment from: Paula D.R."]
+  },
+  {
+    "entry_reference": "SYN-0039",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-05-28",
+    "value_date": "2026-05-28",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["cancha", "Bizum payment from: Elena R.V."]
+  },
+  {
+    "entry_reference": "SYN-0038",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-05-26",
+    "value_date": "2026-05-26",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["partido", "Bizum payment from: Lucía F.D."]
+  },
+  {
+    "entry_reference": "SYN-0037",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-05-25",
+    "value_date": "2026-05-25",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["", "Bizum payment from: Irene C.P."]
+  },
+  {
+    "entry_reference": "SYN-0036",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.50",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-05-23",
+    "value_date": "2026-05-23",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["", "Bizum payment from: Jorge S.M."]
+  },
+  {
+    "entry_reference": "SYN-0035",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "20.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-05-22",
+    "value_date": "2026-05-22",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["", "Bizum payment from: Jorge S.M."]
+  },
+  {
+    "entry_reference": "SYN-0034",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "12.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-05-20",
+    "value_date": "2026-05-20",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["", "Bizum payment from: Pablo T.N."]
+  },
+  {
+    "entry_reference": "SYN-0033",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "20.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-05-19",
+    "value_date": "2026-05-19",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["", "Bizum payment from: Nuria S.G."]
+  },
+  {
+    "entry_reference": "SYN-0032",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.50",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-05-17",
+    "value_date": "2026-05-17",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["cena", "Bizum payment from: Pablo T.N."]
+  },
+  {
+    "entry_reference": "SYN-0031",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "28.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-05-16",
+    "value_date": "2026-05-16",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["futbol", "Bizum payment from: Raúl M.T."]
+  },
+  {
+    "entry_reference": "SYN-0030",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.50",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-05-14",
+    "value_date": "2026-05-14",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["cena", "Bizum payment from: Hugo L.C."]
+  },
+  {
+    "entry_reference": "SYN-0029",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "5.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-05-13",
+    "value_date": "2026-05-13",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["cancha", "Bizum payment from: Hugo L.C."]
+  },
+  {
+    "entry_reference": "SYN-0028",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "28.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-05-11",
+    "value_date": "2026-05-11",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["Gracias", "Bizum payment from: Carmen O.L."]
+  },
+  {
+    "entry_reference": "SYN-0027",
+    "status": "BOOK",
+    "credit_debit_indicator": "DBIT",
+    "transaction_amount": {
+      "amount": "4.50",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-05-10",
+    "value_date": "2026-05-10",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["Gracias", "Bizum payment to: Raúl M.T."]
+  },
+  {
+    "entry_reference": "SYN-0026",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-05-08",
+    "value_date": "2026-05-08",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["fútbol", "Bizum payment from: Lucía F.D."]
+  },
+  {
+    "entry_reference": "SYN-0025",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "12.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-05-07",
+    "value_date": "2026-05-07",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["fútbol", "Bizum payment from: Marta G.L."]
+  },
+  {
+    "entry_reference": "SYN-0024",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.50",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-05-05",
+    "value_date": "2026-05-05",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["partido", "Bizum payment from: Carmen O.L."]
+  },
+  {
+    "entry_reference": "SYN-0023",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "8.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-05-04",
+    "value_date": "2026-05-04",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["fútbol", "Bizum payment from: Diego H.M."]
+  },
+  {
+    "entry_reference": "SYN-0022",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.50",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-05-02",
+    "value_date": "2026-05-02",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["futbol", "Bizum payment from: Elena R.V."]
+  },
+  {
+    "entry_reference": "SYN-0021",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "5.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-05-01",
+    "value_date": "2026-05-01",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["Gracias", "Bizum payment from: Ana B.C."]
+  },
+  {
+    "entry_reference": "SYN-0020",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "5.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-04-29",
+    "value_date": "2026-04-29",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["futbol", "Bizum payment from: Lucía F.D."]
+  },
+  {
+    "entry_reference": "SYN-0019",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "5.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-04-28",
+    "value_date": "2026-04-28",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["cena", "Bizum payment from: Irene C.P."]
+  },
+  {
+    "entry_reference": "SYN-0018",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.50",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-04-26",
+    "value_date": "2026-04-26",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": [
+      "pachanga miércoles",
+      "Bizum payment from: Carmen O.L."
+    ]
+  },
+  {
+    "entry_reference": "SYN-0017",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.50",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-04-25",
+    "value_date": "2026-04-25",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["", "Bizum payment from: Ana B.C."]
+  },
+  {
+    "entry_reference": "SYN-0016",
+    "status": "PDNG",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-04-23",
+    "value_date": "2026-04-23",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["pachanga", "Bizum payment from: Ana B.C."]
+  },
+  {
+    "entry_reference": "SYN-0015",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.50",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-04-22",
+    "value_date": "2026-04-22",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["", "Bizum payment from: Luis P.R."]
+  },
+  {
+    "entry_reference": "SYN-0014",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "28.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-04-20",
+    "value_date": "2026-04-20",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["futbol", "Bizum payment from: Paula D.R."]
+  },
+  {
+    "entry_reference": "SYN-0013",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "28.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-04-19",
+    "value_date": "2026-04-19",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["pachanga", "Bizum payment from: Marta G.L."]
+  },
+  {
+    "entry_reference": "SYN-0012",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "2.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-04-17",
+    "value_date": "2026-04-17",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["", "Bizum payment from: Sergio A.B."]
+  },
+  {
+    "entry_reference": "SYN-0011",
+    "status": "BOOK",
+    "credit_debit_indicator": "DBIT",
+    "transaction_amount": {
+      "amount": "5.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-04-16",
+    "value_date": "2026-04-16",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": [
+      "pachanga miércoles",
+      "Bizum payment to: Marta G.L."
+    ]
+  },
+  {
+    "entry_reference": "SYN-0010",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "20.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-04-14",
+    "value_date": "2026-04-14",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["Dinero de Jorge S.M."]
+  },
+  {
+    "entry_reference": "SYN-0009",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-04-13",
+    "value_date": "2026-04-13",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": [
+      "pachanga miércoles",
+      "Bizum payment from: Sergio A.B."
+    ]
+  },
+  {
+    "entry_reference": "SYN-0008",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "2.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-04-11",
+    "value_date": "2026-04-11",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["pachanga", "Bizum payment from: Lucía F.D."]
+  },
+  {
+    "entry_reference": "SYN-0007",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "20.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-04-10",
+    "value_date": "2026-04-10",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["cena", "Bizum payment from: Irene C.P."]
+  },
+  {
+    "entry_reference": "SYN-0006",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-04-08",
+    "value_date": "2026-04-08",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["partido", "Bizum payment from: Raúl M.T."]
+  },
+  {
+    "entry_reference": "SYN-0005",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "28.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-04-07",
+    "value_date": "2026-04-07",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["", "Bizum payment from: Paula D.R."]
+  },
+  {
+    "entry_reference": "SYN-0004",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-04-05",
+    "value_date": "2026-04-05",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["fútbol", "Bizum payment from: Ana B.C."]
+  },
+  {
+    "entry_reference": "SYN-0003",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "4.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-04-04",
+    "value_date": "2026-04-04",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["Dinero de Irene C.P."]
+  },
+  {
+    "entry_reference": "SYN-0002",
+    "status": "BOOK",
+    "credit_debit_indicator": "CRDT",
+    "transaction_amount": {
+      "amount": "12.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-04-02",
+    "value_date": "2026-04-02",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["partido", "Bizum payment from: Paula D.R."]
+  },
+  {
+    "entry_reference": "SYN-0001",
+    "status": "BOOK",
+    "credit_debit_indicator": "DBIT",
+    "transaction_amount": {
+      "amount": "28.00",
+      "currency": "EUR"
+    },
+    "booking_date": "2026-04-01",
+    "value_date": "2026-04-01",
+    "bank_transaction_code": {
+      "code": "TOPUP",
+      "description": null,
+      "sub_code": null
+    },
+    "debtor": {
+      "name": null
+    },
+    "creditor": {
+      "name": null
+    },
+    "remittance_information": ["Gracias", "Bizum payment to: Raúl M.T."]
+  }
+]

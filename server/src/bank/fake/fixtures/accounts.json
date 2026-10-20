@@ -1,0 +1,38 @@
+[
+  {
+    "identification_hash": "hash-eur-principal",
+    "currency": "EUR",
+    "cash_account_type": "CACC",
+    "usage": "PRIV",
+    "account_id": {
+      "iban": "ES0000000000000000001111"
+    }
+  },
+  {
+    "identification_hash": "hash-usd",
+    "currency": "USD",
+    "cash_account_type": "CACC",
+    "usage": "PRIV",
+    "account_id": {
+      "iban": "ES0000000000000000002222"
+    }
+  },
+  {
+    "identification_hash": "hash-gbp",
+    "currency": "GBP",
+    "cash_account_type": "CACC",
+    "usage": "PRIV",
+    "account_id": {
+      "iban": "ES0000000000000000003333"
+    }
+  },
+  {
+    "identification_hash": "hash-eur-segunda",
+    "currency": "EUR",
+    "cash_account_type": "CACC",
+    "usage": "PRIV",
+    "account_id": {
+      "iban": "ES0000000000000000004444"
+    }
+  }
+]

@@ -50,14 +50,14 @@ Per the Test Methodology of F8 and F9 (integration through `GameFlow`, real SQLi
 
 ## Definition of Done
 
-- [ ] Every test above passes.
-- [ ] **Graduation:** UC-006-04-S1–S4, UC-006-05-S1–S6, UC-006-10-S1–S4 → marked tests.
-- [ ] **Hard requirements:** the marked tests exist and pass.
-- [ ] **Documentation:**
+- [x] Every test above passes.
+- [x] **Graduation:** UC-006-04-S1–S4, UC-006-05-S1–S6, UC-006-10-S1–S4 → marked tests.
+- [x] **Hard requirements:** the marked tests exist and pass.
+- [x] **Documentation:**
   - `docs/domain-model/ciclo-del-partido.md`: marking a game played settles the waiting Bizums that now qualify, and never discards one; debts are not carried across seasons, by a Bizum or a ruling.
   - `docs/domain-model/glossary.md`: *nombre de Bizum*, *descartar*.
   - `docs/users-and-roles.md`: the player's phone also identifies them as a Bizum sender; bank data and sender names are admin only.
   - `AGENTS.md`: the invariant "a sender is identified only by a stored Bizum name or phone".
-- [ ] **Tests:** `npm test`.
-- [ ] **Regression:** `npm test`.
-- [ ] **Code checks:** `npm run lint`, `npm run format:check`; the coding standard.
+- [x] **Tests:** `npm test`.
+- [x] **Regression:** `npm test`.
+- [x] **Code checks:** `npm run lint`, `npm run format:check`; the coding standard.

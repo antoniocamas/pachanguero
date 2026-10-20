@@ -32,11 +32,11 @@ Move the per-share work of `PaymentService` (the body of `settle` and the body o
 
 ## Definition of Done
 
-- [ ] `git diff` shows no change to any existing test file.
-- [ ] `share-settler.test.ts` passes with the two properties above.
-- [ ] **Graduation:** UC-006-08-S2 (the rules of payment do not change) is held by the existing `payment-service.test.ts` refusals; no new marked test.
-- [ ] **Hard requirements:** none new (structure only).
-- [ ] **Documentation:** none is made untrue (internal structure).
-- [ ] **Tests:** `npm test`.
-- [ ] **Regression:** `npm test`.
-- [ ] **Code checks:** `npm run lint`, `npm run format:check`; the coding standard (no free functions, no stateless statics).
+- [x] `git diff` shows no change to any existing test file.
+- [x] `share-settler.test.ts` passes with the two properties above.
+- [x] **Graduation:** UC-006-08-S2 (the rules of payment do not change) is held by the existing `payment-service.test.ts` refusals; no new marked test.
+- [x] **Hard requirements:** none new (structure only).
+- [x] **Documentation:** none is made untrue (internal structure).
+- [x] **Tests:** `npm test`.
+- [x] **Regression:** `npm test`.
+- [x] **Code checks:** `npm run lint`, `npm run format:check`; the coding standard (no free functions, no stateless statics).

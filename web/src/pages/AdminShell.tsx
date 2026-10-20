@@ -4,9 +4,13 @@ import { GameDay } from './GameDay';
 import { Standings } from './Standings';
 import { Debts } from './Debts';
 import { PlayerReportPage } from './PlayerReportPage';
-import { Manage } from './Manage';
+import { Manage, type ManageSection } from './Manage';
 import { AccountPanel } from '../components/AccountPanel';
+import { BankBanner } from '../components/BankBanner';
+import { BankPanel } from '../components/BankPanel';
 import { NewSeasonPrompt } from '../components/NewSeasonPrompt';
+import { useBankBanner } from '../hooks/useBankBanner';
+import { useBankReturn } from '../hooks/useBankReturn';
 import type { SessionUser, SwitchView } from '../lib/sessionClient';
 
 type Tab = 'game' | 'standings' | 'debts' | 'player' | 'manage';
@@ -20,7 +24,12 @@ export function AdminShell({
   onLogout: () => Promise<void>;
   onSwitchView: SwitchView;
 }) {
-  const [tab, setTab] = useState<Tab>('game');
+  const returned = useBankReturn();
+  const [tab, setTab] = useState<Tab>(returned === null ? 'game' : 'manage');
+  const [section, setSection] = useState<ManageSection>(
+    returned === null ? 'players' : 'bank'
+  );
+  const { data: banner, reload: reloadBanner } = useBankBanner();
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [season, setSeason] = useState<Season | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
@@ -93,6 +102,14 @@ export function AdminShell({
         </h1>
       </header>
 
+      <BankBanner
+        banner={banner}
+        onOpen={() => {
+          setSection('bank');
+          setTab('manage');
+        }}
+      />
+
       {error && <div className="err">{error}</div>}
 
       {missingSeason && (
@@ -126,7 +143,7 @@ export function AdminShell({
       ) : tab === 'standings' ? (
         <Standings season={season} />
       ) : tab === 'debts' ? (
-        <Debts />
+        <Debts canRead={banner?.canRead ?? false} />
       ) : tab === 'player' ? (
         <PlayerReportPage />
       ) : (
@@ -136,6 +153,9 @@ export function AdminShell({
           players={players}
           onChanged={refresh}
           onSelectSeason={setSeason}
+          section={section}
+          onSection={setSection}
+          bank={<BankPanel returned={returned} onChanged={reloadBanner} />}
           account={
             <AccountPanel
               user={user}

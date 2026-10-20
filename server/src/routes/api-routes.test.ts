@@ -102,7 +102,7 @@ describe('who may call what', () => {
 
   it('decides every route of the admin router: 401 anonymous, 403 regular, neither for an admin', async () => {
     const routes = new RouteLister().list(app.routes.adminRouter);
-    expect(routes.length).toBe(43);
+    expect(routes.length).toBe(59);
     for (const route of routes) {
       const [method, template] = route.split(' ');
       const path = `/api${template.replace(/:[A-Za-z]+/g, '1')}`;
@@ -206,6 +206,7 @@ describe('who may call what', () => {
     it('holds exactly the public routes, the session routes and the own routes', () => {
       const lister = new RouteLister();
       expect(lister.list(app.routes.publicRouter)).toEqual([
+        'GET /bank/callback',
         'POST /auth/login',
         'POST /auth/logout',
         'POST /auth/refresh',
@@ -223,9 +224,29 @@ describe('who may call what', () => {
       ]);
     });
 
-    it('mounts the existing organiser router itself, so a route added there is admin-only', async () => {
+    it('mounts the organiser router and the bank routes together, so a route added to either is admin-only', async () => {
       const { api } = await import('./api.js');
-      expect(app.routes.adminRouter).toBe(api);
+      const lister = new RouteLister();
+      expect(lister.list(app.routes.adminRouter)).toEqual(
+        [
+          ...lister.list(api),
+          'GET /bank',
+          'GET /bank/banner',
+          'POST /bank/connect',
+          'POST /bank/read',
+          'PUT /bank/settings',
+          'PUT /bank/words',
+          'POST /bank/disconnect',
+          'GET /bizums/waiting',
+          'GET /bizums/pairings',
+          'PUT /bizums/pairings/:playerId',
+          'DELETE /bizums/pairings/:playerId',
+          'GET /bizums/:id/open-shares',
+          'POST /bizums/:id/pair',
+          'POST /bizums/:id/rule',
+          'POST /bizums/:id/dismiss',
+        ].sort()
+      );
     });
 
     it('denies a path nobody declared: 401 anonymous, 403 regular, 404 admin', async () => {

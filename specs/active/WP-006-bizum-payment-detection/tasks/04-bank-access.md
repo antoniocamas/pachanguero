@@ -69,17 +69,17 @@ Per the Test Methodology of F5, F14 and F15:
 
 ## Definition of Done
 
-- [ ] Every test above passes, and `npm test` touches no network: the fake server binds to loopback only.
-- [ ] `npm run test:sandbox` exits 0 with a skip message when no sandbox variable is set.
-- [ ] **Graduation:** UC-006-01-S1–S5, S8–S13 (server) → marked tests; the live parts are in task 11.
-- [ ] **Hard requirements:** the marked tests exist and pass.
-- [ ] **Documentation:**
+- [x] Every test above passes, and `npm test` touches no network: the fake server binds to loopback only.
+- [x] `npm run test:sandbox` exits 0 with a skip message when no sandbox variable is set.
+- [x] **Graduation:** UC-006-01-S1–S5, S8–S13 (server) → marked tests; the live parts are in task 11.
+- [x] **Hard requirements:** the marked tests exist and pass.
+- [x] **Documentation:**
   - `docs/commands.md`: the settings table (`PACHANGUERO_PUBLIC_URL`, `ENABLE_BANKING_APP_ID`, `ENABLE_BANKING_PRIVATE_KEY`, `ENABLE_BANKING_API_URL`) and the `test:sandbox` script;
   - `.env.example`;
   - `docs/deployment.md`: the impact table's setting row, and a new section "The bank connection";
   - `docs/backup_and_restore.md`: backups hold bank data;
   - `AGENTS.md`: the `server/src/bizum/` and `server/src/bank/` folders, and `npm run test:sandbox`.
-- [ ] The author is told to add the two bank secrets to their own `values.secrets.yaml`.
-- [ ] **Tests:** `npm test`; `npm run test:e2e`, with the existing journeys still passing alongside the new fake `webServer`.
-- [ ] **Regression:** `npm test`.
-- [ ] **Code checks:** `npm run lint`, `npm run format:check`; the coding standard.
+- [x] The author is told to add the two bank secrets to their own `values.secrets.yaml`.
+- [x] **Tests:** `npm test`; `npm run test:e2e`, with the existing journeys still passing alongside the new fake `webServer`.
+- [x] **Regression:** `npm test`.
+- [x] **Code checks:** `npm run lint`, `npm run format:check`; the coding standard.
