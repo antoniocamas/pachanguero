@@ -51,7 +51,7 @@ A guide for anyone who wants to test an application that reads bank data through
 
 ## 5. Redirect URLs
 
-- A `http://localhost:<port>/...` URL listed in the Sandbox application is accepted at registration and by `POST /auth`; before it was listed, `POST /auth` answered 400 `REDIRECT_URI_NOT_ALLOWED` **[PoC]**. A consent then ended at that address with `state` and `code`, and a listener on the port received the request **[PoC]**.
+- A `http://localhost:<port>/...` URL listed in the Sandbox application is accepted at registration and by `POST /auth`; before it was listed, `POST /auth` answered 400 `REDIRECT_URI_NOT_ALLOWED` **[PoC]**. A consent then ended at that address with `state` and `code`, and a listener on the port received the request **[PoC]**. This holds for a Sandbox application only: a production application refuses a `http` redirect URL **[PoC, 2026-10-20]**.
 - The match is **exact**: another port, another path, or the same URL with a query string was refused **[PoC]**.
 - The list takes several URLs, local and `https` together, one per line; each listed one is accepted by `POST /auth`, an unlisted one is refused **[PoC]**.
 - A browser that cannot load the redirect target (a placeholder `https` URL) still shows the address with `code`, but a script cannot read it afterwards; a local listener makes the code available to the test **[PoC]**.
@@ -70,7 +70,7 @@ A guide for anyone who wants to test an application that reads bank data through
 
 | Situation | Produced? | How and what came back **[PoC]** |
 | --- | --- | --- |
-| expired session | yes | `POST /auth` accepts a validity of 1 minute or more; after it passed, a fetch gave HTTP 401 `EXPIRED_SESSION`. `GET /sessions/{id}` still reported `AUTHORIZED` with the past date: key on the error code |
+| expired session | yes | `POST /auth` accepts a validity of 1 minute or more; after it passed, a fetch gave HTTP 401 `EXPIRED_SESSION`. `GET /sessions/{id}` still reported `AUTHORIZED` with the past date (in `access.valid_until`, not at the top of the answer): key on the error code |
 | session ended by the user | yes | `DELETE /sessions/{id}` then a fetch gave HTTP 401 `CLOSED_SESSION` (it also ends a standing session: authorise again by hand) |
 | revoked from the bank side | no | the Mock offers no way **[not determined]** |
 | pending entry that becomes booked | yes | add `PDNG` (not stored), delete it, add the same reference as `BOOK`: stored once at the next read |

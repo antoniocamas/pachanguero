@@ -25,7 +25,7 @@ The field-by-field registration guide, the Mock ASPSP and how to test are in `en
 3. **Activate the application by linking accounts.** A new Production application is *Inactive* until you press "Activate by linking accounts" and approve the Revolut account; it then becomes *Active* in restricted mode and can read **only the linked accounts** **[docs]**. Linking does not itself authorise your application: the API authorisation of section 4 is still needed **[docs]**.
 4. **Keep the secrets out of version control**: the private key, tokens, sessions and any raw data.
 
-Redirect URL: `https://example.com/callback` was accepted and works **[PoC]**. A `http://localhost:<port>/...` URL was accepted by a Sandbox application, listed exactly; not tried on the production application **[PoC]**. Nothing needs to listen at the redirect URL, see 4.
+Redirect URL: `https://example.com/callback` was accepted and works **[PoC]**. A `http://localhost:<port>/...` URL was accepted by a Sandbox application, listed exactly, but a **production** application refuses it: registering `http://localhost:8787/api/bank/callback` gave "URL … uses unsupported scheme" (only `https` is accepted) **[PoC, 2026-10-20, WP-006 rehearsal]**. Nothing needs to listen at the redirect URL, see 4. To reach a server on `localhost` anyway, register an `https` address (the application accepts `https://example.com/api/bank/callback`), approve the consent, and in the address bar of the page it lands on replace the scheme and host with `http://localhost:<port>`, keeping the path and the query: the code is read from the address and works once, within minutes **[PoC, 2026-10-20]**.
 
 ## 3. Authenticating each call
 
@@ -44,7 +44,7 @@ A fresh token per call is simplest. The base URL is `https://api.enablebanking.c
 2. `POST /auth` with `access.valid_until` (RFC 3339, at most 180 days ahead; 179 used), `aspsp` (`name`, `country`), a unique `state`, the whitelisted `redirect_url`, and `psu_type: "personal"`. It returns a `url` **[PoC]**.
 3. The account owner opens the `url` in a **desktop browser**, accepts Enable Banking's terms, signs in to Revolut and approves in the Revolut app **[PoC]**. Starting on the same device as the Revolut app avoids moving between devices **[docs]**.
 4. The browser is redirected to the `redirect_url` with `?state=...&code=...`. **The page itself does not have to load**: with a placeholder URL the address bar still holds the `code`, and that is all that is needed **[PoC]**. The `code` is short-lived (`EXPIRED_AUTHORIZATION_CODE` exists) **[docs]**, so exchange it at once. Check that `state` equals the one you sent.
-5. `POST /sessions` with `{"code": ...}` returns a `session_id` and the `accounts` **[PoC]**. Keep both. `GET /sessions/{id}` returns `status` (`AUTHORIZED`) and `valid_until` **[PoC]**.
+5. `POST /sessions` with `{"code": ...}` returns a `session_id` and the `accounts` **[PoC]**. Keep both. `POST /sessions` lists the accounts as objects with their details and `uid` **[PoC, 2026-10-20]**. `GET /sessions/{id}` returns `status` (`AUTHORIZED`), `created`, `authorized`, `closed`, `aspsp`, `psu_type`, `psu_id_hash`, `accounts` (only the `uid` strings), `accounts_data` (`uid`, `identification_hash`, `identification_hashes`) and `access`; the end of the consent is **`access.valid_until`**, and there is **no `valid_until` at the top** of the answer **[PoC, 2026-10-20: the WP-006 connector read the top-level field and failed every connection until corrected]**.
 
 ### The accounts you get back
 
@@ -135,4 +135,4 @@ Outgoing Bizums (`DBIT`) exist too (34 in 13 months) and must be excluded by the
 
 ## 11. Not determined
 
-`localhost` as a redirect URL on the production application (accepted on a sandbox one); the real rate limit and recovery time; history depth after an hour or a day; natural and early expiry; pending Bizums; why some senders appear as numbers.
+the real rate limit and recovery time; history depth after an hour or a day; natural and early expiry; pending Bizums; why some senders appear as numbers.
