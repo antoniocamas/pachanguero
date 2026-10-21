@@ -64,15 +64,19 @@ export function PlayedView({
           )}
         />
       }
-      sideTab="Equipos"
-      side={
-        <div className="card">
-          <h2>
-            Equipos<small>opcional</small>
-          </h2>
-          <TeamsPanel paste={teams} players={players} />
-        </div>
-      }
+      sides={[
+        {
+          label: 'Equipos',
+          content: (
+            <div className="card">
+              <h2>
+                Equipos<small>opcional</small>
+              </h2>
+              <TeamsPanel paste={teams} players={players} />
+            </div>
+          ),
+        },
+      ]}
     />
   );
 }

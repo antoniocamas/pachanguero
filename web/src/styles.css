@@ -648,6 +648,26 @@ button.btn.mini {
 .game-tabs {
   display: none;
 }
+.side-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.game-tabs button,
+.side-tabs button {
+  flex: 1;
+  min-height: 40px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--text);
+  font: inherit;
+}
+.game-tabs button[aria-selected='true'],
+.side-tabs button[aria-selected='true'] {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+}
 .card h2 small {
   margin-left: auto;
   color: var(--muted);
@@ -825,17 +845,10 @@ td .chip.oscuros {
     margin-bottom: 8px;
   }
   .game-tabs button {
-    flex: 1;
     min-height: 44px;
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    color: var(--text);
-    font: inherit;
   }
-  .game-tabs button[aria-selected='true'] {
-    background: var(--accent-dim);
-    border-color: var(--accent);
+  .side-tabs {
+    display: none;
   }
   .bar {
     padding: 10px;

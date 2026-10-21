@@ -69,28 +69,38 @@ export function LineView({
           />
         </MemberDnd>
       }
-      sideTab={confirmed ? 'Apuntados y equipos' : 'Apuntados'}
-      side={
-        <>
-          <CandidateList
-            key={gameId}
-            gameId={gameId}
-            seasonId={seasonId}
-            gameLabel={gameLabel}
-            players={players}
-            onChanged={onChanged}
-            onEnrolled={onEnrolled}
-          />
-          {confirmed && (
-            <div className="card">
-              <h2>
-                Equipos<small>opcional</small>
-              </h2>
-              <TeamsPanel paste={teams} players={players} />
-            </div>
-          )}
-        </>
-      }
+      mainTab="Convocados"
+      sides={[
+        {
+          label: 'Apuntados',
+          content: (
+            <CandidateList
+              key={gameId}
+              gameId={gameId}
+              seasonId={seasonId}
+              gameLabel={gameLabel}
+              players={players}
+              onChanged={onChanged}
+              onEnrolled={onEnrolled}
+            />
+          ),
+        },
+        ...(confirmed
+          ? [
+              {
+                label: 'Equipos',
+                content: (
+                  <div className="card">
+                    <h2>
+                      Equipos<small>opcional</small>
+                    </h2>
+                    <TeamsPanel paste={teams} players={players} />
+                  </div>
+                ),
+              },
+            ]
+          : []),
+      ]}
     />
   );
 }
