@@ -142,7 +142,9 @@ web/src/              React 19 + Vite, no router/state lib: App.tsx chooses the 
                       lives in lib/sessionClient.ts (access token in memory, silent refresh) behind
                       api.ts's call().
                       GameDay is the lifecycle screen: GameBar keeps the state, counters and
-                      next step in view, and one PlayersTable follows the game's state
+                      next step in view (on a phone the next-step button sits above the bottom
+                      menu; the occasional moves - new game, recreate, reopen, cancel, delete -
+                      are in GameMenu, listed by lib/gameMenu.ts), and one PlayersTable follows the game's state
                       (OpenView, LineView, PlayedView, ReadOnlyView). pages/ are the tabs,
                       components/ the pieces, hooks/ the data access and actions behind them,
                       lib/ the pure calculations (rows, columns, money, payment cell) with

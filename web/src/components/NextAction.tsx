@@ -4,11 +4,23 @@ export interface NextActions {
   create: () => void;
   confirm: () => void;
   play: () => void;
-  reopen: () => void;
   uncancel: () => void;
 }
 
-/** What to do next in the game's state: the server's label and the buttons that do it. */
+/** The one button that moves the game forward in each state; played has none. */
+const PRIMARY: Partial<
+  Record<GameState, { text: string; run: keyof NextActions }>
+> = {
+  open: { text: 'Crear convocatoria', run: 'create' },
+  convocatoria_created: { text: 'Confirmar convocatoria', run: 'confirm' },
+  convocatoria_confirmed: { text: 'Marcar como jugado', run: 'play' },
+  cancelled: { text: 'Deshacer cancelación', run: 'uncancel' },
+};
+
+/**
+ * What to do next in the game's state: the server's label and the one button
+ * that does it. On a phone the button sits above the bottom menu.
+ */
 export function NextAction({
   state,
   label,
@@ -20,38 +32,24 @@ export function NextAction({
   busy: boolean;
   actions: NextActions;
 }) {
-  const button = (text: string, onClick: () => void, primary = false) => (
-    <button
-      key={text}
-      className={primary ? 'btn primary' : 'btn'}
-      disabled={busy}
-      onClick={onClick}
-    >
-      {text}
-    </button>
-  );
-
+  const primary = PRIMARY[state];
   return (
-    <div className="next" data-testid="next-action">
+    <div
+      className={`next${primary ? ' has-button' : ''}`}
+      data-testid="next-action"
+    >
       <span className="txt">
         <b>Siguiente:</b> {label ?? 'nada pendiente'}
       </span>
-      {state === 'open' && button('Crear convocatoria', actions.create, true)}
-      {state === 'convocatoria_created' && (
-        <>
-          {button('Crear de nuevo', actions.create)}
-          {button('Confirmar convocatoria', actions.confirm, true)}
-        </>
+      {primary && (
+        <button
+          className="btn primary"
+          disabled={busy}
+          onClick={actions[primary.run]}
+        >
+          {primary.text}
+        </button>
       )}
-      {state === 'convocatoria_confirmed' && (
-        <>
-          {button('Crear de nuevo', actions.create)}
-          {button('Marcar como jugado', actions.play, true)}
-        </>
-      )}
-      {state === 'played' && button('Reabrir partido', actions.reopen)}
-      {state === 'cancelled' &&
-        button('Deshacer cancelación', actions.uncancel, true)}
     </div>
   );
 }

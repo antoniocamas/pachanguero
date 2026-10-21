@@ -179,6 +179,7 @@ test('a game can be deleted, and a pasted name can be linked to a player of anot
   // The unrecognised name opened a dialog that holds the page until closed.
   await page.getByRole('button', { name: 'Cerrar' }).click();
   page.once('dialog', dialog => dialog.accept());
+  await page.getByRole('button', { name: 'Más acciones' }).click();
   await page.getByRole('button', { name: 'Borrar este partido' }).click();
   await expect(
     page.getByLabel('Elegir partido').locator(`option[value="${game.id}"]`)
@@ -267,7 +268,8 @@ test('records a past game in the season its date belongs to', async ({
   await page.goto('/');
   await expect(page.locator('.season')).toHaveText(current.name);
 
-  await page.getByRole('button', { name: '+ Nuevo' }).click();
+  await page.getByRole('button', { name: 'Más acciones' }).click();
+  await page.getByRole('button', { name: 'Nuevo partido' }).click();
   await page.getByLabel('Fecha del partido').fill(`${startYear - 1}-10-07`);
   await page.getByRole('button', { name: 'Registrar partido' }).click();
 

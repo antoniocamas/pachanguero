@@ -13,6 +13,12 @@ export function StateSteps({ state }: { state: GameState }) {
   if (state === 'cancelled')
     return (
       <div className="steps">
+        <div className="bars cancelled" aria-hidden>
+          <i className="d" />
+          <i className="d" />
+          <i className="d" />
+          <i className="d" />
+        </div>
         <span className="step now cancelled" aria-current="step">
           Cancelado
         </span>
@@ -21,15 +27,14 @@ export function StateSteps({ state }: { state: GameState }) {
   const at = STEPS.findIndex(s => s.state === state);
   return (
     <div className="steps">
-      {STEPS.map((s, i) => (
-        <span
-          key={s.state}
-          className={`step ${i < at ? 'done' : i === at ? 'now' : ''}`}
-          aria-current={i === at ? 'step' : undefined}
-        >
-          {s.label}
-        </span>
-      ))}
+      <div className="bars" aria-hidden>
+        {STEPS.map((s, i) => (
+          <i key={s.state} className={i <= at ? 'd' : ''} />
+        ))}
+      </div>
+      <span className="step now" aria-current="step">
+        {STEPS[at].label}
+      </span>
     </div>
   );
 }

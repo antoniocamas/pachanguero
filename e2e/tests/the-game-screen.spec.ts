@@ -100,6 +100,12 @@ const row = (page: Page, name: string) =>
 
 const stateNow = (page: Page) => page.locator('.step.now');
 
+/** Opens the game's "more actions" menu and chooses one item. */
+const fromMenu = async (page: Page, item: string) => {
+  await page.getByRole('button', { name: 'Más acciones' }).click();
+  await page.getByRole('button', { name: item }).click();
+};
+
 const noHorizontalScroll = (page: Page) =>
   page.evaluate(
     () =>
@@ -138,10 +144,10 @@ test.describe('the lifecycle, read from the screen', () => {
     await expect(stateNow(page)).toHaveText('Jugado');
     await expect(next).toContainText('Registrar pagos');
 
-    await page.getByRole('button', { name: 'Reabrir partido' }).click();
+    await fromMenu(page, 'Reabrir partido');
     await expect(stateNow(page)).toHaveText('Convocatoria confirmada');
 
-    await page.getByRole('button', { name: 'Cancelar partido' }).click();
+    await fromMenu(page, 'Cancelar partido');
     await expect(stateNow(page)).toHaveText('Cancelado');
     await expect(next).toContainText('Deshacer cancelación');
     await expect(page.getByTestId('player-row')).toHaveCount(4);
@@ -331,14 +337,16 @@ for (const viewport of [
       await expect(page.getByTestId('counter-pagados')).toContainText('0');
       await expect(page.getByTestId('counter-deuda')).toContainText('0 €');
 
-      await page.getByRole('button', { name: '+ Nuevo' }).click();
+      await fromMenu(page, 'Nuevo partido');
       await expect(page.getByLabel('Fecha del partido')).toBeVisible();
+      await page.getByRole('button', { name: 'Más acciones' }).click();
       await expect(
         page.getByRole('button', { name: 'Borrar este partido' })
       ).toBeVisible();
       await expect(
         page.getByRole('button', { name: 'Cancelar partido' })
       ).toBeVisible();
+      await page.keyboard.press('Escape');
 
       if (viewport.phone)
         await page.getByRole('tab', { name: 'Apuntados' }).click();

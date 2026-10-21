@@ -75,6 +75,7 @@ export function GameDay({
           reopen: () => actions.transition('reopen'),
           uncancel: () => actions.transition('uncancel'),
         }}
+        report={setAlert}
         onSelect={selectGame}
         onCancel={() => actions.transition('cancel')}
         onRecorded={gameRecorded}

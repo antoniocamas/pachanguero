@@ -505,43 +505,112 @@ textarea {
   color: var(--text);
   font-size: 17px;
 }
+.row2 {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.row2 .counters {
+  margin-left: auto;
+}
 .steps {
   display: flex;
-  gap: 6px;
-  margin: 12px 0;
-  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
 }
-.step {
-  padding: 4px 12px;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  color: var(--muted);
-  font-size: 13px;
+.bars {
+  display: flex;
+  gap: 4px;
+  width: 160px;
 }
-.step.done {
-  background: var(--in);
-  color: var(--text);
+.bars i {
+  flex: 1;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--line);
+}
+.bars i.d {
+  background: var(--accent);
+}
+.bars.cancelled i.d {
+  background: var(--danger);
 }
 .step.now {
-  background: var(--accent-dim);
-  color: #d4f7dc;
-  border-color: var(--accent);
+  font-size: 14px;
   font-weight: 600;
 }
 .step.now.cancelled {
-  background: color-mix(in srgb, var(--danger) 30%, transparent);
-  border-color: var(--danger);
-  color: #ffd9d6;
+  color: var(--danger);
 }
 .next {
   display: flex;
   gap: 10px;
   align-items: center;
-  flex-wrap: wrap;
+  margin-top: 10px;
 }
 .next .txt {
   flex: 1;
-  min-width: 200px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.nav-game {
+  padding: 4px 10px;
+  font-size: 18px;
+  line-height: 1;
+}
+.menu-btn {
+  padding: 2px 12px;
+  font-size: 22px;
+  line-height: 1;
+}
+.record-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.record-wrap .record-game {
+  flex: 1;
+}
+.menu-dialog {
+  width: min(340px, 92vw);
+  padding: 0;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+.menu-dialog::backdrop {
+  background: rgb(0 0 0 / 0.55);
+}
+.menu-items {
+  display: grid;
+  padding: 6px 0;
+}
+.menu-item {
+  background: none;
+  border: 0;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  padding: 14px 20px;
+  cursor: pointer;
+}
+.menu-item:hover:not(:disabled) {
+  background: var(--surface);
+}
+.menu-item.careful {
+  color: var(--danger);
+}
+.menu-heading {
+  margin-top: 6px;
+  padding: 10px 20px 2px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 button.btn.link {
   border: 0;
@@ -779,14 +848,70 @@ td .chip.oscuros {
   .counters b {
     font-size: 15px;
   }
-  .steps .step:not(.now) {
-    display: none;
+  .bar .row1 {
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+  .bar .row1 select.sel {
+    flex: 1;
+    min-width: 0;
+  }
+  .row2 {
+    gap: 8px;
   }
   .steps {
-    margin: 8px 0;
+    flex-wrap: wrap;
+    gap: 6px;
+    width: 100%;
   }
-  .next .btn {
-    min-height: 44px;
+  .bars {
+    width: 100%;
+  }
+  .row2 .counters {
+    margin-left: 0;
+  }
+  .bar .next {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: calc(60px + env(safe-area-inset-bottom));
+    z-index: 7;
+    margin: 0;
+    padding: 10px 12px;
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+  }
+  .bar .next:not(.has-button) {
+    display: none;
+  }
+  .bar .next .btn {
+    flex: 1;
+    min-height: 48px;
+    font-size: 16px;
+  }
+  .bar .next.has-button .txt {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .app.wide {
+    padding-bottom: calc(150px + env(safe-area-inset-bottom));
+  }
+  .menu-dialog {
+    position: fixed;
+    inset: auto 0 0 0;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    border-radius: 18px 18px 0 0;
+    border-bottom: 0;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .menu-item {
+    min-height: 52px;
+    font-size: 16px;
   }
   .hide-sm {
     display: none;
@@ -1134,4 +1259,12 @@ label.choice input {
 .setting select {
   width: auto;
   flex: 1 1 140px;
+}
+
+/* The next-step button sits above the bottom menu on a phone, so what sticks
+   there makes room for it. */
+@media (max-width: 760px) {
+  .sticky-actions {
+    bottom: calc(130px + env(safe-area-inset-bottom));
+  }
 }
