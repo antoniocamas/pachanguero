@@ -149,6 +149,11 @@ web/src/              React 19 + Vite, no router/state lib: App.tsx chooses the 
                       components/ the pieces, hooks/ the data access and actions behind them,
                       lib/ the pure calculations (rows, columns, money, payment cell) with
                       their vitest tests. The drag library is imported only in MemberDnd.tsx.
+                      Debts has three views (Deudas, En espera, Liquidados; DebtViewTabs) over one
+                      useBizums hook; "Leer ahora" sits above them. The payment method is chosen
+                      once per table (PaymentMethodBar) and handed to every PaymentCell, which has
+                      one "Pagar" button and a ⋯ for another amount. ActionMenu is the shared
+                      ⋯ menu (a bottom sheet on a phone).
 ```
 
 ## Domain invariants

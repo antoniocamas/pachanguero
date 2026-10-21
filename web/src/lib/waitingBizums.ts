@@ -203,3 +203,24 @@ export const settledLines = (item: SettledBizum): string[] => [
 
 export const settledHowText = (how: SettledBizum['settledHow']) =>
   how === 'organiser' ? 'Decidido por ti' : 'Automático';
+
+export type WaitingChoice = 'accept' | 'rule' | 'assign' | 'dismiss';
+
+/**
+ * What a waiting Bizum offers: the one button shown on it (accepting the
+ * suggested player, else ruling its shares, else assigning a player) and the
+ * rest, kept in its menu.
+ */
+export const waitingChoices = (
+  item: WaitingBizum
+): { primary: WaitingChoice | null; menu: WaitingChoice[] } => {
+  const actions = waitingActions(item);
+  const offered: WaitingChoice[] = [
+    ...(suggestedPlayer(item) !== null ? (['accept'] as const) : []),
+    ...(actions.rule ? (['rule'] as const) : []),
+    ...(actions.assign ? (['assign'] as const) : []),
+    'dismiss',
+  ];
+  const primary = offered.find(choice => choice !== 'dismiss') ?? null;
+  return { primary, menu: offered.filter(choice => choice !== primary) };
+};

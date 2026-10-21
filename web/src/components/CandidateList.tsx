@@ -139,15 +139,17 @@ export function CandidateList({
               players={players}
               busy={list.busy}
               onResolve={action => list.resolve(row.entry, action)}
+              extra={
+                <button
+                  className="btn link danger"
+                  aria-label={`Quitar ${row.text}`}
+                  disabled={list.busy}
+                  onClick={() => list.remove(row.position)}
+                >
+                  Quitar
+                </button>
+              }
             />
-            <button
-              className="btn"
-              aria-label={`Quitar ${row.text}`}
-              disabled={list.busy}
-              onClick={() => list.remove(row.position)}
-            >
-              Quitar de la lista
-            </button>
           </div>
         ))}
       </ResolveDialog>

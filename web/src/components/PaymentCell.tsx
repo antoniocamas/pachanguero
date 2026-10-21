@@ -4,19 +4,21 @@ import { useBizumUndo } from '../hooks/useBizumUndo';
 import { parseEuros } from '../lib/money';
 import { opensDetail, type PaymentPart } from '../lib/paymentCell';
 import { PaymentDetail } from './PaymentDetail';
-import { PaymentMethodField } from './PaymentMethodField';
 import { ResolveDialog } from './ResolveDialog';
 import { UndoBizumDialog } from './UndoBizumDialog';
 
 /** The settled and owed shares of a row, with the buttons to settle or undo them. */
 export function PaymentCell({
   parts,
+  method,
   busy,
   onPay,
   onUndo,
   report,
 }: {
   parts: PaymentPart[];
+  /** How the money is handed over, chosen once for the whole table. */
+  method: PaymentMethod;
   busy: boolean;
   onPay: (
     shares: MemberKey[],
@@ -31,23 +33,13 @@ export function PaymentCell({
   const [adjusting, setAdjusting] = useState(false);
   const [detailOf, setDetailOf] = useState<number | null>(null);
   const [amount, setAmount] = useState('');
-  const [method, setMethod] = useState<PaymentMethod>('efectivo');
   const cents = parseEuros(amount);
   const bizumUndo = useBizumUndo(onUndo, report);
 
   if (parts.length === 0) return <>–</>;
 
-  const settles = parts.some(part => part.kind === 'pay');
-
   return (
     <div className="pay-cell">
-      {settles && (
-        <PaymentMethodField
-          value={method}
-          disabled={busy}
-          onChange={setMethod}
-        />
-      )}
       {parts.map(part => {
         switch (part.kind) {
           case 'tag':
@@ -86,7 +78,7 @@ export function PaymentCell({
             return (
               <button
                 key={part.label}
-                className="btn"
+                className="btn pay"
                 disabled={busy}
                 onClick={() => onPay(part.shares, part.payerId, method)}
               >
@@ -118,11 +110,13 @@ export function PaymentCell({
             ) : (
               <button
                 key="adjust"
-                className="btn"
+                className="btn mini"
+                aria-label="Otro importe…"
+                title="Otro importe…"
                 disabled={busy}
                 onClick={() => setAdjusting(true)}
               >
-                Otro importe…
+                ⋯
               </button>
             );
         }

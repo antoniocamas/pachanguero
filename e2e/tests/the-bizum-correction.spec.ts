@@ -39,8 +39,9 @@ test.describe('correcting a Bizum', () => {
 
     await page.goto('/');
     await tab(page, 'Deudas').click();
+    await page.getByRole('button', { name: 'Leer ahora' }).click();
+    await page.getByRole('tab', { name: /En espera/ }).click();
     const waiting = page.getByTestId('waiting-bizums');
-    await waiting.getByRole('button', { name: 'Leer ahora' }).click();
     const item = waiting
       .getByTestId('waiting-bizum')
       .filter({ hasText: 'Zcorrige U.N.' });
@@ -49,6 +50,7 @@ test.describe('correcting a Bizum', () => {
     );
 
     // Rule that it pays one share of Zcorrige Uno; the 0,5 € over stays on the Bizum.
+    await item.getByRole('button', { name: 'Más acciones del Bizum' }).click();
     await item.getByRole('button', { name: 'Pagar cuotas' }).click();
     const rule = page.getByRole('dialog');
     await rule.getByLabel('Jugador').selectOption({ label: 'Zcorrige Uno' });
@@ -73,11 +75,13 @@ test.describe('correcting a Bizum', () => {
     await expect(row).not.toContainText('Pagado');
 
     await tab(page, 'Deudas').click();
+    await page.getByRole('tab', { name: /En espera/ }).click();
     const again = page
       .getByTestId('waiting-bizum')
       .filter({ hasText: 'Zcorrige U.N.' });
     await expect(again).toContainText('Se deshizo su pago.');
 
+    await again.getByRole('button', { name: 'Más acciones del Bizum' }).click();
     await again.getByRole('button', { name: 'Descartar' }).click();
     await page.getByRole('button', { name: 'Descartar para siempre' }).click();
     await expect(page.getByTestId('waiting-bizums')).toContainText(
@@ -116,8 +120,9 @@ test.describe('correcting a Bizum', () => {
 
     await page.goto('/');
     await tab(page, 'Deudas').click();
+    await page.getByRole('button', { name: 'Leer ahora' }).click();
+    await page.getByRole('tab', { name: /En espera/ }).click();
     const waiting = page.getByTestId('waiting-bizums');
-    await waiting.getByRole('button', { name: 'Leer ahora' }).click();
     const item = waiting
       .getByTestId('waiting-bizum')
       .filter({ hasText: 'Zprepaga U.N.' });
@@ -141,7 +146,7 @@ test.describe('correcting a Bizum', () => {
     const settled = page
       .getByTestId('settled-bizum')
       .filter({ hasText: 'Zprepaga U.N.' });
-    await page.getByTestId('settled-bizums').locator('summary').click();
+    await page.getByRole('tab', { name: /Liquidados/ }).click();
     await expect(settled).toContainText(
       'Zprepaga Uno · partido del 27 sept · 4 €'
     );

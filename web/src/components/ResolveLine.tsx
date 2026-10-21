@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import type { Player, ResolveAction, UnresolvedEntry } from '../api';
 
 const spelled = (e: UnresolvedEntry) =>
@@ -31,9 +31,10 @@ const suggestedName = (entry: UnresolvedEntry, text: string) =>
     : text;
 
 /**
- * One unresolved name and the ways to settle it: pick the player it is,
- * optionally remembering the spelling as an alias, or register someone new.
- * It knows nothing about which list it came from.
+ * One unresolved name and the ways to settle it: pick the player it is (the usual case, one
+ * button), optionally remembering the spelling as an alias, or register someone new, which
+ * opens only when asked. It knows nothing about which list it came from; `extra` is whatever
+ * the list wants beside those ways, such as taking the name off it.
  */
 export function ResolveLine({
   entry,
@@ -41,6 +42,7 @@ export function ResolveLine({
   busy,
   allowRegister = true,
   onResolve,
+  extra,
 }: {
   entry: UnresolvedEntry;
   players: Pick<Player, 'id' | 'name'>[];
@@ -48,6 +50,7 @@ export function ResolveLine({
   /** Whether a name can be settled by registering a new player. */
   allowRegister?: boolean;
   onResolve: (action: ResolveAction) => void;
+  extra?: ReactNode;
 }) {
   const text = spelled(entry);
   const options = optionsFor(entry, players);
@@ -56,17 +59,19 @@ export function ResolveLine({
       ? entry.candidates[0].id
       : ''
   );
+  const [remember, setRemember] = useState(false);
+  const [registering, setRegistering] = useState(false);
   const [newName, setNewName] = useState(suggestedName(entry, text));
   const [hostId, setHostId] = useState<number | ''>('');
 
   return (
     <div className="resolve" data-testid="unresolved-line">
       <div>
-        <b>{text}</b>{' '}
-        <span className="muted">
+        <b>{text}</b>
+        <div className="muted">
           {entry.field === 'host' ? '(quien lo trae) · ' : ''}
           {REASONS[entry.reason]}
-        </span>
+        </div>
       </div>
       <div className="actions">
         <select
@@ -76,7 +81,7 @@ export function ResolveLine({
             setPlayerId(e.target.value ? Number(e.target.value) : '')
           }
         >
-          <option value="">Elegir jugador…</option>
+          <option value="">¿Quién es?</option>
           {options.map(p => (
             <option key={p.id} value={p.id}>
               {p.name}
@@ -84,58 +89,78 @@ export function ResolveLine({
           ))}
         </select>
         <button
-          className="btn"
+          className="btn primary"
           disabled={busy || playerId === ''}
           onClick={() =>
-            playerId !== '' && onResolve({ type: 'link', playerId })
+            playerId !== '' &&
+            onResolve({
+              type: remember ? 'linkAsAlias' : 'link',
+              playerId,
+            })
           }
         >
           Es este
         </button>
-        <button
-          className="btn"
-          disabled={busy || playerId === ''}
-          onClick={() =>
-            playerId !== '' && onResolve({ type: 'linkAsAlias', playerId })
-          }
-        >
-          Es este y recordar apodo
-        </button>
       </div>
-      {allowRegister && (
-        <div className="actions">
+      <label className="remember">
+        <input
+          type="checkbox"
+          checked={remember}
+          onChange={e => setRemember(e.target.checked)}
+        />
+        Recordar como apodo
+      </label>
+      {(allowRegister || extra) && (
+        <div className="links">
+          {allowRegister && (
+            <button
+              className="btn link"
+              aria-expanded={registering}
+              onClick={() => setRegistering(r => !r)}
+            >
+              {registering ? '− Es un jugador nuevo' : '＋ Es un jugador nuevo'}
+            </button>
+          )}
+          <span className="sp" />
+          {extra}
+        </div>
+      )}
+      {allowRegister && registering && (
+        <div className="register">
           <input
             aria-label={`Nombre nuevo para ${text}`}
             value={newName}
             onChange={e => setNewName(e.target.value)}
           />
-          <select
-            aria-label="Lo trae"
-            value={hostId}
-            onChange={e =>
-              setHostId(e.target.value ? Number(e.target.value) : '')
-            }
-          >
-            <option value="">Lo trae…</option>
-            {players.map(p => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
-          <button
-            className="btn primary"
-            disabled={busy || !newName.trim()}
-            onClick={() =>
-              onResolve({
-                type: 'register',
-                name: newName.trim(),
-                ...(hostId !== '' ? { introducedBy: hostId } : {}),
-              })
-            }
-          >
-            Registrar nuevo
-          </button>
+          <div className="actions">
+            <select
+              aria-label="Lo trae"
+              value={hostId}
+              onChange={e =>
+                setHostId(e.target.value ? Number(e.target.value) : '')
+              }
+            >
+              <option value="">Lo trae… (opcional)</option>
+              {players.map(p => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+            <button
+              className="btn primary"
+              disabled={busy || !newName.trim()}
+              onClick={() =>
+                onResolve({
+                  type: 'register',
+                  name: newName.trim(),
+                  ...(hostId !== '' ? { introducedBy: hostId } : {}),
+                })
+              }
+            >
+              Registrar nuevo
+            </button>
+          </div>
         </div>
       )}
     </div>

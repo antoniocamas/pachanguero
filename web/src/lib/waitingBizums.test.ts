@@ -13,6 +13,7 @@ import {
   senderText,
   suggestedPlayer,
   waitingActions,
+  waitingChoices,
 } from './waitingBizums';
 
 const bizum = (over: Partial<WaitingBizum>): WaitingBizum => ({
@@ -406,5 +407,39 @@ describe('settledLines', () => {
   it('says who decided', () => {
     expect(settledHowText('automatic')).toBe('Automático');
     expect(settledHowText('organiser')).toBe('Decidido por ti');
+  });
+});
+
+describe('waitingChoices', () => {
+  it('shows the suggested player first and keeps the rest in the menu', () => {
+    const item = bizum({
+      reason: { code: 'sender_unknown' },
+      senderIdentity: { kind: 'unknown', suggestions: [7] },
+      players: { 7: 'Joaquín Ruiz' },
+    });
+    expect(waitingChoices(item)).toEqual({
+      primary: 'accept',
+      menu: ['assign', 'dismiss'],
+    });
+  });
+
+  it('shows the assignment when the sender is not known and nothing is suggested', () => {
+    const item = bizum({ reason: { code: 'sender_unknown' } });
+    expect(waitingChoices(item)).toEqual({
+      primary: 'assign',
+      menu: ['dismiss'],
+    });
+  });
+
+  it('shows the ruling of shares for a sender the rules know', () => {
+    const item = bizum({
+      reason: { code: 'not_enough_debts', playerId: 3, shares: 2, debts: 1 },
+      senderIdentity: { kind: 'player', playerId: 3 },
+      players: { 3: 'Marta Gómez' },
+    });
+    expect(waitingChoices(item)).toEqual({
+      primary: 'rule',
+      menu: ['dismiss'],
+    });
   });
 });

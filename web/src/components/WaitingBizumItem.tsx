@@ -13,8 +13,10 @@ import {
   reasonLines,
   senderText,
   suggestedPlayer,
-  waitingActions,
+  waitingChoices,
+  type WaitingChoice,
 } from '../lib/waitingBizums';
+import { ActionMenu } from './ActionMenu';
 import { AssignPlayerDialog } from './AssignPlayerDialog';
 import { DismissBizumDialog } from './DismissBizumDialog';
 import { PairResultBody } from './PairResultBody';
@@ -52,12 +54,27 @@ export function WaitingBizumItem({
   const [dialog, setDialog] = useState<Dialog>(null);
   const [accepted, setAccepted] = useState<PairResult | null>(null);
   const suggested = suggestedPlayer(item);
-  const actions = waitingActions(item);
+  const { primary, menu } = waitingChoices(item);
   const who = identifiedAs(item);
   const close = () => {
     setDialog(null);
     setAccepted(null);
     onClosed();
+  };
+  const label: Record<WaitingChoice, string> = {
+    accept: `Sí, es ${suggested?.name ?? ''}`,
+    rule: 'Pagar cuotas',
+    assign: 'Asignar jugador',
+    dismiss: 'Descartar',
+  };
+  const choose = (choice: WaitingChoice) => {
+    if (choice === 'rule') setDialog('rule');
+    else if (choice === 'assign') setDialog('assign');
+    else if (choice === 'dismiss') setDialog('dismiss');
+    else if (suggested !== null)
+      void onPair(item.id, suggested.id).then(
+        answer => answer && setAccepted(answer)
+      );
   };
 
   return (
@@ -76,32 +93,25 @@ export function WaitingBizumItem({
         </p>
       ))}
       <div className="actions">
-        {suggested !== null && (
+        {primary !== null && (
           <button
             className="btn primary"
             disabled={busy}
-            onClick={() =>
-              void onPair(item.id, suggested.id).then(
-                answer => answer && setAccepted(answer)
-              )
-            }
+            onClick={() => choose(primary)}
           >
-            Sí, es {suggested.name}
+            {label[primary]}
           </button>
         )}
-        {actions.assign && (
-          <button className="btn" onClick={() => setDialog('assign')}>
-            Asignar jugador
-          </button>
-        )}
-        {actions.rule && (
-          <button className="btn" onClick={() => setDialog('rule')}>
-            Pagar cuotas
-          </button>
-        )}
-        <button className="btn" onClick={() => setDialog('dismiss')}>
-          Descartar
-        </button>
+        <ActionMenu
+          label="Más acciones del Bizum"
+          busy={busy}
+          onSelect={choose}
+          items={menu.map(id => ({
+            id,
+            label: label[id],
+            careful: id === 'dismiss',
+          }))}
+        />
       </div>
       <ResolveDialog
         open={accepted !== null}

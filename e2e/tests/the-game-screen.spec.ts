@@ -536,6 +536,9 @@ test.describe('a played game with a host, a plus-one and a named guest', () => {
       .fill(`${ana}\n${marta} (${ana})\n${dani}\n${dani} +1\n${luis}`);
     await page.getByRole('button', { name: 'Añadir a la lista' }).click();
     const unresolved = page.getByTestId('unresolved-line');
+    await unresolved
+      .getByRole('button', { name: /Es un jugador nuevo/ })
+      .click();
     await unresolved.getByLabel('Lo trae').selectOption({ label: ana });
     await unresolved.getByRole('button', { name: 'Registrar nuevo' }).click();
     await page

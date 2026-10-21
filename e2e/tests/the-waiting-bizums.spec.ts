@@ -34,11 +34,12 @@ test.describe('the waiting Bizums', () => {
 
     await page.goto('/');
     await tab(page, 'Deudas').click();
+    await page.getByRole('button', { name: 'Leer ahora' }).click();
+    await page.getByRole('tab', { name: /En espera/ }).click();
     const waiting = page.getByTestId('waiting-bizums');
-    await waiting.getByRole('button', { name: 'Leer ahora' }).click();
-    await expect(waiting.getByRole('status')).toContainText(
-      'Lectura terminada'
-    );
+    await expect(
+      page.locator('.bizums-strip').getByRole('status')
+    ).toContainText('Lectura terminada');
 
     const item = waiting
       .getByTestId('waiting-bizum')
@@ -49,6 +50,7 @@ test.describe('the waiting Bizums', () => {
       item.getByRole('button', { name: 'Pagar cuotas' })
     ).toHaveCount(0);
 
+    await item.getByRole('button', { name: 'Más acciones del Bizum' }).click();
     await item.getByRole('button', { name: 'Asignar jugador' }).click();
     const dialog = page.getByRole('dialog');
     await dialog
@@ -88,8 +90,9 @@ test.describe('the waiting Bizums', () => {
 
     await page.goto('/');
     await tab(page, 'Deudas').click();
+    await page.getByRole('button', { name: 'Leer ahora' }).click();
+    await page.getByRole('tab', { name: /En espera/ }).click();
     const waiting = page.getByTestId('waiting-bizums');
-    await waiting.getByRole('button', { name: 'Leer ahora' }).click();
     const item = waiting
       .getByTestId('waiting-bizum')
       .filter({ hasText: 'Zacepta U.N.' });

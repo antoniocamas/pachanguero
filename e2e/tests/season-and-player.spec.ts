@@ -85,7 +85,7 @@ test('pastes a candidate list and settles an ambiguous name', async ({
   await expect(ambiguous).toHaveCount(1);
   const picker = ambiguous.getByLabel('Quién es Juanito');
   await expect(picker.locator('option')).toHaveText([
-    'Elegir jugador…',
+    '¿Quién es?',
     'Juanito',
     'Juan',
   ]);
@@ -101,10 +101,9 @@ test('pastes a candidate list and settles an ambiguous name', async ({
   );
 
   // The unknown name is registered as a new player.
-  await page
-    .getByTestId('unresolved-line')
-    .getByRole('button', { name: 'Registrar nuevo' })
-    .click();
+  const unknown = page.getByTestId('unresolved-line');
+  await unknown.getByRole('button', { name: /Es un jugador nuevo/ }).click();
+  await unknown.getByRole('button', { name: 'Registrar nuevo' }).click();
   await expect(page.getByTestId('unresolved-line')).toHaveCount(0);
   await expect(page.getByTestId('matched-line')).toHaveCount(3);
 });
@@ -172,7 +171,7 @@ test('a game can be deleted, and a pasted name can be linked to a player of anot
   await page.getByRole('button', { name: 'Añadir a la lista' }).click();
   const picker = page.getByLabel('Quién es Desconocida Rara');
   await expect(picker.locator('option')).toContainText([
-    'Elegir jugador…',
+    '¿Quién es?',
     'Veterano Lejano',
   ]);
 
