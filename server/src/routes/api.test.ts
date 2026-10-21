@@ -949,12 +949,10 @@ describe('API', () => {
         text: `Claros\n-----\n${names[0]}\nOscuros\n-----\n${names[1]}`,
       });
 
-    it('refuses a paste before the game is played', async () => {
+    it('accepts a paste once the convocatoria is confirmed, before the game is played', async () => {
       const res = await paste();
-      expect(res.status).toBe(400);
-      expect((await res.json()).error).toBe(
-        'Marca el partido como jugado antes de pegar los equipos'
-      );
+      expect(res.status).toBe(200);
+      expect((await res.json()).matched).toHaveLength(2);
     });
 
     it('a paste sets only the team, and GET and PUT read and replace it', async () => {

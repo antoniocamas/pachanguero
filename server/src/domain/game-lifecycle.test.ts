@@ -78,6 +78,7 @@ describe('GameLifecycle.require', () => {
     ['edit_convocatoria', 'convocatoria_created'],
     ['edit_convocatoria', 'convocatoria_confirmed'],
     ['pay', 'played'],
+    ['teams', 'convocatoria_confirmed'],
     ['teams', 'played'],
   ])('%s is allowed in %s', (capability, state) => {
     expect(() => lifecycle.require(state, capability)).not.toThrow();
@@ -101,20 +102,11 @@ describe('GameLifecycle.require', () => {
       'Marca el partido como jugado antes de registrar pagos',
     ],
     ['pay', 'cancelled', CANCELLED],
-    [
-      'teams',
-      'open',
-      'Marca el partido como jugado antes de pegar los equipos',
-    ],
+    ['teams', 'open', 'Confirma la convocatoria antes de pegar los equipos'],
     [
       'teams',
       'convocatoria_created',
-      'Marca el partido como jugado antes de pegar los equipos',
-    ],
-    [
-      'teams',
-      'convocatoria_confirmed',
-      'Marca el partido como jugado antes de pegar los equipos',
+      'Confirma la convocatoria antes de pegar los equipos',
     ],
     ['teams', 'cancelled', CANCELLED],
   ])('%s is refused in %s: %s', (capability, state, message) => {

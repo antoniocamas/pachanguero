@@ -1,14 +1,17 @@
 import type { MemberKey, Player } from '../api';
+import { useTeamsPaste } from '../hooks/useTeamsPaste';
 import { columnsFor } from '../lib/columns';
 import type { GameRow, GameTable } from '../lib/gameRows';
 import { CandidateList } from './CandidateList';
 import { GameLayout } from './GameLayout';
 import { DragHandle, DropZone, MemberDnd } from './MemberDnd';
 import { PlayersTable } from './PlayersTable';
+import { TeamsPanel } from './TeamsPanel';
 
 /**
  * A game with its convocatoria created or confirmed: the line after the last
  * place can be crossed by dragging a row or with its Meter / Sacar button.
+ * Once confirmed, the two teams can be declared before the game is played.
  */
 export function LineView({
   table,
@@ -20,6 +23,7 @@ export function LineView({
   onMove,
   onChanged,
   onEnrolled,
+  report,
 }: {
   table: GameTable;
   busy: boolean;
@@ -30,10 +34,13 @@ export function LineView({
   onMove: (member: MemberKey, playing: boolean) => void;
   onChanged: () => void;
   onEnrolled: () => void;
+  report: (message: string | null) => void;
 }) {
+  const teams = useTeamsPaste(gameId, onChanged, report);
+  const confirmed = table.state === 'convocatoria_confirmed';
   return (
     <GameLayout
-      title="Jugadores · por orden de convocatoria · arrastra una fila para cambiarla de lado"
+      title="Jugadores · orden de convocatoria"
       count={table.rows.length}
       main={
         <MemberDnd onMove={onMove}>
@@ -62,17 +69,27 @@ export function LineView({
           />
         </MemberDnd>
       }
-      sideTab="Apuntados"
+      sideTab={confirmed ? 'Apuntados y equipos' : 'Apuntados'}
       side={
-        <CandidateList
-          key={gameId}
-          gameId={gameId}
-          seasonId={seasonId}
-          gameLabel={gameLabel}
-          players={players}
-          onChanged={onChanged}
-          onEnrolled={onEnrolled}
-        />
+        <>
+          <CandidateList
+            key={gameId}
+            gameId={gameId}
+            seasonId={seasonId}
+            gameLabel={gameLabel}
+            players={players}
+            onChanged={onChanged}
+            onEnrolled={onEnrolled}
+          />
+          {confirmed && (
+            <div className="card">
+              <h2>
+                Equipos<small>opcional</small>
+              </h2>
+              <TeamsPanel paste={teams} players={players} />
+            </div>
+          )}
+        </>
       }
     />
   );

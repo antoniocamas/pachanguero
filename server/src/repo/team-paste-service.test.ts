@@ -58,12 +58,20 @@ describe('TeamPasteService', () => {
     );
   });
 
-  it('is refused until the game is played', () => {
-    flow.confirmed(gameId);
+  it('is refused until the convocatoria is confirmed', () => {
+    flow.convocatoria.create(gameId);
 
     expect(() => service.paste(gameId, standardPaste())).toThrow(
-      'Marca el partido como jugado antes de pegar los equipos'
+      'Confirma la convocatoria antes de pegar los equipos'
     );
+  });
+
+  it('is accepted once the convocatoria is confirmed, before the game is played', () => {
+    flow.confirmed(gameId);
+
+    expect(
+      service.paste(gameId, standardPaste()).matched.length
+    ).toBeGreaterThan(0);
   });
 
   describe('in a played game', () => {

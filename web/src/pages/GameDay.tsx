@@ -147,7 +147,13 @@ function GameBody({
     case 'convocatoria_created':
     case 'convocatoria_confirmed':
       return (
-        <LineView table={table} busy={busy} onMove={onMove} {...candidates} />
+        <LineView
+          table={table}
+          busy={busy}
+          onMove={onMove}
+          report={report}
+          {...candidates}
+        />
       );
     case 'played':
       return (

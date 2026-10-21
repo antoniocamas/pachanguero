@@ -104,13 +104,11 @@ export class GameLifecycle {
       },
     },
     teams: {
-      allowedIn: ['played'],
+      allowedIn: ['convocatoria_confirmed', 'played'],
       refusals: {
-        open: 'Marca el partido como jugado antes de pegar los equipos',
+        open: 'Confirma la convocatoria antes de pegar los equipos',
         convocatoria_created:
-          'Marca el partido como jugado antes de pegar los equipos',
-        convocatoria_confirmed:
-          'Marca el partido como jugado antes de pegar los equipos',
+          'Confirma la convocatoria antes de pegar los equipos',
         cancelled: this.refusedCancelled,
       },
     },

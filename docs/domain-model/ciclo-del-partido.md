@@ -49,7 +49,7 @@ Qué se puede tocar en cada estado:
 | Apuntar y quitar apuntados | sí      | sí     | sí         | no     | no        |
 | Corregir la convocatoria   | no      | sí     | sí         | no     | no        |
 | Registrar pagos            | no      | no     | no         | sí     | no        |
-| Pegar los equipos          | no      | no     | no         | sí     | no        |
+| Pegar los equipos          | no      | no     | sí         | sí     | no        |
 
 Lo que no se puede hacer responde con el motivo («Reabre el partido para
 editarlo», «El partido está cancelado», «Confirma la convocatoria antes de
@@ -204,12 +204,13 @@ Bizum solo paga deudas de la temporada de su fecha.
 
 ## Equipos (opcional)
 
-Con el partido jugado se pueden pegar los dos equipos (`Claros` y `Oscuros`, en
-cualquier orden). Es un paso opcional: no hace falta para registrar pagos. El
+Con la convocatoria confirmada, o con el partido jugado, se pueden pegar los dos
+equipos (`Claros` y `Oscuros`, en cualquier orden), así que se pueden declarar antes
+de marcar el partido como jugado. Es un paso opcional: no hace falta para registrar pagos. El
 pegado **solo guarda el equipo** de cada jugador de la convocatoria; no toca
 quién jugó, los pagos, los puntos de exclusión ni los apuntados. Un nombre de un
 jugador que no estaba en la convocatoria se queda como texto, sin equipo; uno que
 no se reconoce o es ambiguo queda sin resolver (se elige un jugador de la
 convocatoria para esa línea, sin registrar jugadores nuevos); un `X +1` no nombra
 a nadie y se ignora. Volver a pegar sustituye los equipos anteriores. Antes de
-marcar el partido como jugado se rechaza.
+confirmar la convocatoria se rechaza.
