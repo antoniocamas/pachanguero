@@ -37,4 +37,3 @@
 
 | Id  | Raised | What is owed | Owed by | Evidence |
 | --- | ------ | ------------ | ------- | -------- |
-| OI-01 | 2026-10-21 | steps 25–26 of task 11, after the release: the production secrets show key names only, and the real account connects in production | author | tasks/11-manual-checks-and-rehearsal.md |

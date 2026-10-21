@@ -29,6 +29,8 @@ The one disagreement is the payer only: same game, share, amount, date and holde
 | 21 | report written; the one disagreed payment (payer only) accepted by the organiser as a recording convention |
 | 22 | passed: disconnected; redirect removed |
 | 23 | log of the final server run (319 bytes) holds no session id, sender, subject, amount or `Bizum payment from`; logs of earlier runs were not kept |
+| 25 | passed in production (release 0.2.0): the Secret holds `ENABLE_BANKING_APP_ID`, `ENABLE_BANKING_PRIVATE_KEY` and `JWT_SECRET`; the deployment's env holds `PACHANGUERO_PUBLIC_URL` |
+| 26 | passed in production: the real account connected; the first read returned 4 entries since the start date and missed Bizums that the account held two days earlier; reading again brought them in. Cause not found (no read of the bank was repeated to see the raw answer) |
 
 ## What Didn't Work
 
