@@ -100,15 +100,15 @@ Data
 
 ## Definition of Done
 
-- [ ] Steps 1–24 done and passed, or each failure escalated and resolved.
-- [ ] The rehearsal report has **no disagreed payment**, and every extra payment is explained (F17's pass condition).
-- [ ] `RETROSPECTIVE.md` holds the counts and the pass/fail of each step, with no personal data.
-- [ ] Steps 25–26 done after the release, or recorded as owed in `PROGRESS.md`'s open items if the release comes later.
-- [ ] The localhost redirect is removed from the production application, and the rehearsal's bank session is closed.
-- [ ] Nothing under `~/pachanguero-rehearsal/` is in the repository (`git status` clean of it).
-- [ ] **Graduation:** the rehearsal success criterion → `throwaway` (a one-time check whose counts stay in the retrospective).
-- [ ] **Hard requirements:** none new.
-- [ ] **Documentation:** none outside the work package; the tool and its README live in `rehearsal/` inside it.
-- [ ] **Tests:** `npm test`; `npm run test:e2e` (step 1).
-- [ ] **Regression:** `npm test` (step 1).
-- [ ] **Code checks:** `npm run lint`, `npm run format:check` (step 1); the tool follows the coding standard, though it lives outside `server/src`.
+- [x] Steps 1–24 done and passed, or each failure escalated and resolved.
+- [x] The rehearsal report has **no disagreed payment**, and every extra payment is explained (F17's pass condition).
+- [x] `RETROSPECTIVE.md` holds the counts and the pass/fail of each step, with no personal data.
+- [x] Steps 25–26 done after the release, or recorded as owed in `PROGRESS.md`'s open items if the release comes later.
+- [x] The localhost redirect is removed from the production application, and the rehearsal's bank session is closed.
+- [x] Nothing under `~/pachanguero-rehearsal/` is in the repository (`git status` clean of it).
+- [x] **Graduation:** the rehearsal success criterion → `throwaway` (a one-time check whose counts stay in the retrospective).
+- [x] **Hard requirements:** none new.
+- [x] **Documentation:** none outside the work package; the tool and its README live in `rehearsal/` inside it.
+- [x] **Tests:** `npm test`; `npm run test:e2e` (step 1).
+- [x] **Regression:** `npm test` (step 1).
+- [x] **Code checks:** `npm run lint`, `npm run format:check` (step 1); the tool follows the coding standard, though it lives outside `server/src`.

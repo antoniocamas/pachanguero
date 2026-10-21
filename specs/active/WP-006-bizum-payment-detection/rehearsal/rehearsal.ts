@@ -270,7 +270,10 @@ class RehearsalReport {
     const before = new Set(truth.bizumNamesAtReset);
     return (
       conn
-        .prepare('SELECT id, name, bizum_name FROM players WHERE bizum_name IS NOT NULL')
+        .prepare(
+          `SELECT p.id, p.name, n.bizum_name FROM player_bizum_names n
+             JOIN players p ON p.id = n.player_id ORDER BY p.id, n.bizum_name`
+        )
         .all() as { id: number; name: string; bizum_name: string }[]
     )
       .filter(p => !before.has(p.id))
