@@ -27,6 +27,17 @@ export class GameRepository {
       .all(seasonId) as GameRow[];
   }
 
+  /** Every game whose candidate list can still change, of any season, oldest first. */
+  listUnplayed(): GameRow[] {
+    return this.conn
+      .prepare(
+        `SELECT * FROM games
+          WHERE status IN ('open', 'convocatoria_created', 'convocatoria_confirmed')
+          ORDER BY played_on, id`
+      )
+      .all() as GameRow[];
+  }
+
   get(id: number): GameRow | undefined {
     return this.conn.prepare('SELECT * FROM games WHERE id = ?').get(id) as
       GameRow | undefined;

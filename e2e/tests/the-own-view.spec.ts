@@ -119,7 +119,7 @@ test.describe('the player own view', () => {
     await expect(tab(page, 'Deudas')).toBeVisible();
     for (const name of ['Pagos', 'Estadísticas', 'Ajustes'])
       await expect(tab(page, name)).toBeVisible();
-    for (const name of ['Partido', 'Puntos', 'Jugador'])
+    for (const name of ['Partido', 'Puntos', 'Jugadores'])
       await expect(tab(page, name)).toHaveCount(0);
 
     await expect(page.getByTestId('own-debts')).toContainText('Debes');
@@ -178,21 +178,21 @@ test.describe('the player own view', () => {
     const page = await signIn(browser, 'e2e-zcont');
     await tab(page, 'Ajustes').click();
 
-    await page.getByLabel('Correo electrónico').fill('carlos@example');
+    await page.getByLabel('Correo electrónico 1').fill('carlos@example');
     await page.getByRole('button', { name: 'Guardar' }).click();
     await expect(page.getByRole('alert')).toContainText('No se ha guardado');
     await expect(
       page.getByText('Correo electrónico no válido', { exact: true })
     ).toBeVisible();
 
-    await page.getByLabel('Correo electrónico').fill('carlos@example.com');
+    await page.getByLabel('Correo electrónico 1').fill('carlos@example.com');
     await page.getByLabel('Teléfono').fill('+34 600 123 456');
     await page.getByRole('button', { name: 'Guardar' }).click();
     await expect(page.getByText('Datos guardados.')).toBeVisible();
 
     await page.reload();
     await tab(page, 'Ajustes').click();
-    await expect(page.getByLabel('Correo electrónico')).toHaveValue(
+    await expect(page.getByLabel('Correo electrónico 1')).toHaveValue(
       'carlos@example.com'
     );
     await expect(page.getByLabel('Teléfono')).toHaveValue('+34 600 123 456');

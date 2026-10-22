@@ -9,6 +9,9 @@ export interface DebtInput {
   holderName: string;
   /** The player the share is for; null for an anonymous plus-one. */
   beneficiaryId: number | null;
+  beneficiaryName: string | null;
+  /** Truthy when the beneficiary came to that game as the holder's named guest. */
+  beneficiaryWasGuest: number | boolean;
   amountCents: number;
 }
 
@@ -31,7 +34,13 @@ export interface OwnDebtRow {
   playedOn: string;
   label: string | null;
   amountCents: number;
-  kind: 'own' | 'guest';
+  /**
+   * Why the player owes it: their own share, a guest's they brought, or another player's share
+   * the organiser moved to them.
+   */
+  kind: 'own' | 'guest' | 'other';
+  /** Whose share it is when it is not theirs; absent for an anonymous plus-one. */
+  forName?: string;
 }
 
 export interface HeldRow {
@@ -76,8 +85,9 @@ interface PaymentValueLike {
 
 /**
  * What one player may be told about money and standing: their own shares and the ones they
- * hold for guests, never another player's name or id (except the host answering for their
- * share), and no position among the others. Every privacy rule of the player's own view is here.
+ * answer for, never another player's id, and another player's name only where a share ties the
+ * two (the one answering for it, or the guest or player whose share it is); no position among
+ * the others. Every privacy rule of the player's own view is here.
  */
 export class OwnDisclosure {
   constructor(private readonly viewerId: number) {}
@@ -92,7 +102,13 @@ export class OwnDisclosure {
           playedOn: d.playedOn,
           label: d.gameLabel,
           amountCents: d.amountCents,
-          kind: own ? 'own' : 'guest',
+          kind: own
+            ? 'own'
+            : d.beneficiaryId === null || d.beneficiaryWasGuest
+              ? 'guest'
+              : 'other',
+          ...(!own &&
+            d.beneficiaryName !== null && { forName: d.beneficiaryName }),
         });
         result.owedCents += d.amountCents;
       } else if (own) {

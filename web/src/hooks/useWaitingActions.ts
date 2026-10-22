@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { api, type PairResult, type RestOfBizum } from '../api';
+import { api, type PairResult, type RestOfBizum, type SharesFor } from '../api';
 import { useGuarded } from './useGuarded';
 
 /**
@@ -24,9 +24,15 @@ export function useWaitingActions(
     [run]
   );
   const rule = useCallback(
-    (bizumId: number, playerId: number, shares: number, rest: RestOfBizum) =>
+    (
+      bizumId: number,
+      playerId: number,
+      shares: number,
+      rest: RestOfBizum,
+      others: SharesFor[] = []
+    ) =>
       run(async () => {
-        await api.ruleBizum(bizumId, playerId, shares, rest);
+        await api.ruleBizum(bizumId, playerId, shares, rest, others);
         await refresh();
       }),
     [run, refresh]

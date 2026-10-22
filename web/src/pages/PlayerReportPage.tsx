@@ -4,9 +4,15 @@ import { usePlayerReport } from '../hooks/usePlayerReport';
 import { PlayerReportView } from '../components/PlayerReportView';
 
 /** Pick a player, see every game they played and the statistics about each. */
-export function PlayerReportPage() {
+export function PlayerReportPage({
+  playerId,
+  onPlayer,
+}: {
+  /** Chosen from outside too: a row of the players table opens its player here. */
+  playerId: number | null;
+  onPlayer: (playerId: number | null) => void;
+}) {
   const players = useKnownPlayers(null);
-  const [playerId, setPlayerId] = useState<number | null>(null);
   const [allSeasons, setAllSeasons] = useState(false);
   const { report, error } = usePlayerReport(playerId);
 
@@ -22,7 +28,7 @@ export function PlayerReportPage() {
             aria-label="Elegir jugador"
             value={playerId ?? ''}
             onChange={e =>
-              setPlayerId(e.target.value ? Number(e.target.value) : null)
+              onPlayer(e.target.value ? Number(e.target.value) : null)
             }
           >
             <option value="">Elige un jugador…</option>

@@ -1,7 +1,7 @@
 import type { MemberKey, Player } from '../api';
 import { useTeamsPaste } from '../hooks/useTeamsPaste';
 import { columnsFor } from '../lib/columns';
-import type { GameRow, GameTable } from '../lib/gameRows';
+import { guestsOf, type GameRow, type GameTable } from '../lib/gameRows';
 import { CandidateList } from './CandidateList';
 import { GameLayout } from './GameLayout';
 import { DragHandle, DropZone, MemberDnd } from './MemberDnd';
@@ -94,7 +94,11 @@ export function LineView({
                     <h2>
                       Equipos<small>opcional</small>
                     </h2>
-                    <TeamsPanel paste={teams} players={players} />
+                    <TeamsPanel
+                      paste={teams}
+                      players={players}
+                      guestOf={guestsOf(table.rows)}
+                    />
                   </div>
                 ),
               },

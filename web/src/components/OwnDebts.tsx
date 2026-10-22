@@ -47,7 +47,9 @@ export function OwnDebts({ debts }: { debts: OwnDebtsData }) {
             <span className="name">Total que debes</span>
             <span className="amount">{euros(debts.owedCents)}</span>
           </div>
-          <p className="note">Incluye lo que debes por tus invitados.</p>
+          <p className="note">
+            Incluye lo que debes por tus invitados y por quien pagas.
+          </p>
         </div>
       )}
       {held.length > 0 && (

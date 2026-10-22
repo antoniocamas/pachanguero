@@ -593,6 +593,26 @@ test.describe('a played game with a host, a plus-one and a named guest', () => {
     await expect(debt).toContainText('12 €');
   });
 
+  test("a returning guest listed without a host is the same host's guest: tagged, and billed to the host", async ({
+    page,
+    request,
+  }) => {
+    const g = await played(page, request);
+    await expect(row(page, g.marta).getByTestId('guest-tag')).toHaveText(
+      `de ${g.ana}`
+    );
+
+    const backend = new Backend(request);
+    const next = await backend.game(0, () => [g.ana, g.marta]);
+    await backend.play(next.gameId);
+    await openGame(page, next.gameId);
+
+    await expect(row(page, g.marta).getByTestId('guest-tag')).toHaveText(
+      `de ${g.ana}`
+    );
+    await expect(row(page, g.marta)).toContainText(`Deuda de ${g.ana}`);
+  });
+
   test('an odd amount settles the share, and paying everything leaves nothing to do', async ({
     page,
     request,

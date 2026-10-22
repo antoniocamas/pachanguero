@@ -38,9 +38,10 @@ export class ConvocatoriaService {
   ) {}
 
   /**
-   * Run selection for a game without persisting it. While regulars alone fit
-   * the slots, everyone regular is in and guests fill what is left by arrival
-   * order; once regulars alone overflow, everybody is ranked by points.
+   * Run selection for a game without persisting it. Fijos always come before
+   * guests: while they fit the slots, every fijo is in and guests fill what is
+   * left by arrival order; once fijos alone overflow, they are ranked by points
+   * and no guest plays.
    */
   preview(gameId: number): ConvocatoriaResult & { game: GameRow } {
     const game = this.games.get(gameId);
@@ -59,7 +60,7 @@ export class ConvocatoriaService {
     const result =
       regulars.length <= rules.slots
         ? this.byArrival(game, signedUp, regulars.length, guestRows, rules)
-        : this.byPoints(game, signedUp, guestRows, rules);
+        : this.byPoints(game, signedUp, regulars, guestRows, rules);
     return { ...result, game };
   }
 
@@ -185,40 +186,48 @@ export class ConvocatoriaService {
   }
 
   /**
-   * Everyone competes on points. Anonymous guests join as zero-point
-   * stand-ins with negative ids, which no real player can have.
+   * The fijos alone overflow the slots, so they compete among themselves on points with the
+   * mercy rule. Fijos always come before guests: every guest, named or anonymous, stays out,
+   * listed after them in arrival order.
    */
   private byPoints(
     game: GameRow,
     signedUp: ParticipationRow[],
+    regulars: ParticipationRow[],
     guestRows: GuestCandidateRow[],
     rules: SeasonRules
   ): ConvocatoriaResult {
     const table = this.standings.standings(game.season_id, game.id);
     const enrolled = new Set(table.map(s => s.playerId));
-    const missing = signedUp.filter(p => !enrolled.has(p.player_id));
+    const missing = regulars.filter(p => !enrolled.has(p.player_id));
     if (missing.length) {
       throw new Error(
         `Falta la antigüedad de: ${missing.map(p => p.name).join(', ')}`
       );
     }
 
-    const signedIds = new Set(signedUp.map(p => p.player_id));
-    const names = this.nameLookup(signedUp);
-    const contenders: Contender[] = [
-      ...table
-        .filter(s => signedIds.has(s.playerId))
-        .map(s => ({ playerId: s.playerId, name: s.name, points: s.points })),
-      ...guestRows
-        .filter(g => g.player_id === null)
-        .map(g => ({
-          playerId: -g.position,
-          name: `Invitado de ${names.get(g.host_player_id) ?? '?'}`,
-          points: 0,
-        })),
-    ];
+    const regularIds = new Set(regulars.map(p => p.player_id));
+    const contenders: Contender[] = table
+      .filter(s => regularIds.has(s.playerId))
+      .map(s => ({ playerId: s.playerId, name: s.name, points: s.points }));
     const history = this.exclusions.historyFor(game.season_id, game.id);
-    return this.builder.build(contenders, history, rules);
+    const selected = this.builder.build(contenders, history, rules);
+
+    const names = this.nameLookup(signedUp);
+    const points = new Map(table.map(s => [s.playerId, s.points]));
+    const guests = guestRows.map((g, i) => ({
+      playerId: g.player_id ?? -g.position,
+      name:
+        g.player_id === null
+          ? `Invitado de ${names.get(g.host_player_id) ?? '?'}`
+          : (names.get(g.player_id) ?? '?'),
+      points: g.player_id === null ? 0 : (points.get(g.player_id) ?? 0),
+      playing: false,
+      position: selected.entries.length + i + 1,
+      outcome: 'excluded' as const,
+      waitCounter: 0,
+    }));
+    return { ...selected, entries: [...selected.entries, ...guests] };
   }
 
   private pointsOf(game: GameRow): Map<number, number> {

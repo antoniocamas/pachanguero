@@ -25,7 +25,7 @@ El `*` **no** puntúa: `">0"` lo excluye porque es texto. Esto es intencionado.
 Fuiste al partido pero no pagaste, así que no hay punto hasta que pagues.
 
 Un partido cuenta para un jugador cuando **su propia parte está saldada**, la
-pague él o la pague quien responde de ella (su anfitrión, si vino de invitado).
+pague quien la pague (ver [Deuda](glossary.md#deuda)).
 Un partido solo cuenta como pagado cuando el partido está **jugado** y hay un
 pago registrado (quién jugó se deriva de la convocatoria al marcarlo jugado, y
 quién pagó lo dice el pago), no por haber confirmado una convocatoria: la

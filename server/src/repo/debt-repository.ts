@@ -19,6 +19,8 @@ export interface OutstandingShare {
   beneficiaryId: number | null;
   beneficiaryName: string | null;
   guestOrdinal: number | null;
+  /** 1 when the beneficiary came to that game as the holder's named guest. */
+  beneficiaryWasGuest: number;
   amountCents: number;
 }
 
@@ -26,6 +28,9 @@ const OUTSTANDING_SELECT = `SELECT d.id, d.game_id AS gameId, g.played_on AS pla
                 g.label AS gameLabel, d.holder_player_id AS holderId,
                 h.name AS holderName, d.beneficiary_player_id AS beneficiaryId,
                 b.name AS beneficiaryName, d.guest_ordinal AS guestOrdinal,
+                EXISTS (SELECT 1 FROM guest_candidates gc
+                         WHERE gc.game_id = d.game_id AND gc.player_id = d.beneficiary_player_id
+                           AND gc.host_player_id = d.holder_player_id) AS beneficiaryWasGuest,
                 d.amount_cents AS amountCents
            FROM share_debts d
            JOIN games g   ON g.id = d.game_id
@@ -89,6 +94,21 @@ export class DebtRepository {
     for (const d of this.list(gameId))
       if (!keep.has(new ShareKey(this.members.keyOf(d)).toString()))
         this.delete(d.id);
+  }
+
+  get(debtId: number): DebtRow | null {
+    return (
+      (this.conn
+        .prepare('SELECT * FROM share_debts WHERE id = ?')
+        .get(debtId) as DebtRow | undefined) ?? null
+    );
+  }
+
+  /** Who answers for the share from now on. */
+  setHolder(debtId: number, holderId: number): void {
+    this.conn
+      .prepare('UPDATE share_debts SET holder_player_id = ? WHERE id = ?')
+      .run(holderId, debtId);
   }
 
   delete(debtId: number): void {

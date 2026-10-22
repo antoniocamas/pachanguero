@@ -922,6 +922,183 @@ describe('API', () => {
     });
   });
 
+  describe('players table, roles, hosts and moved debts', () => {
+    const send = (method: string, path: string, body?: unknown) =>
+      fetch(`${base}${path}`, {
+        method,
+        headers: { 'content-type': 'application/json' },
+        body: body === undefined ? undefined : JSON.stringify(body),
+      });
+    type Row = {
+      id: number;
+      name: string;
+      role: string;
+      roleWritten: boolean;
+      usualHosts: number[];
+      emails: string[];
+      phone: string | null;
+      bizumNames: string[];
+    };
+    const table = async (seasonId: number) =>
+      (await (
+        await send('GET', `/seasons/${seasonId}/players/table`)
+      ).json()) as Row[];
+    const candidates = async (gameId: number) =>
+      (
+        (await (await send('GET', `/games/${gameId}/candidates`)).json()) as {
+          rows: {
+            status: string;
+            candidate?: { guest: string | null; hostPlayerId: number | null };
+            entry?: { reason: string };
+          }[];
+        }
+      ).rows;
+
+    it('makes a player an invitado and the lists not yet played follow', async () => {
+      const season = seasons.create({ name: '2060/2061' });
+      const game = games.create(season.id, '2060-10-06');
+      const david = players.add(season.id, 'Dir David', 1).id;
+      const adri = players.add(season.id, 'Dir Adri', 1).id;
+      await send('PUT', `/games/${game.id}/candidates`, {
+        lines: [{ text: 'Dir David' }, { text: 'Dir Adri' }],
+      });
+      expect((await candidates(game.id))[1].candidate?.guest).toBeNull();
+
+      const noHost = await send(
+        'PUT',
+        `/seasons/${season.id}/players/${adri}/role`,
+        { role: 'invitado' }
+      );
+      expect(noHost.status).toBe(200);
+      expect((await candidates(game.id))[1].entry?.reason).toBe('noHost');
+
+      await send('PUT', `/players/${adri}/hosts`, { hostIds: [david] });
+      expect((await candidates(game.id))[1]).toMatchObject({
+        status: 'matched',
+        candidate: { guest: 'named', hostPlayerId: david },
+      });
+      expect((await table(season.id)).find(r => r.id === adri)).toMatchObject({
+        role: 'invitado',
+        roleWritten: true,
+        usualHosts: [david],
+      });
+    });
+
+    it('refuses to make an invitado of a fijo who has played as one', async () => {
+      const season = seasons.create({ name: '2061/2062' });
+      const game = games.create(season.id, '2061-10-06');
+      const eva = players.add(season.id, 'Dir Eva', 1).id;
+      participations.set(game.id, eva, { signed_up: true });
+      await send('POST', `/games/${game.id}/convocatoria`, {});
+      await send('POST', `/games/${game.id}/convocatoria/confirm`);
+      await send('POST', `/games/${game.id}/state`, { action: 'play' });
+
+      const res = await send(
+        'PUT',
+        `/seasons/${season.id}/players/${eva}/role`,
+        {
+          role: 'invitado',
+        }
+      );
+      expect(res.status).toBe(400);
+      expect((await res.json()).error).toContain('ya ha jugado como fijo');
+    });
+
+    it('moves a share to someone else, who can then pay it', async () => {
+      const season = seasons.create({ name: '2062/2063' });
+      const game = games.create(season.id, '2062-10-06');
+      const [mama, hijo, amigo] = ['Mamá', 'Hijo', 'Amigo'].map(name => {
+        const p = players.add(season.id, `Dir ${name}`, 1);
+        participations.set(game.id, p.id, { signed_up: true });
+        return p.id;
+      });
+      await send('POST', `/games/${game.id}/convocatoria`, {});
+      await send('POST', `/games/${game.id}/convocatoria/confirm`);
+      await send('POST', `/games/${game.id}/state`, { action: 'play' });
+      const detail = await (await send('GET', `/games/${game.id}`)).json();
+      const debtOf = (
+        debts: { beneficiary_player_id: number }[],
+        who: number
+      ) =>
+        debts.find(d => d.beneficiary_player_id === who) as unknown as {
+          id: number;
+          holder_player_id: number;
+        };
+      expect(debtOf(detail.debts, hijo).holder_player_id).toBe(hijo);
+      await send(
+        'PATCH',
+        `/games/${game.id}/debts/${debtOf(detail.debts, hijo).id}`,
+        { holderPlayerId: mama }
+      );
+
+      const moved = await send(
+        'PATCH',
+        `/games/${game.id}/debts/${debtOf(detail.debts, amigo).id}`,
+        { holderPlayerId: mama }
+      );
+      expect(moved.status).toBe(200);
+      expect(debtOf((await moved.json()).debts, amigo).holder_player_id).toBe(
+        mama
+      );
+
+      const paid = await send('POST', `/games/${game.id}/payments`, {
+        shares: [{ playerId: hijo }, { playerId: amigo }],
+        payerPlayerId: mama,
+        method: 'efectivo',
+      });
+      expect(paid.status).toBe(201);
+      expect((await paid.json()).debts).toHaveLength(1);
+    });
+
+    it("bills a returning guest's share to the host they come with, written or not", async () => {
+      const season = seasons.create({ name: '2064/2065' });
+      const fer = players.add(season.id, 'Dir Fer', 1).id;
+      const juan = players.register('Dir Juan', fer).id;
+      const play = async (playedOn: string, lines: string[]) => {
+        const game = games.create(season.id, playedOn);
+        await send('PUT', `/games/${game.id}/candidates`, {
+          lines: lines.map(text => ({ text })),
+        });
+        await send('POST', `/games/${game.id}/convocatoria`, {});
+        await send('POST', `/games/${game.id}/convocatoria/confirm`);
+        await send('POST', `/games/${game.id}/state`, { action: 'play' });
+        return (await (await send('GET', `/games/${game.id}`)).json()) as {
+          debts: { beneficiary_player_id: number; holder_player_id: number }[];
+        };
+      };
+
+      const second = await play('2064-10-08', [
+        'Dir Fer',
+        'Dir Juan (Dir Fer)',
+      ]);
+      const third = await play('2064-10-15', ['Dir Fer', 'Dir Juan']);
+
+      for (const detail of [second, third]) {
+        expect(
+          detail.debts.find(d => d.beneficiary_player_id === juan)
+        ).toMatchObject({ holder_player_id: fer });
+      }
+    });
+
+    it('keeps several emails and a phone for any player', async () => {
+      const season = seasons.create({ name: '2063/2064' });
+      const lola = players.add(season.id, 'Dir Lola', 1).id;
+      const contact = await send('PATCH', `/players/${lola}/contact`, {
+        emails: ['lola@example.com', 'lola@trabajo.example'],
+        phone: '600111222',
+      });
+      expect(await contact.json()).toEqual({
+        emails: ['lola@example.com', 'lola@trabajo.example'],
+        phone: '600111222',
+      });
+      expect((await table(season.id)).find(r => r.id === lola)).toMatchObject({
+        emails: ['lola@example.com', 'lola@trabajo.example'],
+        phone: '600111222',
+        bizumNames: [],
+      });
+    });
+  });
+
   describe('teams', () => {
     const send = (method: string, path: string, body?: unknown) =>
       fetch(`${base}${path}`, {

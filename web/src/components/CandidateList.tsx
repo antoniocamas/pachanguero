@@ -1,5 +1,11 @@
 import { useState } from 'react';
-import type { CandidateRow, Player, UnresolvedEntry } from '../api';
+import type {
+  CandidateRow,
+  MatchedCandidate,
+  Player,
+  SeasonRole,
+  UnresolvedEntry,
+} from '../api';
 import { fmtPoints } from '../lib/format';
 import type { GameRow } from '../lib/gameRows';
 import { useCandidateList } from '../hooks/useCandidateList';
@@ -13,6 +19,42 @@ const label = (row: Extract<CandidateRow, { status: 'matched' }>) =>
   row.candidate.guest === 'anonymous'
     ? row.text
     : (row.candidate.name ?? row.text);
+
+/** Who brought a guest, beside their name: "invitado de David". */
+function GuestTag({ candidate }: { candidate: MatchedCandidate }) {
+  if (!candidate.guest) return null;
+  return (
+    <span className="tag guest" data-testid="guest-tag">
+      {candidate.guest === 'named' && candidate.hostName
+        ? `invitado de ${candidate.hostName}`
+        : 'invitado'}
+    </span>
+  );
+}
+
+/** A named player's role this season, changed from the line: it reaches every game not played. */
+function RoleSwitch({
+  candidate,
+  busy,
+  onRole,
+}: {
+  candidate: MatchedCandidate;
+  busy: boolean;
+  onRole: (role: SeasonRole) => void;
+}) {
+  if (candidate.playerId === null || candidate.role === null) return null;
+  const other: SeasonRole = candidate.role === 'fijo' ? 'invitado' : 'fijo';
+  return (
+    <div className="actions">
+      <span className="muted">
+        {candidate.name} es {candidate.role} esta temporada
+      </span>
+      <button className="btn" disabled={busy} onClick={() => onRole(other)}>
+        Hacer {other}
+      </button>
+    </div>
+  );
+}
 
 /** The names of a matched line that can be corrected: the player's and the host's. */
 const correctable = (
@@ -140,14 +182,27 @@ export function CandidateList({
               busy={list.busy}
               onResolve={action => list.resolve(row.entry, action)}
               extra={
-                <button
-                  className="btn link danger"
-                  aria-label={`Quitar ${row.text}`}
-                  disabled={list.busy}
-                  onClick={() => list.remove(row.position)}
-                >
-                  Quitar
-                </button>
+                <>
+                  {row.entry.reason === 'noHost' && (
+                    <button
+                      className="btn link"
+                      disabled={list.busy}
+                      onClick={() =>
+                        list.setRole(row.entry.candidates[0].id, 'fijo')
+                      }
+                    >
+                      Es fijo
+                    </button>
+                  )}
+                  <button
+                    className="btn link danger"
+                    aria-label={`Quitar ${row.text}`}
+                    disabled={list.busy}
+                    onClick={() => list.remove(row.position)}
+                  >
+                    Quitar
+                  </button>
+                </>
               }
             />
           </div>
@@ -191,8 +246,8 @@ export function CandidateList({
                 <>
                   <span className="name" data-testid="matched-line">
                     {label(row)}
+                    <GuestTag candidate={row.candidate} />
                   </span>
-                  {row.candidate.guest && <span className="tag">invitado</span>}
                   <span className="muted phone-line-inline">
                     {standing(row)}
                   </span>
@@ -209,6 +264,14 @@ export function CandidateList({
             </div>
             {row.status === 'matched' && correcting === row.position && (
               <div className="resolve-item">
+                <RoleSwitch
+                  candidate={row.candidate}
+                  busy={list.busy}
+                  onRole={role => {
+                    void list.setRole(row.candidate.playerId!, role);
+                    setCorrecting(null);
+                  }}
+                />
                 {correctable(row).map(entry => (
                   <ResolveLine
                     key={entry.field}

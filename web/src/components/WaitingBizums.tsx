@@ -3,6 +3,7 @@ import type {
   PairResult,
   Player,
   RestOfBizum,
+  SharesFor,
   WaitingBizum,
 } from '../api';
 import { WaitingBizumItem } from './WaitingBizumItem';
@@ -29,7 +30,8 @@ export function WaitingBizums({
     bizumId: number,
     playerId: number,
     shares: number,
-    rest: RestOfBizum
+    rest: RestOfBizum,
+    others: SharesFor[]
   ) => Promise<boolean>;
   onDismiss: (bizumId: number) => Promise<boolean>;
   onClosed: () => void;

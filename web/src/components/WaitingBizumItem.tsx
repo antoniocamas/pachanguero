@@ -4,6 +4,7 @@ import type {
   Pairing,
   Player,
   RestOfBizum,
+  SharesFor,
   WaitingBizum,
 } from '../api';
 import {
@@ -45,7 +46,8 @@ export function WaitingBizumItem({
     bizumId: number,
     playerId: number,
     shares: number,
-    rest: RestOfBizum
+    rest: RestOfBizum,
+    others: SharesFor[]
   ) => Promise<boolean>;
   onDismiss: (bizumId: number) => Promise<boolean>;
   /** The list may have changed: read it again. */
@@ -136,9 +138,9 @@ export function WaitingBizumItem({
         open={dialog === 'rule'}
         players={players}
         busy={busy}
-        onRule={(playerId, shares, rest) => {
+        onRule={(playerId, shares, rest, others) => {
           setDialog(null);
-          void onRule(item.id, playerId, shares, rest);
+          void onRule(item.id, playerId, shares, rest, others);
         }}
         onClose={() => setDialog(null)}
       />

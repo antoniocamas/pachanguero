@@ -4,6 +4,7 @@ import { TestDatabase } from '../db/test-support.js';
 import { AliasRepository } from './alias-repository.js';
 import { GameRepository } from './game-repository.js';
 import { ParticipationRepository } from './participation-repository.js';
+import { ContactRepository } from './contact-repository.js';
 import { PlayerMergeService } from './player-merge-service.js';
 import { PlayerRepository } from './player-repository.js';
 import { UserRepository } from './user-repository.js';
@@ -122,29 +123,27 @@ describe('PlayerMergeService', () => {
   });
 
   describe('contact data', () => {
-    const contact = (playerId: number) =>
-      conn
-        .prepare('SELECT email, phone FROM player_contacts WHERE player_id = ?')
-        .get(playerId);
+    const contacts = () => new ContactRepository(conn);
+    const contact = (playerId: number) => {
+      const found = contacts().get(playerId);
+      return found.emails.length === 0 && found.phone === null
+        ? undefined
+        : found;
+    };
     const setContact = (
       playerId: number,
       email: string | null,
       phone: string | null
-    ) =>
-      conn
-        .prepare(
-          'INSERT INTO player_contacts (player_id, email, phone) VALUES (?, ?, ?)'
-        )
-        .run(playerId, email, phone);
+    ) => contacts().save(playerId, { emails: email ? [email] : [], phone });
 
-    it("keeps the survivor's values, fills the gaps from the absorbed player, and leaves no row for them", () => {
+    it("keeps the survivor's phone, fills the gaps from the absorbed player, takes their emails too, and leaves no row for them", () => {
       setContact(santi, 'santi@example.com', null);
       setContact(santo, 'santo@example.com', '600123456');
 
       merge.merge(santi, santo);
 
       expect(contact(santi)).toEqual({
-        email: 'santi@example.com',
+        emails: ['santi@example.com', 'santo@example.com'],
         phone: '600123456',
       });
       expect(contact(santo)).toBeUndefined();
@@ -155,13 +154,44 @@ describe('PlayerMergeService', () => {
 
       merge.merge(santi, santo);
 
-      expect(contact(santi)).toEqual({ email: null, phone: '600123456' });
+      expect(contact(santi)).toEqual({ emails: [], phone: '600123456' });
     });
 
     it('merges fine when neither has contact data', () => {
       merge.merge(santi, santo);
 
       expect(contact(santi)).toBeUndefined();
+    });
+  });
+
+  describe('roles and hosts', () => {
+    it('follow the person, never pointing at themselves', () => {
+      const other = players.register('Otro').id;
+      const season = new SeasonRepository(conn).create({
+        name: '2031/2032',
+      }).id;
+      conn.exec(`
+        INSERT INTO season_roles (season_id, player_id, role) VALUES (${season}, ${santo}, 'invitado');
+        INSERT INTO player_hosts (player_id, host_player_id, position) VALUES (${santo}, ${other}, 1), (${other}, ${santo}, 1);
+      `);
+
+      merge.merge(santi, santo);
+
+      expect(
+        conn.prepare('SELECT player_id, role FROM season_roles').all()
+      ).toEqual([{ player_id: santi, role: 'invitado' }]);
+      expect(
+        conn
+          .prepare(
+            'SELECT player_id, host_player_id FROM player_hosts ORDER BY player_id'
+          )
+          .all()
+      ).toEqual(
+        [
+          { player_id: santi, host_player_id: other },
+          { player_id: other, host_player_id: santi },
+        ].sort((a, b) => a.player_id - b.player_id)
+      );
     });
   });
 

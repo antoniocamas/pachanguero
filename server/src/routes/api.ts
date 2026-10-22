@@ -12,6 +12,7 @@ import {
   players,
   playerEdit,
   playerMerge,
+  playerDeletion,
   playerReport,
   games,
   schedule,
@@ -29,6 +30,8 @@ import {
   teamAssignment,
   teamPaste,
   gameView,
+  playerDirectory,
+  debtHolders,
 } from '../repo/index.js';
 
 export const api = Router();
@@ -191,6 +194,15 @@ api.patch(
   })
 );
 
+/** Deletes a player created by mistake; refused for anyone with a history or an account. */
+api.delete(
+  '/players/:playerId',
+  route((req, res) => {
+    playerDeletion.delete(id(req.params.playerId));
+    res.json({ ok: true });
+  })
+);
+
 /** Folds the player in `from` into this one: they are the same person. */
 api.post(
   '/players/:playerId/merge',
@@ -216,6 +228,44 @@ api.delete(
     playerEdit.removeAlias(id(req.params.playerId), String(req.params.alias));
     res.json({ ok: true });
   })
+);
+
+/** Every player with all the organiser knows of them, as of this season. */
+api.get(
+  '/seasons/:id/players/table',
+  route((req, res) => res.json(playerDirectory.table(id(req.params.id))))
+);
+
+/** Fijo or invitado in this season. */
+api.put(
+  '/seasons/:id/players/:playerId/role',
+  route((req, res) => {
+    playerDirectory.setRole(
+      id(req.params.id),
+      id(req.params.playerId),
+      req.body?.role
+    );
+    res.json({ ok: true });
+  })
+);
+
+/** The usual hosts, the usual one first. */
+api.put(
+  '/players/:playerId/hosts',
+  route((req, res) => {
+    const hostIds = req.body?.hostIds;
+    if (!Array.isArray(hostIds)) throw new Error('hostIds must be a list');
+    playerDirectory.setHosts(id(req.params.playerId), hostIds.map(id));
+    res.json({ ok: true });
+  })
+);
+
+/** The organiser keeps a player's emails and phone, by the rules the player's own form follows. */
+api.patch(
+  '/players/:playerId/contact',
+  route((req, res) =>
+    res.json(playerDirectory.saveContact(id(req.params.playerId), req.body))
+  )
 );
 
 api.patch(
@@ -403,6 +453,23 @@ api.post(
       method: paymentMethods.parse(method),
     });
     res.status(201).json({
+      debts: debtRepository.list(gameId),
+      payments: paymentRepository.list(gameId),
+    });
+  })
+);
+
+/** Someone else answers for a share from now on: whoever pays for another player. */
+api.patch(
+  '/games/:gameId/debts/:debtId',
+  route((req, res) => {
+    const gameId = id(req.params.gameId);
+    debtHolders.reassign(
+      gameId,
+      id(req.params.debtId),
+      id(req.body?.holderPlayerId)
+    );
+    res.json({
       debts: debtRepository.list(gameId),
       payments: paymentRepository.list(gameId),
     });

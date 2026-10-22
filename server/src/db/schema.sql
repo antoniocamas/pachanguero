@@ -41,6 +41,34 @@ CREATE TABLE IF NOT EXISTS season_players (
   PRIMARY KEY (season_id, player_id)
 );
 
+-- Whether a player is a fijo (a regular) or an invitado in a season. A row is written the first
+-- time a saved list places them, or when the organiser says so; without one the player's role
+-- is the one of their latest earlier season, else invitado if someone introduced them, else
+-- fijo. Once a fijo has played a game of the season as such, they stay fijo in it.
+CREATE TABLE IF NOT EXISTS season_roles (
+  season_id INTEGER NOT NULL REFERENCES seasons(id) ON DELETE CASCADE,
+  player_id INTEGER NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  role      TEXT    NOT NULL CHECK (role IN ('fijo','invitado')),
+  PRIMARY KEY (season_id, player_id)
+);
+
+-- Who usually brings an invitado, first the usual one: a pasted line without a host takes the
+-- first. Every host a saved list gave them is added; the organiser may add, drop and reorder.
+CREATE TABLE IF NOT EXISTS player_hosts (
+  player_id      INTEGER NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  host_player_id INTEGER NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  position       INTEGER NOT NULL,
+  PRIMARY KEY (player_id, host_player_id),
+  CHECK (player_id <> host_player_id)
+);
+
+-- A player's email addresses, any number of them, in the order they were added.
+CREATE TABLE IF NOT EXISTS player_emails (
+  player_id INTEGER NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  email     TEXT    NOT NULL,
+  PRIMARY KEY (player_id, email)
+);
+
 -- Nicknames a pasted name may use instead of the canonical one. No global
 -- UNIQUE(alias): two players may share one, which matching reports as ambiguous.
 CREATE TABLE IF NOT EXISTS player_aliases (
@@ -258,10 +286,9 @@ CREATE TABLE IF NOT EXISTS view_as_log (
   started_at    TEXT    NOT NULL                    -- ISO-8601 UTC
 );
 
--- Optional contact data a player keeps about themselves; a row exists only while one value is set.
+-- A player's phone, optional; a row exists only while it is set. Emails are in player_emails.
 CREATE TABLE IF NOT EXISTS player_contacts (
   player_id INTEGER PRIMARY KEY REFERENCES players(id) ON DELETE CASCADE,
-  email     TEXT,
   phone     TEXT
 );
 

@@ -12,6 +12,8 @@ export interface Arrival {
   position: number;
   playerId: number | null;
   hostPlayerId: number | null;
+  /** Who brought a guest, by name. */
+  hostName: string | null;
   guest: 'named' | 'anonymous' | null;
   text: string;
 }
@@ -54,6 +56,7 @@ export class GameViewService {
               position: row.position,
               playerId: row.candidate.playerId,
               hostPlayerId: row.candidate.hostPlayerId,
+              hostName: row.candidate.hostName,
               guest: row.candidate.guest,
               text: row.text,
             },

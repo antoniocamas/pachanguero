@@ -1,13 +1,17 @@
-/** What a player may change about their contact data: absent keys stay, `null` clears. */
+/**
+ * What a player may change about their contact data: absent keys stay, `null` clears the phone
+ * and `emails` is the whole list, in order (empty clears it).
+ */
 export interface ContactPatch {
-  email?: string | null;
+  emails?: string[];
   phone?: string | null;
 }
 
 /** A refusal that names the field, for the player to read. */
 export class ContactError extends Error {}
 
-const FIELDS = ['email', 'phone'] as const;
+const FIELDS = ['emails', 'phone'] as const;
+const EMAILS_MAX = 5;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const EMAIL_MAX = 254;
 const PHONE = /^\+?\d{9,15}$/;
@@ -25,9 +29,23 @@ export class ContactValidator {
       }
     }
     const patch: ContactPatch = {};
-    if ('email' in body) patch.email = this.email(body.email);
+    if ('emails' in body) patch.emails = this.emails(body.emails);
     if ('phone' in body) patch.phone = this.phone(body.phone);
     return patch;
+  }
+
+  /** Each address checked and trimmed; blanks dropped, repeats folded, the order kept. */
+  private emails(value: unknown): string[] {
+    if (!Array.isArray(value)) throw new ContactError('email no válido');
+    const out: string[] = [];
+    for (const item of value) {
+      const email = this.email(item);
+      if (email !== null && !out.includes(email)) out.push(email);
+    }
+    if (out.length > EMAILS_MAX) {
+      throw new ContactError(`email: como mucho ${EMAILS_MAX} correos`);
+    }
+    return out;
   }
 
   private email(value: unknown): string | null {

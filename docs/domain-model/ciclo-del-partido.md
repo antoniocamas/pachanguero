@@ -71,9 +71,10 @@ busca entre los jugadores y sus apodos, sin importar mayúsculas ni tildes:
   jugador (solo para esa línea), elegirlo y recordar el apodo, o registrar a uno
   nuevo. Nunca se adivina.
 - Lo que hay bajo un encabezado `Reservas` se descarta.
-- `Nombre (Anfitrión)` es un invitado nombrado solo en la línea que registra a
-  ese nombre como nuevo; un jugador que ya existe no cambia por el paréntesis.
-  Pero si ese nombre ya está en la lista con **otro anfitrión** (`Javi (Fer)` y
+- Si un jugador es fijo o invitado, y de quién, lo decide su papel en la
+  temporada, no la línea: ver [fijo e invitado](glossary.md#fijo-e-invitado) e
+  [invitado nombrado](glossary.md#invitado-nombrado).
+- Si un invitado nombrado ya está en la lista con **otro anfitrión** (`Javi (Fer)` y
   `Javi (Caro)`), no se funde con él: queda «sin resolver» como posible duplicado
   y el organizador decide si es otra persona (se registra con otro nombre, p. ej.
   «Javi de Caro»).
@@ -90,10 +91,9 @@ al guardado.
 
 ## 2. Convocatoria
 
-Es la predicción de quién juega. Con los habituales dentro de las plazas entran
-todos y los invitados ocupan el resto por orden de llegada (un `+1` anónimo
-ocupa plaza como cualquiera). Si los habituales se pasan, compiten todos por
-puntos con la mercy rule. **Crearla** guarda la selección y pasa el partido a
+Es la predicción de quién juega, según [`convocatoria.md`](convocatoria.md): los
+fijos van siempre antes que los invitados, y un `+1` anónimo ocupa plaza como
+cualquier invitado. **Crearla** guarda la selección y pasa el partido a
 «Convocatoria creada»; no marca asistencia ni pagos ni puntos de exclusión
 (esos se deciden al jugarse el partido). Sin nadie apuntado no se puede crear
 («No hay nadie apuntado»). Para puntuar hace falta tener la antigüedad
@@ -132,7 +132,7 @@ jugado pero con 0 partidos pagados.
 ## Pago después de jugar
 
 Al marcar el partido como jugado se **factura**: una deuda por cada parte de
-quien juega (el anfitrión responde por sus `+1` y por sus invitados con nombre).
+quien juega (quién responde de ella: ver [Deuda](glossary.md#deuda)).
 Se paga después, parte a parte: paga quien responde de ella o su beneficiario, y
 el punto de asistencia es del beneficiario. Una cantidad rara para una sola parte
 es un ajuste (3,75 € salda la parte, sin saldo pendiente). Todo pago guarda su
@@ -166,7 +166,7 @@ vez**, por la identificación del propio banco. El pago que deja el sistema tien
 método Bizum, la fecha en que llegó el dinero (no la del partido) y el enlace a su
 Bizum; el importe que sobra de las partes pagadas se anota como «sin asignar».
 
-Un Bizum que espera se vuelve a juzgar en tres momentos, siempre con las mismas
+Un Bizum que espera se vuelve a juzgar en cuatro momentos, siempre con las mismas
 reglas pero **sin descartar nunca** (lo que ya se guardó no se borra en silencio):
 
 - al **emparejar** a su remitente con un jugador, se juzgan todos los Bizums que
@@ -176,10 +176,16 @@ reglas pero **sin descartar nunca** (lo que ya se guardó no se borra en silenci
   del partido ya existen, así que los que ahora cubren una deuda la pagan, en la
   misma operación que marca el partido. Si falla algo, el partido no queda jugado.
   Reabrir el partido no deshace esos pagos;
+- al **pasar una deuda a otro titular** (ver [Deuda](glossary.md#deuda)), igual que
+  al marcar jugado su partido: se juzgan los que esperan de su temporada con fecha
+  igual o posterior;
 - cuando el organizador **dictamina** cuántas partes paga: se pagan las más cercanas
   (los partidos hasta la fecha del Bizum, el más reciente primero), nunca más de lo
   que cubre el Bizum, y lo que sobra queda sin asignar o se descarta, a elección del
-  organizador. El dictamen no empareja al remitente.
+  organizador. El dictamen no empareja al remitente. Ocasionalmente el remitente
+  paga también por otros (un Bizum de 12 € por él y dos amigos): el organizador
+  elige cuántas partes propias de cada uno paga, y el pago queda hecho por el
+  remitente sin cambiar quién responde de cada parte.
 
 Un Bizum puede llegar **antes** de los partidos que paga («3 furgol» el 2/9 para los
 tres partidos siguientes). Las reglas no pagan nunca un partido posterior a la fecha

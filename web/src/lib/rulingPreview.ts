@@ -109,3 +109,22 @@ export const sharesAfterToggle = (
   index: number,
   checked: boolean
 ): number => (checked ? index + 1 : index);
+
+/** The money the first `count` shares take. */
+export const centsOf = (open: readonly RulableShare[], count: number): number =>
+  open.slice(0, count).reduce((sum, share) => sum + share.amountCents, 0);
+
+/** The shares a ruling pays for each other player, as a sentence; null when it pays for none. */
+export const othersText = (
+  picked: readonly { name: string; count: number }[]
+): string | null => {
+  const named = picked
+    .filter(p => p.count > 0)
+    .map(p => `${p.name} (${p.count === 1 ? '1 cuota' : `${p.count} cuotas`})`);
+  if (named.length === 0) return null;
+  const list =
+    named.length === 1
+      ? named[0]
+      : `${named.slice(0, -1).join(', ')} y ${named[named.length - 1]}`;
+  return `Paga también por ${list}.`;
+};

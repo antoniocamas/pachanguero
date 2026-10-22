@@ -30,6 +30,7 @@ export const rowOf = (s: OutstandingShare): GameRow => {
     name: s.beneficiaryName ?? '+1',
     playerId: s.beneficiaryId,
     hostPlayerId: s.beneficiaryId === null ? s.holderId : null,
+    guestOf: null,
     position: null,
     arrival: null,
     points: null,

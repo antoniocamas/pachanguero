@@ -67,6 +67,7 @@ export class DetailFixture {
       position,
       playerId: id,
       hostPlayerId: null,
+      hostName: null,
       guest: null,
       text: name,
     });
@@ -80,6 +81,7 @@ export class DetailFixture {
       position,
       playerId: null,
       hostPlayerId: host,
+      hostName: null,
       guest: 'anonymous',
       text: 'plus one',
     };

@@ -17,6 +17,7 @@ import { PaymentBizumLinkMigration } from './payment-bizum-link-migration.js';
 import { PaymentMethodMigration } from './payment-method-migration.js';
 import { PlayerBizumNameMigration } from './player-bizum-name-migration.js';
 import { PlayerBizumNamesMigration } from './player-bizum-names-migration.js';
+import { PlayerProfileMigration } from './player-profile-migration.js';
 import {
   LATEST_SCHEMA_VERSION,
   SchemaMigrator,
@@ -30,6 +31,7 @@ const schemaV2 = readFileSync(join(here, 'fixtures/schema-v2.sql'), 'utf8');
 const schemaV3 = readFileSync(join(here, 'fixtures/schema-v3.sql'), 'utf8');
 const schemaV4 = readFileSync(join(here, 'fixtures/schema-v4.sql'), 'utf8');
 const schemaV5 = readFileSync(join(here, 'fixtures/schema-v5.sql'), 'utf8');
+const schemaV6 = readFileSync(join(here, 'fixtures/schema-v6.sql'), 'utf8');
 const legacySchema = readFileSync(join(here, 'fixtures/schema-v0.sql'), 'utf8');
 
 class FixedClock implements Clock {
@@ -173,11 +175,12 @@ describe('SchemaMigrator', () => {
       new PlayerBizumNameMigration(),
       new PaymentBizumLinkMigration(),
       new PlayerBizumNamesMigration(),
+      new PlayerProfileMigration(),
     ]).run();
 
     // ALTER TABLE words an added column's definition differently from schema.sql, so the tables
     // a step alters are compared by their columns, the rest by definition.
-    const altered = ['payments', 'players'];
+    const altered = ['payments', 'players', 'player_contacts'];
     const apartFromAltered = (conn: Database.Database) =>
       tables(conn).filter(t => !altered.includes((t as { name: string }).name));
     expect(apartFromAltered(legacy)).toEqual(apartFromAltered(fresh));
@@ -327,6 +330,7 @@ describe('SchemaMigrator', () => {
       new PlayerBizumNameMigration(),
       new PaymentBizumLinkMigration(),
       new PlayerBizumNamesMigration(),
+      new PlayerProfileMigration(),
     ]).run();
 
     expect(readdirSync(backupDir)).toHaveLength(1);
@@ -357,6 +361,7 @@ describe('SchemaMigrator', () => {
       new PlayerBizumNameMigration(),
       new PaymentBizumLinkMigration(),
       new PlayerBizumNamesMigration(),
+      new PlayerProfileMigration(),
     ]).run();
 
     expect(readdirSync(backupDir)).toHaveLength(1);
@@ -390,6 +395,7 @@ describe('SchemaMigrator', () => {
     migrator(conn, [
       new PaymentBizumLinkMigration(),
       new PlayerBizumNamesMigration(),
+      new PlayerProfileMigration(),
     ]).run();
 
     expect(readdirSync(backupDir)).toHaveLength(1);
@@ -418,7 +424,10 @@ describe('SchemaMigrator', () => {
       INSERT INTO players (id, name, bizum_name) VALUES (1, 'Ana López', 'Ana L.'), (2, 'Beto Ruiz', NULL), (3, 'Carlos García', 'Ana L.');
     `);
 
-    migrator(conn, [new PlayerBizumNamesMigration()]).run();
+    migrator(conn, [
+      new PlayerBizumNamesMigration(),
+      new PlayerProfileMigration(),
+    ]).run();
 
     expect(readdirSync(backupDir)).toHaveLength(1);
     expect(version(conn)).toBe(LATEST_SCHEMA_VERSION);
@@ -445,10 +454,67 @@ describe('SchemaMigrator', () => {
     migrator(fresh).run();
     const columns = (c: Database.Database) => c.pragma('table_info(players)');
     expect(columns(conn)).toEqual(columns(fresh));
-    // Dropping a column rewrites the table's definition, so `players` is compared by its columns.
+    // Dropping a column rewrites the table's definition, so `players` and `player_contacts` are
+    // compared by their columns.
+    const dropped = ['players', 'player_contacts'];
     const apartFromPlayers = (c: Database.Database) =>
-      tables(c).filter(t => (t as { name: string }).name !== 'players');
+      tables(c).filter(t => !dropped.includes((t as { name: string }).name));
     expect(apartFromPlayers(conn)).toEqual(apartFromPlayers(fresh));
+  });
+
+  it('migrates a version 6 file: emails move, roles and usual hosts come from the saved lists, same schema as a new file', () => {
+    const conn = connect();
+    conn.exec(schemaV6);
+    conn.pragma('user_version = 6');
+    conn.exec(`
+      INSERT INTO seasons (id, name, starts_on, ends_on) VALUES (1, '2026/2027', '2026-09-01', '2027-08-31');
+      INSERT INTO players (id, name, introduced_by) VALUES (1, 'Ana López', NULL), (2, 'David Sanz', NULL), (3, 'Adri Gil', 2), (4, 'Beto Ruiz', NULL);
+      INSERT INTO player_contacts (player_id, email, phone)
+        VALUES (1, 'ana@example.com', '600111222'), (2, 'david@example.com', NULL), (4, NULL, '600333444');
+      INSERT INTO games (id, season_id, played_on, status) VALUES (1, 1, '2026-10-07', 'played'), (2, 1, '2026-10-14', 'open');
+      INSERT INTO participations (game_id, player_id, signed_up) VALUES (1, 1, 1), (1, 2, 1), (1, 3, 1), (2, 3, 1), (2, 2, 1);
+      INSERT INTO guest_candidates (game_id, position, player_id, host_player_id) VALUES (1, 3, 3, 2), (1, 4, NULL, 1);
+    `);
+
+    migrator(conn, [new PlayerProfileMigration()]).run();
+
+    expect(version(conn)).toBe(LATEST_SCHEMA_VERSION);
+    expect(
+      conn.prepare('SELECT * FROM player_emails ORDER BY player_id').all()
+    ).toEqual([
+      { player_id: 1, email: 'ana@example.com' },
+      { player_id: 2, email: 'david@example.com' },
+    ]);
+    expect(
+      conn.prepare('SELECT * FROM player_contacts ORDER BY player_id').all()
+    ).toEqual([
+      { player_id: 1, phone: '600111222' },
+      { player_id: 4, phone: '600333444' },
+    ]);
+    expect(
+      conn
+        .prepare('SELECT player_id, role FROM season_roles ORDER BY player_id')
+        .all()
+    ).toEqual([
+      { player_id: 1, role: 'fijo' },
+      { player_id: 2, role: 'fijo' },
+      { player_id: 3, role: 'invitado' },
+    ]);
+    expect(
+      conn
+        .prepare('SELECT player_id, host_player_id, position FROM player_hosts')
+        .all()
+    ).toEqual([{ player_id: 3, host_player_id: 2, position: 1 }]);
+
+    const fresh = new Database(':memory:');
+    open.push(fresh);
+    migrator(fresh).run();
+    expect(conn.pragma('table_info(player_contacts)')).toEqual(
+      fresh.pragma('table_info(player_contacts)')
+    );
+    const apartFromContacts = (c: Database.Database) =>
+      tables(c).filter(t => (t as { name: string }).name !== 'player_contacts');
+    expect(apartFromContacts(conn)).toEqual(apartFromContacts(fresh));
   });
 
   it('refuses a file made by a newer application and touches nothing', () => {

@@ -24,33 +24,36 @@ describe('ContactService', () => {
   it('stores what is valid and returns what is stored', () => {
     expect(
       service.save(ana, {
-        email: ' ana@example.com ',
+        emails: [' ana@example.com '],
         phone: '+34 600 123 456',
       })
-    ).toEqual({ email: 'ana@example.com', phone: '+34 600 123 456' });
+    ).toEqual({ emails: ['ana@example.com'], phone: '+34 600 123 456' });
     expect(service.get(ana)).toEqual({
-      email: 'ana@example.com',
+      emails: ['ana@example.com'],
       phone: '+34 600 123 456',
     });
   });
 
   it('refuses an invalid field and keeps the previous values', () => {
-    service.save(ana, { email: 'ana@example.com' });
+    service.save(ana, { emails: ['ana@example.com'] });
 
     expect(() =>
-      service.save(ana, { email: 'ana@example.com', phone: 'abc' })
+      service.save(ana, { emails: ['ana@example.com'], phone: 'abc' })
     ).toThrow(ContactError);
     expect(() =>
-      service.save(ana, { email: 'nope', phone: '600123456' })
+      service.save(ana, { emails: ['nope'], phone: '600123456' })
     ).toThrow('email no válido');
 
-    expect(service.get(ana)).toEqual({ email: 'ana@example.com', phone: null });
+    expect(service.get(ana)).toEqual({
+      emails: ['ana@example.com'],
+      phone: null,
+    });
   });
 
   it('clears a value with an empty text', () => {
-    service.save(ana, { email: 'ana@example.com', phone: '600123456' });
+    service.save(ana, { emails: ['ana@example.com'], phone: '600123456' });
     expect(service.save(ana, { phone: '' })).toEqual({
-      email: 'ana@example.com',
+      emails: ['ana@example.com'],
       phone: null,
     });
   });

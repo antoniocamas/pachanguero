@@ -15,14 +15,22 @@ export interface MoneyLine {
   method: string | null;
 }
 
-/** What the player owes, as lines: their own share or "invitado". */
+/** Why the player owes the share: theirs, a guest they brought, or a share moved to them. */
+const debtTag = (r: OwnDebtRow): string => {
+  if (r.kind === 'own') return 'tu parte';
+  if (r.kind === 'guest')
+    return r.forName ? `tu invitado ${r.forName}` : 'tu invitado (+1)';
+  return r.forName ? `por ${r.forName}` : 'por otro jugador';
+};
+
+/** What the player owes, as lines, each with why. */
 export const debtLines = (rows: readonly OwnDebtRow[]): MoneyLine[] =>
   rows.map((r, i) => ({
     key: `${r.gameId}-${i}`,
     date: fmtDate(r.playedOn),
     label: r.label,
     amount: euros(r.amountCents),
-    tag: r.kind === 'own' ? 'tu parte' : 'invitado',
+    tag: debtTag(r),
     method: null,
   }));
 

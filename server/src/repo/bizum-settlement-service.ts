@@ -37,7 +37,8 @@ export class BizumSettlementService {
 
   /**
    * Pays the shares in order; a Bizum that does not cover their amounts pays nothing and waits.
-   * What is left of the Bizum stays on it unassigned, unless the organiser has it dismissed.
+   * What is left of the Bizum stays on it unassigned, unless the organiser has it dismissed. The
+   * organiser's ruling may pay other players' shares too: the sender pays them on their behalf.
    */
   settle(
     stored: StoredBizum,
@@ -62,6 +63,7 @@ export class BizumSettlementService {
         paidOn: stored.bizum.bookedOn,
         method: 'bizum',
         bizumId: stored.id,
+        onBehalf: how === 'organiser',
       }).amount_cents;
     }
     this.handling.markSettled(

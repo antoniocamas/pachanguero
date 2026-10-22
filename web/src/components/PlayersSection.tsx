@@ -1,14 +1,15 @@
 import { useState } from 'react';
 import { api, type Player, type Season } from '../api';
-import { usePlayerDetails } from '../hooks/usePlayerDetails';
+import { usePlayerDirectory } from '../hooks/usePlayerDirectory';
+import { BizumNamesEditor } from './BizumNamesEditor';
+import { PlayerContactEditor } from './PlayerContactEditor';
 import { PlayerEditor } from './PlayerEditor';
-
-const normal = (text: string) =>
-  text.normalize('NFD').replace(/\p{M}/gu, '').toLocaleLowerCase('es');
+import { PlayerRelationsEditor } from './PlayerRelationsEditor';
+import { PlayersList } from './PlayersList';
 
 /**
- * Every player: a searchable list, and one player at a time open for
- * correction in a view of their own, so nothing needs scrolling past.
+ * Every player: a searchable list, and one player at a time open for correction in a view of
+ * their own, so nothing needs scrolling past.
  */
 export function PlayersSection({
   season,
@@ -24,9 +25,8 @@ export function PlayersSection({
 }) {
   const [name, setName] = useState('');
   const [seniority, setSeniority] = useState(1);
-  const [search, setSearch] = useState('');
   const [open, setOpen] = useState<number | null>(null);
-  const directory = usePlayerDetails(players);
+  const directory = usePlayerDirectory(season.id, players);
 
   const refresh = (done: Promise<boolean>) =>
     done.then(ok => {
@@ -38,7 +38,7 @@ export function PlayersSection({
     setName('');
   };
 
-  const chosen = directory.details.find(p => p.id === open);
+  const chosen = directory.rows.find(p => p.id === open);
   if (chosen) {
     return (
       <div className="card">
@@ -52,8 +52,8 @@ export function PlayersSection({
         <PlayerEditor
           key={chosen.name}
           player={chosen}
-          everyone={directory.details}
-          seasons={players.find(e => e.id === chosen.id)?.seasons ?? null}
+          everyone={directory.rows}
+          seasons={chosen.seasons}
           onRename={(next, keep) =>
             refresh(directory.rename(chosen.id, next, keep))
           }
@@ -62,6 +62,9 @@ export function PlayersSection({
             if (done) setOpen(null);
             return done;
           }}
+          onDelete={async () => {
+            if (await refresh(directory.remove(chosen.id))) setOpen(null);
+          }}
           onIntroduce={by => directory.introduce(chosen.id, by)}
           onAddAlias={alias => directory.addAlias(chosen.id, alias)}
           onRemoveAlias={alias => directory.removeAlias(chosen.id, alias)}
@@ -69,19 +72,34 @@ export function PlayersSection({
             guard(() => api.updatePlayer(season.id, chosen.id, { seasons }))
           }
         />
+        <PlayerRelationsEditor
+          player={chosen}
+          everyone={directory.rows}
+          seasonName={season.name}
+          onRole={role => void refresh(directory.setRole(chosen.id, role))}
+          onHosts={hosts => void refresh(directory.setHosts(chosen.id, hosts))}
+        />
+        <BizumNamesEditor
+          playerName={chosen.name}
+          names={chosen.bizumNames}
+          onAdd={bizumName => directory.addBizumName(chosen.id, bizumName)}
+          onRemove={bizumName =>
+            void directory.removeBizumName(chosen.id, bizumName)
+          }
+        />
+        <PlayerContactEditor
+          stored={{ emails: chosen.emails, phone: chosen.phone }}
+          onSave={patch => directory.saveContact(chosen.id, patch)}
+        />
       </div>
     );
   }
 
-  const wanted = normal(search.trim());
-  const shown = directory.details.filter(
-    p => !wanted || [p.name, ...p.aliases].some(n => normal(n).includes(wanted))
-  );
   return (
     <div className="card">
       <h2>
         Jugones
-        <span className="right muted">{directory.details.length}</span>
+        <span className="right muted">{directory.rows.length}</span>
       </h2>
       {directory.error && <div className="err">{directory.error}</div>}
       <div style={{ padding: '12px 14px', display: 'flex', gap: 8 }}>
@@ -105,31 +123,9 @@ export function PlayersSection({
           +
         </button>
       </div>
-      <div style={{ padding: '0 14px 12px' }}>
-        <input
-          type="search"
-          aria-label="Buscar jugador"
-          placeholder="Buscar jugador o apodo"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-        />
-      </div>
-      {shown.length === 0 && <div className="empty">Nadie coincide.</div>}
-      {shown.map(p => (
-        <div key={p.id} className="row">
-          <span className="name">{p.name}</span>
-          {p.aliases.length > 0 && (
-            <span className="muted">{p.aliases.join(', ')}</span>
-          )}
-          <button
-            className="btn"
-            aria-label={`Editar ${p.name}`}
-            onClick={() => setOpen(p.id)}
-          >
-            Editar
-          </button>
-        </div>
-      ))}
+      {directory.loaded && (
+        <PlayersList rows={directory.rows} onOpen={setOpen} />
+      )}
     </div>
   );
 }

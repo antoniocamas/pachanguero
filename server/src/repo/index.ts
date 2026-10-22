@@ -60,6 +60,15 @@ import { KeywordRepository } from './keyword-repository.js';
 import { SenderPairingService } from './sender-pairing-service.js';
 import { UserRepository } from './user-repository.js';
 import { RefreshTokenRepository } from './refresh-token-repository.js';
+import { SeasonRoleRepository } from './season-role-repository.js';
+import { PlayerHostRepository } from './player-host-repository.js';
+import { GuestRoleService } from './guest-role-service.js';
+import { PlayerActivityRepository } from './player-activity-repository.js';
+import { PlayerDirectoryService } from './player-directory-service.js';
+import { PlayerDeletionService } from './player-deletion-service.js';
+import { ContactService } from './contact-service.js';
+import { ContactValidator } from '../domain/contact-validator.js';
+import { DebtHolderService } from './debt-holder-service.js';
 
 export const seasons = new SeasonRepository(db());
 export const players = new PlayerRepository(db());
@@ -74,6 +83,14 @@ export const playerMerge = new PlayerMergeService(
   db()
 );
 export const playerRegistrar = new PlayerRegistrar(players, aliases);
+export const playerDeletion = new PlayerDeletionService(players, users, db());
+export const seasonRoles = new SeasonRoleRepository(db());
+export const playerHosts = new PlayerHostRepository(db());
+export const guestRoles = new GuestRoleService(
+  seasonRoles,
+  playerHosts,
+  players
+);
 export const games = new GameRepository(db());
 export const schedule = new ScheduleRepository(db());
 export const participations = new ParticipationRepository(db());
@@ -231,6 +248,32 @@ export const candidateResolution = new CandidateResolutionService(
   playerRegistrar,
   gameLifecycle,
   convocatoriaEdit,
+  guestRoles,
+  db()
+);
+
+export const playerDirectory = new PlayerDirectoryService(
+  players,
+  aliases,
+  seasonRoles,
+  guestRoles,
+  playerHosts,
+  contactRepository,
+  new ContactService(new ContactValidator(), contactRepository, db()),
+  users,
+  debtRepository,
+  new PlayerActivityRepository(db()),
+  candidateResolution,
+  db()
+);
+
+export const debtHolders = new DebtHolderService(
+  gameLifecycle,
+  games,
+  debtRepository,
+  players,
+  bizumHandling,
+  bizumResolution,
   db()
 );
 

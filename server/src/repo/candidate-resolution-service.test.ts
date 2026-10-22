@@ -17,6 +17,9 @@ import {
   CandidateResolutionService,
   type CandidateRow,
 } from './candidate-resolution-service.js';
+import { GuestRoleService } from './guest-role-service.js';
+import { PlayerHostRepository } from './player-host-repository.js';
+import { SeasonRoleRepository } from './season-role-repository.js';
 import { GameDayResolutionService } from './game-day-resolution-service.js';
 import { GameRepository } from './game-repository.js';
 import { GuestCandidateRepository } from './guest-candidate-repository.js';
@@ -37,6 +40,8 @@ describe('CandidateResolutionService', () => {
   let gameId: number;
   let seasonId: number;
   let seasons: SeasonRepository;
+  let roles: SeasonRoleRepository;
+  let hosts: PlayerHostRepository;
 
   const enrol = (name: string) => players.add(seasonId, name, 1).id;
   const L = (...texts: string[]) => texts.map(text => ({ text }));
@@ -56,6 +61,8 @@ describe('CandidateResolutionService', () => {
     aliases = new AliasRepository(conn);
     participations = new ParticipationRepository(conn);
     guests = new GuestCandidateRepository(conn);
+    roles = new SeasonRoleRepository(conn);
+    hosts = new PlayerHostRepository(conn);
     const games = new GameRepository(conn);
     seasons = new SeasonRepository(conn);
     const schedule = new ScheduleRepository(conn);
@@ -99,6 +106,7 @@ describe('CandidateResolutionService', () => {
         players,
         conn
       ),
+      new GuestRoleService(roles, hosts, players),
       conn
     );
   });
@@ -202,7 +210,7 @@ describe('CandidateResolutionService', () => {
       });
     });
 
-    it('treats an already-known player with a host annotation as a regular', () => {
+    it('treats a known fijo with a host annotation as a regular', () => {
       enrol('David');
       enrol('Juan');
       const [row] = service.preview(gameId, L(), '1 Juan (David)');
@@ -618,14 +626,87 @@ describe('CandidateResolutionService', () => {
       expect(service.load(gameId)[1]).toMatchObject({ introduced: true });
     });
 
-    it('treats a known player written with a host as a regular, even one that host once introduced', () => {
+    it("makes a known invitado written with a host that host's guest", () => {
       const david = enrol('David');
       const adri = players.register('Adri', david).id;
-      const [row] = service.preview(gameId, L('Adri (David)'));
-      expect(row).toMatchObject({
+      const [row] = service.preview(gameId, L('Adri (Caro)', 'Caro'));
+      expect(row).toMatchObject({ status: 'unresolved' });
+      enrol('Caro');
+      const [again] = service.preview(gameId, L('Adri (Caro)'));
+      expect(again).toMatchObject({
         status: 'matched',
-        candidate: { playerId: adri, guest: null },
+        candidate: { playerId: adri, guest: 'named', role: 'invitado' },
       });
+      expect(again).not.toMatchObject({ candidate: { hostPlayerId: david } });
+    });
+
+    it('brings an invitado written without a host with their usual host, else who introduced them', () => {
+      const david = enrol('David');
+      const caro = enrol('Caro');
+      const adri = players.register('Adri', david).id;
+      expect(service.preview(gameId, L('Adri'))[0]).toMatchObject({
+        candidate: { playerId: adri, guest: 'named', hostPlayerId: david },
+      });
+
+      hosts.add(adri, caro);
+      expect(service.preview(gameId, L('Adri'))[0]).toMatchObject({
+        candidate: { hostPlayerId: caro },
+      });
+    });
+
+    it('asks who brought an invitado when no host is known, and takes the one chosen on the line', () => {
+      const david = enrol('David');
+      const adri = players.register('Adri').id;
+      roles.set(seasonId, adri, 'invitado');
+
+      const [row] = service.preview(gameId, L('Adri'));
+      expect(row).toMatchObject({
+        status: 'unresolved',
+        entry: {
+          field: 'host',
+          reason: 'noHost',
+          candidates: [{ id: adri, name: 'Adri' }],
+        },
+      });
+
+      const [linked] = service.preview(gameId, [
+        { text: 'Adri', links: { host: david } },
+      ]);
+      expect(linked).toMatchObject({
+        status: 'matched',
+        candidate: { playerId: adri, guest: 'named', hostPlayerId: david },
+      });
+    });
+
+    it('never makes a guest of a fijo, even one somebody introduced', () => {
+      const david = enrol('David');
+      const adri = players.register('Adri', david).id;
+      roles.set(seasonId, adri, 'fijo');
+      expect(service.preview(gameId, L('Adri (David)'))[0]).toMatchObject({
+        candidate: { playerId: adri, guest: null, role: 'fijo' },
+      });
+    });
+
+    it("writes each player's role for the season on save and learns the hosts guests came with", () => {
+      const david = enrol('David');
+      const ana = enrol('Ana');
+      const adri = players.register('Adri', david).id;
+
+      service.save(gameId, L('Ana', 'Adri (David)'));
+
+      expect(roles.get(seasonId, ana)).toBe('fijo');
+      expect(roles.get(seasonId, adri)).toBe('invitado');
+      expect(hosts.list(adri)).toEqual([david]);
+    });
+
+    it("refuses to remember a guest's name as their host's alias", () => {
+      expect(() =>
+        service.resolve(
+          gameId,
+          { line: { position: 1, kind: 'plain', name: 'Adri' }, field: 'host' },
+          { type: 'linkAsAlias', playerId: 1 }
+        )
+      ).toThrow('se elige en su línea');
     });
 
     it('takes the host from the annotation when none is given', () => {

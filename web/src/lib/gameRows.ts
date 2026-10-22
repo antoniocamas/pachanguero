@@ -22,6 +22,8 @@ export interface GameRow {
   playerId: number | null;
   /** Who brought an anonymous plus-one. */
   hostPlayerId: number | null;
+  /** Who brought a named guest, by name; null for anyone else. */
+  guestOf: string | null;
   /** Place in the convocatoria; null before it exists. */
   position: number | null;
   /** Place in the candidate list. */
@@ -52,6 +54,28 @@ export interface GameTable {
 }
 
 const byName = (a: GameRow, b: GameRow) => a.name.localeCompare(b.name, 'es');
+
+/** Each named guest's host, by name, from the candidate list. */
+export const guestHostNames = (
+  arrivals: readonly Arrival[]
+): Map<number, string> =>
+  new Map(
+    arrivals.flatMap(a =>
+      a.guest === 'named' && a.playerId !== null && a.hostName !== null
+        ? [[a.playerId, a.hostName] as const]
+        : []
+    )
+  );
+
+/** Who brought each named guest of a table, by name. */
+export const guestsOf = (rows: readonly GameRow[]): Map<number, string> =>
+  new Map(
+    rows.flatMap(r =>
+      r.playerId !== null && r.guestOf !== null
+        ? [[r.playerId, r.guestOf] as const]
+        : []
+    )
+  );
 
 /** Builds the table the game screen shows for the game's state. */
 export const buildRows = (detail: GameDetail): GameTable => {
@@ -89,8 +113,11 @@ export const buildRows = (detail: GameDetail): GameTable => {
 class RowBuilder {
   private readonly names: Map<number, string>;
   private readonly participations: Map<number, Participation>;
+  /** The host of each named guest, by name, as the candidate list says. */
+  private readonly guestHosts: Map<number, string>;
 
   constructor(private readonly detail: GameDetail) {
+    this.guestHosts = guestHostNames(detail.arrivals);
     this.names = new Map(detail.participations.map(p => [p.player_id, p.name]));
     this.participations = new Map(
       detail.participations.map(p => [p.player_id, p])
@@ -184,6 +211,8 @@ class RowBuilder {
       name: '',
       playerId,
       hostPlayerId: null,
+      guestOf:
+        playerId === null ? null : (this.guestHosts.get(playerId) ?? null),
       position: null,
       arrival: null,
       points: null,

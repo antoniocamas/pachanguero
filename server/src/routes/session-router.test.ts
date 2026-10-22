@@ -266,7 +266,7 @@ describe('the routes of any signed-in user', () => {
       expect(await answer('report')).toEqual(
         JSON.parse(JSON.stringify(service.report(user.playerId!)))
       );
-      expect(await answer('contact')).toEqual({ email: null, phone: null });
+      expect(await answer('contact')).toEqual({ emails: [], phone: null });
       expect(await answer('debts')).toMatchObject({ owedCents: 500 });
     });
 
@@ -425,15 +425,15 @@ describe('the routes of any signed-in user', () => {
         const saved = await app.request('/api/me/contact', {
           method: 'PATCH',
           token: reply.body.accessToken,
-          body: { email: 'visto@example.com' },
+          body: { emails: ['visto@example.com'] },
         });
 
         expect(saved.status).toBe(200);
         expect(new ContactRepository(app.conn).get(target)).toMatchObject({
-          email: 'visto@example.com',
+          emails: ['visto@example.com'],
         });
         expect(new ContactRepository(app.conn).get(user.playerId!)).toEqual({
-          email: null,
+          emails: [],
           phone: null,
         });
       });
@@ -522,7 +522,7 @@ describe('the routes of any signed-in user', () => {
         );
         const other = await as(`Visto ${fresh('p')}`);
         new ContactRepository(app.conn).save(other, {
-          email: 'otro@example.com',
+          emails: ['otro@example.com'],
         });
         const token = await app.server.tokens.issueAccess(
           {
@@ -536,7 +536,7 @@ describe('the routes of any signed-in user', () => {
 
         const reply = await app.request('/api/me/contact', { token });
 
-        expect(reply.body).toEqual({ email: null, phone: null });
+        expect(reply.body).toEqual({ emails: [], phone: null });
       });
     });
   });

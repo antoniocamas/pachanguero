@@ -10,6 +10,7 @@ import { PaymentMethodMigration } from './payment-method-migration.js';
 import { PaymentBizumLinkMigration } from './payment-bizum-link-migration.js';
 import { PlayerBizumNameMigration } from './player-bizum-name-migration.js';
 import { PlayerBizumNamesMigration } from './player-bizum-names-migration.js';
+import { PlayerProfileMigration } from './player-profile-migration.js';
 import { ViewAsMigration } from './view-as-migration.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -47,6 +48,7 @@ export function db(): Database.Database {
         new PlayerBizumNameMigration(),
         new PaymentBizumLinkMigration(),
         new PlayerBizumNamesMigration(),
+        new PlayerProfileMigration(),
       ],
       backup
     ).run();

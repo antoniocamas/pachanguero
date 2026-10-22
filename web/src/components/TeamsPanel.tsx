@@ -8,8 +8,19 @@ type Paste = ReturnType<typeof useTeamsPaste>;
 
 const TEAMS: Team[] = ['claros', 'oscuros'];
 
-const names = (members: TeamMember[], team: Team) =>
-  members.filter(m => m.team === team).map(m => m.name);
+/** The team's names, a guest's with who brought them: "Adri (de David)". */
+const names = (
+  members: TeamMember[],
+  team: Team,
+  guestOf: ReadonlyMap<number, string>
+) =>
+  members
+    .filter(m => m.team === team)
+    .map(m =>
+      guestOf.has(m.playerId)
+        ? `${m.name} (de ${guestOf.get(m.playerId)})`
+        : m.name
+    );
 
 /**
  * Pasting the two teams is optional and records only who was on which side;
@@ -18,9 +29,12 @@ const names = (members: TeamMember[], team: Team) =>
 export function TeamsPanel({
   paste,
   players,
+  guestOf = new Map(),
 }: {
   paste: Paste;
   players: Pick<Player, 'id' | 'name'>[];
+  /** Who brought each named guest, by name. */
+  guestOf?: ReadonlyMap<number, string>;
 }) {
   const [text, setText] = useState('');
   const { result } = paste;
@@ -50,8 +64,10 @@ export function TeamsPanel({
         TEAMS.map(team => (
           <div key={team} data-testid={`team-${team}`}>
             <b>{TEAM_LABEL[team]}</b>{' '}
-            <span className="muted">{names(result.matched, team).length}</span>
-            <div>{names(result.matched, team).join(', ')}</div>
+            <span className="muted">
+              {names(result.matched, team, guestOf).length}
+            </span>
+            <div>{names(result.matched, team, guestOf).join(', ')}</div>
           </div>
         ))}
       {result && result.outside.length > 0 && (

@@ -27,6 +27,33 @@ export interface PlayerDetail {
   aliases: string[];
 }
 
+/** What a player is in a season: a fijo competes on points, an invitado comes with a host. */
+export type SeasonRole = 'fijo' | 'invitado';
+
+/** One player as the organiser's players table shows them, for one season. */
+export interface DirectoryRow {
+  id: number;
+  name: string;
+  aliases: string[];
+  introducedBy: number | null;
+  role: SeasonRole;
+  /** The season has the role written, rather than carried over. */
+  roleWritten: boolean;
+  /** The usual one first. */
+  usualHosts: number[];
+  emails: string[];
+  phone: string | null;
+  bizumNames: string[];
+  /** Seniority this season; null before their first appearance in it. */
+  seasons: number | null;
+  username: string | null;
+  played: number;
+  asGuest: number;
+  lastPlayedOn: string | null;
+  owedCents: number;
+  createdOn: string;
+}
+
 export type Team = 'claros' | 'oscuros';
 
 export interface Game {
@@ -163,7 +190,10 @@ export interface OwnDebtRow {
   playedOn: string;
   label: string | null;
   amountCents: number;
-  kind: 'own' | 'guest';
+  /** Why they owe it: their own share, a guest's they brought, or a share moved to them. */
+  kind: 'own' | 'guest' | 'other';
+  /** Whose share it is when it is not theirs; absent for an anonymous +1. */
+  forName?: string;
 }
 
 /** A share another player holds for this one. */
@@ -195,7 +225,7 @@ export interface OwnPaymentRow {
 }
 
 export interface Contact {
-  email: string | null;
+  emails: string[];
   phone: string | null;
 }
 
@@ -245,6 +275,8 @@ export interface Arrival {
   position: number;
   playerId: number | null;
   hostPlayerId: number | null;
+  /** Who brought a guest, by name. */
+  hostName: string | null;
   guest: 'named' | 'anonymous' | null;
   text: string;
 }
@@ -277,8 +309,17 @@ export type ParsedLine =
 export interface UnresolvedEntry {
   line: ParsedLine;
   field: 'name' | 'host';
-  /** 'correction' is only ever made on screen, for a name that matched but is wrong. */
-  reason: 'unmatched' | 'ambiguous' | 'collision' | 'duplicate' | 'correction';
+  /**
+   * 'correction' is only ever made on screen, for a name that matched but is wrong; 'noHost'
+   * is an invitado written without a host when none is known for them.
+   */
+  reason:
+    | 'unmatched'
+    | 'ambiguous'
+    | 'collision'
+    | 'duplicate'
+    | 'noHost'
+    | 'correction';
   candidates: { id: number; name: string }[];
 }
 
@@ -287,7 +328,11 @@ export interface MatchedCandidate {
   playerId: number | null;
   name: string | null;
   hostPlayerId: number | null;
+  /** Who brought a guest, by name. */
+  hostName: string | null;
   guest: 'named' | 'anonymous' | null;
+  /** Their role in the game's season; null for a +1. */
+  role: SeasonRole | null;
   seniorityPrompt?: true;
   suggested?: number;
 }
@@ -550,6 +595,12 @@ export interface PairResult {
 /** What becomes of the money of a Bizum that no share takes: kept on it unassigned, or dismissed. */
 export type RestOfBizum = 'keep' | 'dismiss';
 
+/** In a ruling, how many of another player's own shares the Bizum pays for them. */
+export interface SharesFor {
+  playerId: number;
+  shares: number;
+}
+
 export interface Ruling {
   shares: number;
   unallocatedCents: number;
@@ -598,6 +649,23 @@ export const api = {
   players: (seasonId: number) => call<Player[]>(`/seasons/${seasonId}/players`),
   knownPlayers: () => call<Pick<Player, 'id' | 'name'>[]>('/players'),
   playerDetails: () => call<PlayerDetail[]>('/players/details'),
+  playerTable: (seasonId: number) =>
+    call<DirectoryRow[]>(`/seasons/${seasonId}/players/table`),
+  setRole: (seasonId: number, playerId: number, role: SeasonRole) =>
+    call<{ ok: true }>(`/seasons/${seasonId}/players/${playerId}/role`, {
+      method: 'PUT',
+      body: body({ role }),
+    }),
+  setHosts: (playerId: number, hostIds: number[]) =>
+    call<{ ok: true }>(`/players/${playerId}/hosts`, {
+      method: 'PUT',
+      body: body({ hostIds }),
+    }),
+  savePlayerContact: (playerId: number, patch: Partial<Contact>) =>
+    call<Contact>(`/players/${playerId}/contact`, {
+      method: 'PATCH',
+      body: body(patch),
+    }),
   editPlayer: (
     playerId: number,
     patch: {
@@ -611,6 +679,9 @@ export const api = {
       body: body(patch),
     }),
   /** Folds `from` into `playerId`: they are the same person. */
+  /** Refused for a player with any history or an account. */
+  deletePlayer: (playerId: number) =>
+    call<{ ok: true }>(`/players/${playerId}`, { method: 'DELETE' }),
   mergePlayers: (playerId: number, from: number) =>
     call<{ ok: true }>(`/players/${playerId}/merge`, {
       method: 'POST',
@@ -745,6 +816,12 @@ export const api = {
     }),
   paymentDetail: (paymentId: number) =>
     call<PaymentDetail>(`/payments/${paymentId}/bizum`),
+  /** Someone else answers for a share from now on. */
+  reassignDebt: (gameId: number, debtId: number, holderPlayerId: number) =>
+    call<{ debts: Debt[]; payments: Payment[] }>(
+      `/games/${gameId}/debts/${debtId}`,
+      { method: 'PATCH', body: body({ holderPlayerId }) }
+    ),
   undoPayment: (gameId: number, paymentId: number) =>
     call<{ debts: Debt[]; payments: Payment[] }>(
       `/games/${gameId}/payments/${paymentId}`,
@@ -803,8 +880,11 @@ export const api = {
     ),
   waitingBizums: () => call<WaitingBizum[]>('/bizums/waiting'),
   settledBizums: () => call<SettledBizum[]>('/bizums/settled'),
-  openShares: (bizumId: number, playerId: number) =>
-    call<RulableShare[]>(`/bizums/${bizumId}/open-shares?playerId=${playerId}`),
+  /** `own`: only the player's own shares, the ones someone else may pay for them. */
+  openShares: (bizumId: number, playerId: number, own = false) =>
+    call<RulableShare[]>(
+      `/bizums/${bizumId}/open-shares?playerId=${playerId}${own ? '&own=1' : ''}`
+    ),
   pairBizum: (bizumId: number, playerId: number) =>
     call<PairResult>(`/bizums/${bizumId}/pair`, {
       method: 'POST',
@@ -814,11 +894,12 @@ export const api = {
     bizumId: number,
     playerId: number,
     shares: number,
-    rest: RestOfBizum
+    rest: RestOfBizum,
+    others: SharesFor[] = []
   ) =>
     call<Ruling>(`/bizums/${bizumId}/rule`, {
       method: 'POST',
-      body: body({ playerId, shares, rest }),
+      body: body({ playerId, shares, rest, others }),
     }),
   dismissBizum: (bizumId: number) =>
     call<{ waiting: WaitingBizum[] }>(`/bizums/${bizumId}/dismiss`, {

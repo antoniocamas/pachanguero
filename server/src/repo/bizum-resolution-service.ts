@@ -75,6 +75,12 @@ export interface Ruling {
   unallocatedCents: number;
 }
 
+/** In a ruling, how many of another player's own shares the Bizum pays for them. */
+export interface SharesFor {
+  playerId: number;
+  shares: number;
+}
+
 /**
  * What the organiser does with a waiting Bizum, and the one way a waiting Bizum is judged again:
  * always in `review` mode, so nothing is discarded, through the same settlement as every other
@@ -151,30 +157,42 @@ export class BizumResolutionService {
 
   /**
    * The shares this player owes that the organiser may pay with the Bizum: the nearest first
-   * among the games up to its booking, then the games after it, earliest first.
+   * among the games up to its booking, then the games after it, earliest first. `ownOnly` keeps
+   * the player's own shares, the ones another sender may pay for them.
    */
-  openShares(bizumId: number, playerId: number): RulableShare[] {
+  openShares(
+    bizumId: number,
+    playerId: number,
+    ownOnly = false
+  ): RulableShare[] {
     const stored = this.waitingBizum(bizumId);
     this.requirePlayer(playerId);
-    return this.facts.candidateSharesOf(playerId, stored.bizum);
+    return this.sharesOf(playerId, stored.bizum, ownOnly);
   }
 
   /**
    * The organiser rules that the Bizum pays this many of the player's shares, nearest first,
    * whatever its amount, among those of games up to its booking and, after them, the later ones.
-   * The rest is left on the Bizum unassigned, or dismissed when the organiser says so. It decides
-   * this Bizum only, and never pays shares worth more than the Bizum.
+   * It may also pay, for `others`, that many of each one's own shares, nearest first: the player
+   * pays for them, as a regular paying for a friend. The rest is left on the Bizum unassigned, or
+   * dismissed when the organiser says so. It decides this Bizum only, and never pays shares worth
+   * more than the Bizum.
    */
   rule(
     bizumId: number,
     playerId: number,
     shares: number,
-    rest: RestOfBizum = 'keep'
+    rest: RestOfBizum = 'keep',
+    others: readonly SharesFor[] = []
   ): Ruling {
     return this.conn.transaction(() => {
       const stored = this.waitingBizum(bizumId);
       this.requirePlayer(playerId);
-      if (!Number.isInteger(shares) || shares < 1) {
+      if (
+        !Number.isInteger(shares) ||
+        shares < 0 ||
+        (shares === 0 && others.length === 0)
+      ) {
         throw new BizumRefusal('Indica cuántas cuotas paga el Bizum');
       }
       if (rest !== 'keep' && rest !== 'dismiss') {
@@ -188,18 +206,29 @@ export class BizumResolutionService {
             : `Solo tiene ${open.length} cuotas abiertas en esa temporada`
         );
       }
-      const chosen = open.slice(0, shares);
+      const chosen = [
+        ...open.slice(0, shares),
+        ...others.flatMap(other =>
+          this.sharesForOther(stored.bizum, playerId, other)
+        ),
+      ];
+      if (new Set(chosen.map(s => s.debtId)).size !== chosen.length) {
+        throw new BizumRefusal('Has elegido la misma cuota dos veces');
+      }
       const owed = chosen.reduce((sum, share) => sum + share.amountCents, 0);
       if (owed > stored.bizum.amountCents) {
         throw new BizumRefusal(
-          shares === 1
+          chosen.length === 1
             ? 'El Bizum no cubre 1 cuota'
-            : `El Bizum no cubre ${shares} cuotas`
+            : `El Bizum no cubre ${chosen.length} cuotas`
         );
       }
       this.settlement.settle(stored, playerId, chosen, 'organiser', rest);
       const settled = this.handling.get(bizumId);
-      return { shares, unallocatedCents: settled?.unallocatedCents ?? 0 };
+      return {
+        shares: chosen.length,
+        unallocatedCents: settled?.unallocatedCents ?? 0,
+      };
     })();
   }
 
@@ -217,6 +246,42 @@ export class BizumResolutionService {
       this.ledger.dismiss(stored.bizum.key);
       this.store.remove(bizumId);
     })();
+  }
+
+  private sharesOf(
+    playerId: number,
+    bizum: StoredBizum['bizum'],
+    ownOnly: boolean
+  ): RulableShare[] {
+    const all = this.facts.candidateSharesOf(playerId, bizum);
+    return ownOnly
+      ? all.filter(
+          s => 'playerId' in s.member && s.member.playerId === playerId
+        )
+      : all;
+  }
+
+  /** That many of another player's own shares, nearest first, checked. */
+  private sharesForOther(
+    bizum: StoredBizum['bizum'],
+    payerId: number,
+    other: SharesFor
+  ): RulableShare[] {
+    this.requirePlayer(other.playerId);
+    if (other.playerId === payerId) {
+      throw new BizumRefusal('Sus propias cuotas se eligen arriba');
+    }
+    if (!Number.isInteger(other.shares) || other.shares < 1) {
+      throw new BizumRefusal('Indica cuántas cuotas paga por cada jugador');
+    }
+    const open = this.sharesOf(other.playerId, bizum, true);
+    if (other.shares > open.length) {
+      const name = this.players.nameOf(other.playerId) ?? '';
+      throw new BizumRefusal(
+        `${name} solo tiene ${open.length} cuota${open.length === 1 ? '' : 's'} abierta${open.length === 1 ? '' : 's'}`
+      );
+    }
+    return open.slice(0, other.shares);
   }
 
   private paymentsOf(bizumId: number): SettledBizum['payments'] {

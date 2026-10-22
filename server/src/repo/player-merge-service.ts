@@ -135,17 +135,49 @@ export class PlayerMergeService {
       .run({ into: intoId, from: fromId });
   }
 
-  /** The survivor's own contact values win; the absorbed player's fill the gaps. */
+  /**
+   * The survivor's own phone wins, the absorbed player's fills the gap; the survivor keeps their
+   * emails and takes the absorbed player's too. So do their usual hosts and their roles in the
+   * seasons the survivor has none for.
+   */
   private mergeContacts(intoId: number, fromId: number): void {
+    const ids = { into: intoId, from: fromId };
     this.conn
       .prepare(
-        `INSERT INTO player_contacts (player_id, email, phone)
-         SELECT @into, email, phone FROM player_contacts WHERE player_id = @from
+        `INSERT INTO player_contacts (player_id, phone)
+         SELECT @into, phone FROM player_contacts WHERE player_id = @from
          ON CONFLICT (player_id) DO UPDATE SET
-           email = COALESCE(player_contacts.email, excluded.email),
            phone = COALESCE(player_contacts.phone, excluded.phone)`
       )
-      .run({ into: intoId, from: fromId });
+      .run(ids);
+    this.conn
+      .prepare(
+        `INSERT OR IGNORE INTO player_emails (player_id, email)
+           SELECT @into, email FROM player_emails WHERE player_id = @from ORDER BY rowid`
+      )
+      .run(ids);
+    this.conn
+      .prepare(
+        `INSERT OR IGNORE INTO season_roles (season_id, player_id, role)
+           SELECT season_id, @into, role FROM season_roles WHERE player_id = @from`
+      )
+      .run(ids);
+    this.conn
+      .prepare(
+        `INSERT OR IGNORE INTO player_hosts (player_id, host_player_id, position)
+           SELECT @into, host_player_id,
+                  (SELECT COALESCE(MAX(position), 0) FROM player_hosts WHERE player_id = @into) + position
+             FROM player_hosts WHERE player_id = @from AND host_player_id <> @into
+            ORDER BY position`
+      )
+      .run(ids);
+    // Whoever had the absorbed player as host now has the survivor.
+    this.conn
+      .prepare(
+        `UPDATE OR IGNORE player_hosts SET host_player_id = @into
+          WHERE host_player_id = @from AND player_id <> @into`
+      )
+      .run(ids);
   }
 
   /** The survivor keeps their Bizum names and takes the absorbed player's too. */

@@ -269,7 +269,8 @@ nav.tabs button[aria-current='true'] {
 
 /* ----------------------------------------------------------------- buttons */
 
-button.btn {
+button.btn,
+summary.btn {
   background: var(--surface-2);
   border: 1px solid var(--line);
   color: var(--text);
@@ -314,11 +315,13 @@ select {
   width: 100%;
 }
 
-label.field {
+label.field,
+div.field {
   display: block;
   margin: 0 0 12px;
 }
-label.field span {
+label.field span,
+div.field > span {
   display: block;
   font-size: 12px;
   color: var(--muted);
@@ -364,7 +367,8 @@ label.field span {
 input.invalid {
   border-color: var(--danger);
 }
-label.field small {
+label.field small,
+div.field small {
   display: block;
   color: var(--danger);
   font-size: 12px;
@@ -1465,4 +1469,113 @@ label.choice input {
 }
 button.btn.link.danger {
   color: var(--danger);
+}
+
+/* ------------------------------------------------------ several emails */
+
+.email-line {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.email-line input {
+  flex: 1;
+}
+
+/* ------------------------------------------------------ guests and players table */
+
+.tag.guest {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  color: #c9f2d2;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.tag.role {
+  margin-left: 0;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.tag.role.fijo {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  color: #c9f2d2;
+}
+.tag.role.invitado {
+  background: color-mix(in srgb, var(--mercy) 22%, transparent);
+  color: #e0d1ff;
+}
+
+.directory-tools {
+  display: flex;
+  gap: 8px;
+  padding: 0 14px 10px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.directory-tools input[type='search'] {
+  flex: 1 1 220px;
+}
+.directory-active {
+  padding: 0 14px 8px;
+  font-size: 13px;
+}
+.column-chooser {
+  position: relative;
+}
+.column-chooser summary {
+  list-style: none;
+  cursor: pointer;
+}
+.column-chooser summary::-webkit-details-marker {
+  display: none;
+}
+.column-list {
+  position: absolute;
+  right: 0;
+  z-index: 5;
+  margin-top: 4px;
+  padding: 8px 12px;
+  min-width: 200px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  display: grid;
+  gap: 4px;
+  font-size: 14px;
+}
+.column-list input {
+  width: auto;
+}
+table.grid.directory th:not(.n),
+table.grid.directory td:not(.n) {
+  text-align: left;
+}
+table.grid.directory th .sort {
+  text-decoration: none;
+  color: inherit;
+  font: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  padding: 0;
+}
+table.grid.directory tr.filters input {
+  font-size: 13px;
+  padding: 4px 6px;
+  min-width: 70px;
+  text-transform: none;
+}
+table.grid.directory td .btn.link {
+  color: var(--text);
+  padding: 0;
+}
+table.grid.directory tr.clickable {
+  cursor: pointer;
+}
+table.grid.directory tr.clickable:hover td {
+  background: var(--surface-2);
+}
+@media (max-width: 760px) {
+  .column-list {
+    left: 0;
+    right: auto;
+  }
 }

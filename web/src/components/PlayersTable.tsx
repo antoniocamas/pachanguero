@@ -143,6 +143,11 @@ const cell = (
         <>
           {row.sub ? '↳ ' : ''}
           {row.name}
+          {row.guestOf && (
+            <span className="tag guest" data-testid="guest-tag">
+              de {row.guestOf}
+            </span>
+          )}
           {row.labels.map(l => (
             <span key={l} className="tag">
               {l}

@@ -16,6 +16,11 @@ export interface Settlement {
   method: PaymentMethod;
   /** The Bizum that pays it, when one does. */
   bizumId?: number;
+  /**
+   * The organiser ruled that this payer pays the share although it is neither theirs nor one
+   * they answer for: someone paying for another player. The share keeps its holder.
+   */
+  onBehalf?: boolean;
 }
 
 /**
@@ -50,6 +55,7 @@ export class ShareSettler {
     }
     const beneficiary = 'playerId' in member ? member.playerId : null;
     if (
+      !settlement.onBehalf &&
       settlement.payerPlayerId !== debt.holder_player_id &&
       settlement.payerPlayerId !== beneficiary
     )

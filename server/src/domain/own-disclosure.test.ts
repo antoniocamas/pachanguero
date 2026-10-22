@@ -19,6 +19,8 @@ describe('OwnDisclosure', () => {
     holderId: CARLOS,
     holderName: 'Carlos',
     beneficiaryId: CARLOS,
+    beneficiaryName: 'Carlos',
+    beneficiaryWasGuest: 0,
     amountCents: 500,
     ...over,
   });
@@ -53,14 +55,37 @@ describe('OwnDisclosure', () => {
       });
     });
 
-    it('shows a share held for a guest as "guest" with no name or id, and counts it', () => {
+    it('shows a plus-one\'s share as "guest" with no name, and counts it', () => {
       const result = carlos.debts([
-        debt({ beneficiaryId: ANA, holderName: 'Carlos' }),
-        debt({ beneficiaryId: null }),
+        debt({ beneficiaryId: null, beneficiaryName: null }),
       ]);
-      expect(result.owedCents).toBe(1000);
-      expect(result.mine.map(r => r.kind)).toEqual(['guest', 'guest']);
-      expect(JSON.stringify(result)).not.toMatch(/Ana|beneficiary|holder/i);
+      expect(result.owedCents).toBe(500);
+      expect(result.mine.map(r => r.kind)).toEqual(['guest']);
+      expect(JSON.stringify(result)).not.toMatch(/beneficiary|holder/i);
+    });
+
+    it('names the guest a host brought, as the reason for the debt, never their id', () => {
+      const result = carlos.debts([
+        debt({
+          beneficiaryId: ANA,
+          beneficiaryName: 'Ana',
+          beneficiaryWasGuest: 1,
+        }),
+      ]);
+      expect(result.owedCents).toBe(500);
+      expect(result.mine).toMatchObject([{ kind: 'guest', forName: 'Ana' }]);
+      expect(JSON.stringify(result)).not.toMatch(/beneficiary|holder/i);
+    });
+
+    it('names the player whose share was moved to them, and counts it', () => {
+      const result = carlos.debts([
+        debt({ beneficiaryId: ANA, beneficiaryName: 'Ana' }),
+      ]);
+      expect(result.owedCents).toBe(500);
+      expect(result.mine).toMatchObject([{ kind: 'other', forName: 'Ana' }]);
+      expect(JSON.stringify(result)).not.toMatch(
+        new RegExp(`beneficiary|holder|"${ANA}"`, 'i')
+      );
     });
 
     it('shows a share held by the host with the host name, outside the total', () => {

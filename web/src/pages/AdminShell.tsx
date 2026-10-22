@@ -3,7 +3,7 @@ import { api, type Game, type Player, type Season } from '../api';
 import { GameDay } from './GameDay';
 import { Standings } from './Standings';
 import { Debts } from './Debts';
-import { PlayerReportPage } from './PlayerReportPage';
+import { PlayersPage } from './PlayersPage';
 import { Manage, type ManageSection } from './Manage';
 import { AccountPanel } from '../components/AccountPanel';
 import { BankBanner } from '../components/BankBanner';
@@ -145,7 +145,7 @@ export function AdminShell({
       ) : tab === 'debts' ? (
         <Debts canRead={banner?.canRead ?? false} />
       ) : tab === 'player' ? (
-        <PlayerReportPage />
+        <PlayersPage season={season} />
       ) : (
         <Manage
           season={season}
@@ -195,7 +195,7 @@ export function AdminShell({
           <span className="ico" aria-hidden>
             👤
           </span>
-          Jugador
+          Jugadores
         </button>
         <button
           aria-current={tab === 'manage'}

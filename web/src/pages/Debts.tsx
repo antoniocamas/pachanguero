@@ -4,12 +4,14 @@ import { BizumsStrip } from '../components/BizumsStrip';
 import { DebtViewTabs, type DebtView } from '../components/DebtViewTabs';
 import { PaymentCell } from '../components/PaymentCell';
 import { PaymentMethodBar } from '../components/PaymentMethodBar';
+import { ReassignDebt } from '../components/ReassignDebt';
 import { SettledBizums } from '../components/SettledBizums';
 import { WaitingBizums } from '../components/WaitingBizums';
 import { useBizums } from '../hooks/useBizums';
 import { useCopy } from '../hooks/useCopy';
 import { useDebtPayments } from '../hooks/useDebtPayments';
 import { useDebts } from '../hooks/useDebts';
+import { useKnownPlayers } from '../hooks/useKnownPlayers';
 import {
   filterShares,
   forWhom,
@@ -36,6 +38,7 @@ export function Debts({ canRead }: { canRead: boolean }) {
   const [alert, setAlert] = useState<string | null>(null);
   const payments = useDebtPayments(reload, setAlert);
   const names = useMemo(() => namesOf(shares), [shares]);
+  const everyone = useKnownPlayers(null);
   const { copied, copy } = useCopy();
   const [gameId, setGameId] = useState<number | null>(null);
   const [holderId, setHolderId] = useState<number | null>(null);
@@ -198,6 +201,17 @@ export function Debts({ canRead }: { canRead: boolean }) {
                       onUndo={() => undefined}
                       report={setAlert}
                     />
+                    {s.beneficiaryId !== null && (
+                      <ReassignDebt
+                        shareOf={s.beneficiaryName ?? ''}
+                        holderId={s.holderId}
+                        players={everyone}
+                        busy={payments.busy}
+                        onReassign={holder =>
+                          void payments.reassign(s.gameId, s.id, holder)
+                        }
+                      />
+                    )}
                   </div>
                 ))}
               </div>

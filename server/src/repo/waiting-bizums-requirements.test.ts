@@ -231,7 +231,7 @@ describe('the waiting Bizums requirements', () => {
 
     it('pairs a phone: it becomes his phone, his email is kept, and both Bizums settle', async () => {
       const luisId = luis(null);
-      rig.flow.contacts.save(luisId, { email: 'luis@example.com' });
+      rig.flow.contacts.save(luisId, { emails: ['luis@example.com'] });
       rig.owes(luisId, '2026-10-05');
       rig.owes(luisId, '2026-10-06');
       await rig.arrive(
@@ -242,7 +242,7 @@ describe('the waiting Bizums requirements', () => {
       rig.flow.senderPairing.pair(rig.idOf('a'), luisId);
 
       expect(rig.flow.contacts.get(luisId)).toEqual({
-        email: 'luis@example.com',
+        emails: ['luis@example.com'],
         phone: '+34600000000',
       });
       expect(rig.flow.bizumResolution.waiting()).toEqual([]);

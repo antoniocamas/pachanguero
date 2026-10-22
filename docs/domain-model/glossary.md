@@ -15,9 +15,8 @@ verano).
 ## Convocatoria
 
 La lista de quién **debería** jugar esta semana. Se genera a partir de los
-candidatos: si los habituales caben en las plazas entran todos y los invitados
-ocupan el resto por orden de llegada; si no caben, se ordena por puntos,
-cogiendo los 14 primeros y luego aplicando la mercy rule. Es una predicción: no
+candidatos; los fijos van siempre antes que los invitados (ver
+[`convocatoria.md`](convocatoria.md)). Es una predicción: no
 dice quién jugó de verdad (eso es la [convocatoria final](#convocatoria-final)).
 
 ## Estados de un partido
@@ -82,14 +81,32 @@ No es un concepto del modelo. Si la lista pegada tiene un encabezado
 `Reservas`, ese encabezado y todo lo que viene debajo se descarta: no son
 candidatos ni nombres pendientes de resolver.
 
-## Invitado nombrado (invitado ocasional)
+## Fijo e invitado
 
-Jugador nuevo que alguien trae a un partido, escrito como `Adri (David)`: el
-nombre y, entre paréntesis, quien lo trae. Se registra como jugador normal, con
-el vínculo a quien lo presentó, y en ese partido cuenta como invitado: no
-compite por puntos sino por orden de llegada. No hay una marca permanente de
-"ocasional"; es por partido. Si el nombre ya era un jugador conocido, la
-anotación no cambia nada y entra como cualquier otro.
+Lo que es cada jugador **en una temporada**. Un **fijo** compite por puntos y
+nunca es invitado, aunque la lista lo escriba con un anfitrión. Un **invitado**
+entra por orden de llegada y siempre viene con alguien. El papel se guarda la
+primera vez que una lista guardada coloca al jugador en la temporada, o cuando el
+organizador lo cambia; mientras no hay ninguno, vale el de su última temporada
+anterior, y si no tiene, es invitado quien entró presentado por alguien y fijo el
+resto. Quien ya ha jugado como fijo en la temporada no puede pasar a invitado en
+ella.
+
+## Invitado nombrado
+
+Un invitado con nombre, escrito como `Adri (David)`: el nombre y, entre
+paréntesis, quien lo trae. La primera vez se registra como jugador normal, con el
+vínculo a quien lo presentó. En cada partido su anfitrión es el del paréntesis; si
+la línea no lo trae, su **anfitrión habitual**, y si no tiene, quien lo presentó.
+Sin ninguno, la línea queda sin resolver hasta que el organizador dice quién lo
+trae (o lo hace fijo). Junto a su nombre se muestra siempre «de David» en la
+lista, la convocatoria y los equipos.
+
+## Anfitrión habitual
+
+Quien suele traer a un invitado; puede tener varios y el primero es el habitual.
+Cada anfitrión con el que una lista guardada trae al invitado se añade; el
+organizador los añade, quita y reordena en su ficha de Jugones.
 
 ## Invitado anónimo
 
@@ -101,9 +118,13 @@ por orden de llegada igual que un invitado nombrado.
 
 Una **parte** (4 € por cabeza) que queda por pagar de un partido jugado. Tiene un
 **titular**, que responde de ella, y un **beneficiario**, de quien es la parte:
-el anfitrión responde por sus `+1` y por los invitados con nombre. Cualquiera de
-los dos puede pagarla y el pago guarda quién lo hizo. Al pagarse deja de ser
-deuda y pasa a ser un pago; la deuda de un titular cuenta cada parte una sola vez.
+el anfitrión responde por sus `+1` y por sus invitados con nombre; si no, el propio
+jugador. El organizador puede pasar la deuda de un jugador con nombre a otro
+titular; la de un `+1` es siempre de su anfitrión. Pueden pagarla el titular o el beneficiario, y el pago guarda quién lo hizo; otro
+jugador solo con un Bizum suyo cuando el organizador lo dictamina (ver
+[`ciclo-del-partido.md`](ciclo-del-partido.md#pago-hecho-por-el-sistema-a-partir-de-un-bizum)),
+y la parte conserva su titular. Al pagarse deja de ser deuda y pasa a ser un
+pago; la deuda de un titular cuenta cada parte una sola vez.
 
 ## Método de pago
 

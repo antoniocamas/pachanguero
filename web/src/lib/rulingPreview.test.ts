@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import type { RulableShare } from '../api';
 import {
+  centsOf,
   defaultShares,
   maxShares,
+  othersText,
   rulingPreview,
   shareRows,
   sharesAfterToggle,
@@ -203,5 +205,29 @@ describe('sharesAfterToggle', () => {
 
   it('unticking a debt unticks the ones after it', () => {
     expect(sharesAfterToggle(3, 1, false)).toBe(1);
+  });
+});
+
+describe('paying for others', () => {
+  it('adds up the money of the first shares', () => {
+    const three = [
+      share(1, '2026-10-07'),
+      share(2, '2026-09-30', 350),
+      share(3, '2026-09-23'),
+    ];
+    expect(centsOf(three, 2)).toBe(750);
+    expect(centsOf(three, 0)).toBe(0);
+  });
+
+  it('says whom the Bizum also pays for, leaving out anyone with no share ticked', () => {
+    expect(othersText([])).toBeNull();
+    expect(othersText([{ name: 'Ana', count: 0 }])).toBeNull();
+    expect(
+      othersText([
+        { name: 'Ana', count: 1 },
+        { name: 'Beto', count: 2 },
+        { name: 'Caro', count: 0 },
+      ])
+    ).toBe('Paga también por Ana (1 cuota) y Beto (2 cuotas).');
   });
 });

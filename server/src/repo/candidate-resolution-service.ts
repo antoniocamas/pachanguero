@@ -9,6 +9,7 @@ import type {
   ParsedLine,
 } from '../domain/candidate-line-parser.js';
 import { LocalCalendar } from '../domain/local-calendar.js';
+import { GuestClassifier, type SeasonRole } from '../domain/season-role.js';
 import type { AliasRepository } from './alias-repository.js';
 import type {
   CandidateLine,
@@ -18,6 +19,11 @@ import type {
 import type { GameDayResolutionService } from './game-day-resolution-service.js';
 import type { GameRepository, GameRow } from './game-repository.js';
 import type { GuestCandidateRepository } from './guest-candidate-repository.js';
+import type {
+  GuestContext,
+  GuestRoleService,
+  PlacedCandidate,
+} from './guest-role-service.js';
 import type { ParticipationRepository } from './participation-repository.js';
 import type { PlayerRegistrar } from './player-registrar.js';
 import type { PlayerRepository } from './player-repository.js';
@@ -36,7 +42,10 @@ export interface MatchedCandidate {
   name: string | null;
   /** Who a guest came with; null for a regular. */
   hostPlayerId: number | null;
+  hostName: string | null;
   guest: 'named' | 'anonymous' | null;
+  /** The player's role in the game's season; null for an anonymous plus-one. */
+  role: SeasonRole | null;
   /** First time this season: the organiser has to say how many seasons they have. */
   seniorityPrompt?: true;
   suggested?: number;
@@ -71,7 +80,10 @@ export type ResolveResult =
 interface ResolvedLine {
   line: ParsedLine;
   playerId: number | null;
+  /** The line's host: the one it names or was given, or the host a guest came with. */
   hostPlayerId: number | null;
+  /** Set when the line is a guest's: an anonymous plus-one or a named invitado. */
+  guest?: GuestRow;
 }
 
 interface GuestRow {
@@ -83,7 +95,6 @@ interface GuestRow {
 interface ReadLine {
   row: CandidateRow;
   resolved?: ResolvedLine;
-  guest?: GuestRow;
 }
 
 /**
@@ -94,6 +105,7 @@ interface ReadLine {
  */
 export class CandidateResolutionService {
   private readonly calendar = new LocalCalendar();
+  private readonly classifier = new GuestClassifier();
   private readonly lines: LineResolver;
 
   constructor(
@@ -108,6 +120,7 @@ export class CandidateResolutionService {
     registrar: PlayerRegistrar,
     private readonly lifecycle: GameLifecycleService,
     private readonly edits: ConvocatoriaEditService,
+    private readonly guestRoles: GuestRoleService,
     private readonly conn: Database.Database
   ) {
     this.lines = new LineResolver(players, aliases, registrar);
@@ -163,10 +176,17 @@ export class CandidateResolutionService {
 
     const signedUp = new Set<number>();
     const guestRows: GuestLine[] = [];
-    for (const { resolved, guest } of all) {
+    const placed: PlacedCandidate[] = [];
+    for (const { resolved } of all) {
       if (!resolved) continue;
       signedUp.add((resolved.playerId ?? resolved.hostPlayerId)!);
+      const guest = resolved.guest;
       if (guest) guestRows.push({ position: resolved.line.position, ...guest });
+      if (resolved.playerId !== null)
+        placed.push({
+          playerId: resolved.playerId,
+          hostId: guest ? guest.host_player_id : null,
+        });
     }
     const members: MemberKey[] = [
       ...[...signedUp].map(playerId => ({ playerId })),
@@ -188,9 +208,21 @@ export class CandidateResolutionService {
       for (const playerId of signedUp)
         this.participations.set(gameId, playerId, { signed_up: true });
       this.guests.replaceAll(gameId, guestRows);
+      this.guestRoles.recordSaved(game.season_id, placed);
       this.edits.align(gameId, members);
     })();
     return all.map(r => r.row);
+  }
+
+  /**
+   * Saves again every list that can still change, so a change of role, usual host or payer
+   * reaches the games not played yet. A list that has never been saved is left alone.
+   */
+  refreshUnplayed(): void {
+    for (const game of this.games.listUnplayed()) {
+      const lines = this.saved.list(game.id);
+      if (lines.length) this.save(game.id, lines);
+    }
   }
 
   /**
@@ -207,6 +239,9 @@ export class CandidateResolutionService {
     this.requireGame(gameId);
     if (action.type === 'link') {
       throw new Error('A link is kept on the list line, not on the players');
+    }
+    if (entry.field === 'host' && entry.line.kind === 'plain') {
+      throw new Error('Quien trae a un invitado se elige en su línea');
     }
     const typed = this.lines.settle(entry, action);
     return typed.settled
@@ -266,6 +301,7 @@ export class CandidateResolutionService {
   private rows(game: GameRow, lines: readonly CandidateLine[]): ReadLine[] {
     const matcher = this.lines.matcher();
     const names = this.lines.names();
+    const context = this.guestRoles.forSeason(game.season_id);
     const seen = new Set<string>();
     // Who each player came with on the line that first listed them.
     const hosts = new Map<number, number | null>();
@@ -276,7 +312,12 @@ export class CandidateResolutionService {
       if (text === undefined) continue;
       const line = this.parser.parse(text, position);
       const outcome = this.withoutImpostors(
-        this.resolveLine(line, matcher, names, links),
+        this.asGuest(
+          this.resolveLine(line, matcher, names, links),
+          context,
+          names,
+          introduced
+        ),
         hosts,
         names,
         links
@@ -304,14 +345,12 @@ export class CandidateResolutionService {
         });
         continue;
       }
-      const guest = this.guestRow(outcome.line, introduced);
       const who = outcome.line.playerId;
       if (who !== null && !hosts.has(who)) {
         hosts.set(who, outcome.line.hostPlayerId);
       }
       out.push({
         resolved: outcome.line,
-        guest: guest ?? undefined,
         row: {
           position,
           text,
@@ -319,7 +358,7 @@ export class CandidateResolutionService {
           introduced,
           status: 'matched',
           line: outcome.line.line,
-          candidate: this.describe(game, outcome.line, names, guest),
+          candidate: this.describe(game, outcome.line, names, context),
         },
       });
     }
@@ -384,23 +423,57 @@ export class CandidateResolutionService {
         return { entry: this.lines.unresolved(line, 'host', host, names) };
       }
       hostPlayerId = host.playerId;
+    } else if (links?.host !== undefined && names.has(links.host)) {
+      // An invitado written without a host: the organiser said who brought them.
+      hostPlayerId = links.host;
+    }
+    if (line.kind === 'plusOne') {
+      const guest = { player_id: null, host_player_id: hostPlayerId! };
+      return { line: { line, playerId, hostPlayerId, guest } };
     }
     return { line: { line, playerId, hostPlayerId } };
   }
 
   /**
-   * A guest row for an anonymous plus-one, or for a name this very line
-   * registered as its host's guest; a known player written with a host is a
-   * regular like any other.
+   * Whether a named line is a guest's, and of whom: a fijo never is, an invitado always comes
+   * with a host (the line's, else the usual one, else who introduced them), and a name the line
+   * itself registered is its host's guest. An invitado with no host known is left for the
+   * organiser to say who brought them; the entry names the invitado.
    */
-  private guestRow(r: ResolvedLine, introduced?: true): GuestRow | null {
-    if (r.line.kind === 'plusOne') {
-      return { player_id: null, host_player_id: r.hostPlayerId! };
+  private asGuest(
+    outcome: { line: ResolvedLine } | { entry: UnresolvedEntry },
+    context: GuestContext,
+    names: Map<number, string>,
+    introduced?: true
+  ): { line: ResolvedLine } | { entry: UnresolvedEntry } {
+    if (!('line' in outcome) || outcome.line.playerId === null) return outcome;
+    const resolved = outcome.line;
+    const playerId = resolved.playerId!;
+    const answer = this.classifier.classify({
+      role: context.roleOf(playerId),
+      introduced: introduced === true,
+      lineHost: resolved.hostPlayerId,
+      usualHosts: context.usualHosts(playerId).filter(h => h !== playerId),
+      introducedBy: context.introducedBy(playerId),
+    });
+    if (answer.kind === 'regular') return outcome;
+    if (answer.kind === 'needsHost') {
+      return {
+        entry: {
+          line: resolved.line,
+          field: 'host',
+          reason: 'noHost',
+          candidates: [{ id: playerId, name: names.get(playerId) ?? '' }],
+        },
+      };
     }
-    if (r.line.kind === 'hostAnnotated' && introduced) {
-      return { player_id: r.playerId, host_player_id: r.hostPlayerId! };
-    }
-    return null;
+    return {
+      line: {
+        ...resolved,
+        hostPlayerId: answer.hostId,
+        guest: { player_id: playerId, host_player_id: answer.hostId },
+      },
+    };
   }
 
   /** Asks for seniority the first time a player appears in the game's season. */
@@ -420,15 +493,18 @@ export class CandidateResolutionService {
     game: GameRow,
     r: ResolvedLine,
     names: Map<number, string>,
-    row: GuestRow | null
+    context: GuestContext
   ): MatchedCandidate {
+    const row = r.guest ?? null;
     return {
       ...this.seniorityPrompt(game, r.playerId),
       position: r.line.position,
       playerId: r.playerId,
       name: r.playerId === null ? null : (names.get(r.playerId) ?? null),
       hostPlayerId: row ? row.host_player_id : null,
+      hostName: row ? (names.get(row.host_player_id) ?? null) : null,
       guest: row ? (row.player_id === null ? 'anonymous' : 'named') : null,
+      role: r.playerId === null ? null : context.roleOf(r.playerId),
     };
   }
 }

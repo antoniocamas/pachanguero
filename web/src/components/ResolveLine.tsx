@@ -15,14 +15,23 @@ const REASONS: Record<UnresolvedEntry['reason'], string> = {
   ambiguous: 'Puede ser más de una persona',
   collision: 'Ese nombre ya existe',
   duplicate: 'Ya hay uno en la lista con otro anfitrión: ¿es otra persona?',
+  noHost: 'Es invitado y no sé quién lo trae',
   correction: 'Corregir quién es',
 };
 
-/** Who the entry's name could be: the players it matched, or anyone. */
-const optionsFor = <P,>(entry: UnresolvedEntry, everyone: P[]) =>
+/** Who the entry's name could be: the players it matched, or anyone (never the invitado as their own host). */
+const optionsFor = <P extends { id: number }>(
+  entry: UnresolvedEntry,
+  everyone: P[]
+) =>
   entry.reason === 'ambiguous' || entry.reason === 'collision'
     ? entry.candidates
-    : everyone;
+    : entry.reason === 'noHost'
+      ? everyone.filter(p => !entry.candidates.some(c => c.id === p.id))
+      : everyone;
+
+/** A name that is an invitado's host is chosen for the line only: no alias, no new player. */
+const choosesHostOnly = (entry: UnresolvedEntry) => entry.reason === 'noHost';
 
 /** A second person with a known name needs a different one: "Javi de Caro". */
 const suggestedName = (entry: UnresolvedEntry, text: string) =>
@@ -54,8 +63,9 @@ export function ResolveLine({
 }) {
   const text = spelled(entry);
   const options = optionsFor(entry, players);
+  const hostOnly = choosesHostOnly(entry);
   const [playerId, setPlayerId] = useState<number | ''>(
-    entry.candidates.length === 1 && entry.reason !== 'duplicate'
+    entry.candidates.length === 1 && entry.reason !== 'duplicate' && !hostOnly
       ? entry.candidates[0].id
       : ''
   );
@@ -81,7 +91,9 @@ export function ResolveLine({
             setPlayerId(e.target.value ? Number(e.target.value) : '')
           }
         >
-          <option value="">¿Quién es?</option>
+          <option value="">
+            {hostOnly ? '¿Quién lo trae?' : '¿Quién es?'}
+          </option>
           {options.map(p => (
             <option key={p.id} value={p.id}>
               {p.name}
@@ -99,20 +111,22 @@ export function ResolveLine({
             })
           }
         >
-          Es este
+          {hostOnly ? 'Lo trae este' : 'Es este'}
         </button>
       </div>
-      <label className="remember">
-        <input
-          type="checkbox"
-          checked={remember}
-          onChange={e => setRemember(e.target.checked)}
-        />
-        Recordar como apodo
-      </label>
-      {(allowRegister || extra) && (
+      {!hostOnly && (
+        <label className="remember">
+          <input
+            type="checkbox"
+            checked={remember}
+            onChange={e => setRemember(e.target.checked)}
+          />
+          Recordar como apodo
+        </label>
+      )}
+      {((allowRegister && !hostOnly) || extra) && (
         <div className="links">
-          {allowRegister && (
+          {allowRegister && !hostOnly && (
             <button
               className="btn link"
               aria-expanded={registering}
@@ -125,7 +139,7 @@ export function ResolveLine({
           {extra}
         </div>
       )}
-      {allowRegister && registering && (
+      {allowRegister && !hostOnly && registering && (
         <div className="register">
           <input
             aria-label={`Nombre nuevo para ${text}`}

@@ -4,6 +4,7 @@ import {
   type CandidateLine,
   type CandidateRow,
   type ResolveAction,
+  type SeasonRole,
   type UnresolvedEntry,
 } from '../api';
 import {
@@ -101,6 +102,17 @@ export function useCandidateList(
     [gameId, guard, onEnrolled, rows, seasonId]
   );
 
+  /** Makes a player a fijo or an invitado for the season, then reads the draft again. */
+  const setRole = useCallback(
+    (playerId: number, role: SeasonRole) =>
+      guard(async () => {
+        await api.setRole(seasonId, playerId, role);
+        setRows(await api.previewCandidates(gameId, rowLines(rows)));
+        onSaved();
+      }),
+    [gameId, guard, onSaved, rows, seasonId]
+  );
+
   const resolve = useCallback(
     (entry: UnresolvedEntry, action: ResolveAction) =>
       guard(async () => {
@@ -155,5 +167,6 @@ export function useCandidateList(
     save,
     resolve,
     confirmSeniority,
+    setRole,
   };
 }

@@ -84,13 +84,18 @@ describe('the player own routes', () => {
       });
     });
 
-    it('shows the host their own share and their guests, with no guest name or id', async () => {
+    it("shows the host their own share and their guests', naming the named guest but no id", async () => {
       const ana = await actor('Ana Ruiz');
       const juanito = guest('Juanito Secreto');
       const game = playedGame();
       owe(game, ana.playerId, { playerId: ana.playerId }, 500);
       owe(game, ana.playerId, { playerId: juanito }, 500);
       owe(game, ana.playerId, { hostPlayerId: ana.playerId, ordinal: 1 }, 500);
+      repo.guestCandidates.put(game, {
+        position: 2,
+        player_id: juanito,
+        host_player_id: ana.playerId,
+      });
 
       const reply = await get('/api/me/debts', ana.token);
 
@@ -99,7 +104,7 @@ describe('the player own routes', () => {
         reply.body as unknown as { mine: { kind: string }[] }
       ).mine.map(r => r.kind);
       expect(kinds.sort()).toEqual(['guest', 'guest', 'own']);
-      expect(text(reply.body)).not.toContain('Juanito');
+      expect(text(reply.body)).toContain('Juanito Secreto');
       expect(text(reply.body)).not.toContain(String(juanito + 1000));
       expect(text(reply.body)).not.toMatch(/"(player|holder|beneficiary)Id"/);
     });
@@ -444,22 +449,22 @@ describe('the player own routes', () => {
       const saved = await app.request('/api/me/contact', {
         method: 'PATCH',
         token: carlos.token,
-        body: { email: 'carlos@example.com', phone: '+34 600 123 456' },
+        body: { emails: ['carlos@example.com'], phone: '+34 600 123 456' },
       });
       const read = await get('/api/me/contact', carlos.token);
 
       expect(saved.status).toBe(200);
       expect(saved.body).toEqual({
-        email: 'carlos@example.com',
+        emails: ['carlos@example.com'],
         phone: '+34 600 123 456',
       });
       expect(read.body).toEqual(saved.body);
     });
 
     it.each([
-      [{ email: 'carlos' }, 'email no válido'],
-      [{ email: 'carlos@example' }, 'email no válido'],
-      [{ email: '@example.com' }, 'email no válido'],
+      [{ emails: ['carlos'] }, 'email no válido'],
+      [{ emails: ['carlos@example'] }, 'email no válido'],
+      [{ emails: ['@example.com'] }, 'email no válido'],
       [{ phone: '12345' }, 'teléfono no válido'],
       [{ phone: 'abc' }, 'teléfono no válido'],
       [{ phone: '1234567890123456' }, 'teléfono no válido'],
@@ -472,7 +477,7 @@ describe('the player own routes', () => {
         await app.request('/api/me/contact', {
           method: 'PATCH',
           token: carlos.token,
-          body: { email: 'previo@example.com', phone: '600123456' },
+          body: { emails: ['previo@example.com'], phone: '600123456' },
         });
 
         const reply = await app.request('/api/me/contact', {
@@ -484,7 +489,7 @@ describe('the player own routes', () => {
         expect(reply.status).toBe(422);
         expect(reply.body.error).toBe(message);
         expect((await get('/api/me/contact', carlos.token)).body).toEqual({
-          email: 'previo@example.com',
+          emails: ['previo@example.com'],
           phone: '600123456',
         });
       }
@@ -495,7 +500,7 @@ describe('the player own routes', () => {
       await app.request('/api/me/contact', {
         method: 'PATCH',
         token: carlos.token,
-        body: { email: 'carlos@example.com', phone: '600123456' },
+        body: { emails: ['carlos@example.com'], phone: '600123456' },
       });
 
       const reply = await app.request('/api/me/contact', {
@@ -504,7 +509,10 @@ describe('the player own routes', () => {
         body: { phone: '' },
       });
 
-      expect(reply.body).toEqual({ email: 'carlos@example.com', phone: null });
+      expect(reply.body).toEqual({
+        emails: ['carlos@example.com'],
+        phone: null,
+      });
     });
 
     it.each(['name', 'introducedBy', 'games', 'playerId'])(
@@ -516,14 +524,14 @@ describe('the player own routes', () => {
         const reply = await app.request('/api/me/contact', {
           method: 'PATCH',
           token: carlos.token,
-          body: { email: 'carlos@example.com', [field]: 'otro' },
+          body: { emails: ['carlos@example.com'], [field]: 'otro' },
         });
 
         expect(reply.status).toBe(422);
         expect(reply.body.error).toBe(`campo no permitido: ${field}`);
         expect(repo.players.nameOf(carlos.playerId)).toBe(before);
         expect((await get('/api/me/contact', carlos.token)).body).toEqual({
-          email: null,
+          emails: [],
           phone: null,
         });
       }
@@ -546,7 +554,7 @@ describe('the player own routes', () => {
         const reply = await app.request('/api/me/contact', {
           method: 'PATCH',
           token: who.token,
-          body: { email: 'casa@example.com' },
+          body: { emails: ['casa@example.com'] },
         });
         expect(reply.status).toBe(200);
       }

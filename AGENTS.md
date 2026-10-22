@@ -74,7 +74,8 @@ npm workspaces, both ESM (TS imports use `.js` extensions). Data flow is strictl
 server/src/domain/    classes: PointsCalculator, SeniorityCurve, ConvocatoriaBuilder,
                       ExclusionHistory, SeasonCalendar, ScheduleResolver, NameMatcher,
                       CandidateLineParser, TeamListParser, GameLifecycle, PlayedDerivation,
-                      DebtLedger, GuestSlotAllocator, ... and the access rules:
+                      DebtLedger, GuestSlotAllocator, SeasonRolePolicy and
+                      GuestClassifier (fijo or invitado, and whose guest), ... and the access rules:
                       PasswordPolicy, UsernamePolicy, LockoutPolicy, PasswordHasher (scrypt),
                       TokenService (the only code that knows the JWT library), EffectiveRole; and
                       the player's own view: OwnDisclosure (every privacy rule of what a player
@@ -95,11 +96,16 @@ server/src/repo/      repository/service classes; converts snake_case rows to do
                       ConvocatoriaService/ConvocatoriaEditService, GameLifecycleService,
                       PaymentService, TeamAssignmentService/TeamPasteService,
                       GameViewService, ConvocatoriaHistoryConverter, ...
+                      Players: GuestRoleService (roles, usual hosts, what a saved list
+                      teaches them), PlayerDirectoryService (the players table and what the
+                      organiser edits: role, hosts, contact), PlayerDeletionService (only
+                      a player with no history and no account), DebtHolderService (a share
+                      moved to whoever pays it).
                       Identity: UserRepository, RefreshTokenRepository, AuthService (login,
                       refresh rotation, logout, switchView), UserAdminService (what the operator can
                       do to accounts), PasswordChangeService, AuthConfig (the settings; no
                       JWT_SECRET, no server). The player's own data: OwnDataService (debts,
-                      payments, report through OwnDisclosure), ContactService/ContactRepository.
+                      payments and report, through OwnDisclosure), ContactService/ContactRepository.
 server/src/routes/    Express router; route() wrapper turns throws into 400s. `api.ts` is the
                       organiser's router and is unchanged by access control: ApiRoutes mounts
                       it behind Authenticate and requireEffective('admin'), after the public
@@ -134,7 +140,7 @@ server/src/server-app.ts  builds the sign-in and guard classes and mounts /api, 
                       environment and listens
 web/src/              React 19 + Vite, no router/state lib: App.tsx chooses the login, or
                       the admin shell (pages/AdminShell.tsx: five tabs - GameDay, Standings,
-                      Debts, Jugador, Manage - refreshing by refetching everything), or the
+                      Debts, PlayersPage, Manage - refreshing by refetching everything), or the
                       player's own view (pages/OwnView.tsx: Deudas, Pagos, Estadísticas,
                       Ajustes; also what an admin sees after "Ver como jugador"). Both shells
                       take {user, onLogout, onSwitchView}. AccountPanel (password, view switch)
@@ -147,23 +153,27 @@ web/src/              React 19 + Vite, no router/state lib: App.tsx chooses the 
                       are in GameMenu, listed by lib/gameMenu.ts), and one PlayersTable follows the game's state
                       (OpenView, LineView, PlayedView, ReadOnlyView). pages/ are the tabs,
                       components/ the pieces, hooks/ the data access and actions behind them,
-                      lib/ the pure calculations (rows, columns, money, payment cell) with
-                      their vitest tests. The drag library is imported only in MemberDnd.tsx.
+                      lib/ the pure calculations (rows, columns, money, payment cell, the
+                      players table's filters and sorting) with their vitest tests.
+                      The drag library is imported only in MemberDnd.tsx.
                       Debts has three views (Deudas, En espera, Liquidados; DebtViewTabs) over one
                       useBizums hook; "Leer ahora" sits above them. The payment method is chosen
                       once per table (PaymentMethodBar) and handed to every PaymentCell, which has
                       one "Pagar" button and a ⋯ for another amount. ActionMenu is the shared
-                      ⋯ menu (a bottom sheet on a phone).
+                      ⋯ menu (a bottom sheet on a phone). Jugadores (PlayersPage) switches
+                      between one player's statistics and every player in a table
+                      (PlayerDirectoryTable); players are changed in Manage → Jugones.
 ```
 
 ## Domain invariants
 
 - **Points = paid games + scoring exclusions + seniority.** Attendance counts _payments_, not appearances. Seniority is a log curve (`seniority.ts`), not a table. Only exclusions of kind `points` or `demoted` score; a `mercy` seat does not.
 - **Default behaviour reproduces the legacy Apps Script, including its bugs.** Notably, with `mercy_resets_counter = 0` a mercy seat _subtracts_ from the wait counter and it can go negative — this is deliberate; tests assert it. The flag switches to the organiser's stated rule (reset to zero). Any change away from legacy behaviour must be opt-in per season, never a default. Background: `docs/domain-model/legacy-script-review.md`.
-- **The legacy `*` meant three things; they are separate columns now**: `signed_up`, `played`, `paid_cents` with `paid_on` (when the money _arrived_, not the game date). Never collapse them. Payment is a debt row (`share_debts`, one per share, with a holder who answers for it and a beneficiary whose share it is) until settled and a `payments` row (who paid, how much, when) after; a share is in one table or the other, never both. `paid_cents` is the player's own share, settled by whoever paid it. `BillingEffect` creates the debts when a game is played and `PaymentService` is the writer that settles and undoes them.
+- **The legacy `*` meant three things; they are separate columns now**: `signed_up`, `played`, `paid_cents` with `paid_on` (when the money _arrived_, not the game date). Never collapse them. Payment is a debt row (`share_debts`, one per share, with a holder who answers for it and a beneficiary whose share it is) until settled and a `payments` row (who paid, how much, when) after; a share is in one table or the other, never both. `paid_cents` is the player's own share, settled by whoever paid it. `BillingEffect` creates the debts when a game is played (who holds each: `docs/domain-model/glossary.md#deuda`); `PaymentService` is the writer that settles and undoes them, and `DebtHolderService` is the only writer that changes a holder (merging players aside).
 - **The season is derived, never picked.** A season runs 1 Sept–31 Aug and `seasons.starts_on`/`ends_on` follow from its name (`SeasonCalendar`); "current" is the season containing today, a game's season is the one containing its date (`SeasonRepository.current(asOf)`). There is no active-season flag. Players have no per-season sign-up step: a `season_players` row appears on first appearance, with seniority confirmed then.
 - **A game has five states, and only `GameLifecycle` says which moves are legal.** `open`, `convocatoria_created`, `convocatoria_confirmed`, `played`, `cancelled` (UI: Abierto, Convocatoria creada, Convocatoria confirmada, Jugado, Cancelado). Cancelling remembers the state it left in `cancelled_from` and undoing returns there. A state changes only through `GameLifecycleService.perform` (or `GameRepository.setState` inside it); what each state lets you edit is a capability (`edit_apuntados`, `edit_convocatoria`, `pay`, `teams`) the services check. `docs/domain-model/ciclo-del-partido.md` has the table.
 - **A game goes candidates → convocatoria → played, and the convocatoria is what says who played.** `CandidateResolutionService` writes `signed_up` and `guest_candidates`, on save only; `ConvocatoriaService` stores the selection (and writes **no** exclusion rows, nor `played`/payment); `PlayedOutcomeEffect` (run by `GameLifecycleService` when a game enters or leaves `played`) is the sole writer of `played` and of exclusion rows, derived from the convocatoria by `PlayedDerivation`, so a point is retracted on reopen or cancel and restored on playing again; `BillingEffect` and `PaymentService` own the debts and payments, and `TeamPasteService` records only `team`. Overview in `docs/domain-model/ciclo-del-partido.md`.
+- **A player is a fijo or an invitado per season, and a guest always has a host.** `SeasonRolePolicy` and `GuestClassifier` hold every rule (`docs/domain-model/glossary.md#fijo-e-invitado`). `season_roles` is written only by a saved list's first placement (`GuestRoleService.recordSaved`) or by the organiser (merging players aside). A change of role or usual hosts re-saves every unplayed list. In the convocatoria fijos always come before guests (`docs/domain-model/convocatoria.md`).
 - **Pasted names are never guessed**: an unmatched or ambiguous one is kept only as line text in `candidate_lines` and stores no player or sign-up.
 - **Weekly schedule rows are versioned (create-only)**, so earlier weeks keep resolving as they did.
 - **A convocatoria is stored when created and stamped when confirmed**: it keeps `rules_json` plus every entry with the points it saw and the outcome the selection chose, so past selections stay auditable after late payments change current standings. Confirming only stamps `confirmed_at`; recreating recomputes and asks before discarding hand corrections. Hand corrections (`ConvocatoriaEditService`) change only an entry's `playing`, never its `outcome`, points or position; anonymous plus-ones are entries too, named by host and ordinal. Seeded played games get a confirmed convocatoria with `source = 'history'` (`ConvocatoriaHistoryConverter`).
@@ -171,7 +181,8 @@ web/src/              React 19 + Vite, no router/state lib: App.tsx chooses the 
 - **A player sees only their own data, and the server decides.** The two roles the admin's "Ver como jugador" view switch and "Ver como otro jugador" (the token carries the player; logged in `view_as_log`) are in `docs/users-and-roles.md`. The player's routes (`OwnRouter`) take no player id: the player comes from the token, and every disclosure rule is in `OwnDisclosure`. A route added to `api.ts` is admin-only; accounts exist only through `pachanguero-admin`.
 - **Every payment records its method** (`efectivo`, `bizum`, `otro`; `PaymentMethods`, `payments.method`). The route requires it and parses it, with no default at the boundary (the form preselects Efectivo); payments from before the column read `otro`; a recorded method is never edited, the correction is undo and record again.
 - **A Bizum payment links its Bizum.** A payment made from a Bizum has `method = 'bizum'`, `bizum_id` (the kept Bizum) and the date the money was booked; a manual payment has `bizum_id` null. Only `BizumSettlementService` writes the former, through `ShareSettler`, in the transaction of the entry that was read.
-- **A sender is identified only by a stored Bizum name or phone.** A Bizum's sender is a player only when it equals one of the player's Bizum names (`player_bizum_names`, how they appear on Bizum, not a sign-up alias; the bank may show a player under several) or their phone; the player's name, aliases and any similarity only _suggest_. A name held by two players identifies nobody. Pairing adds that name (never replacing the others) or writes that phone; the rules pay only games on or before the booking date, and later games, and the debts of earlier seasons (only with money the Bizum's own season leaves), are paid only by the organiser's ruling; a waiting Bizum is judged again only by a pairing, a played game or the organiser's ruling, always in `review` mode (never discards), oldest booking first.
+- **A sender is identified only by a stored Bizum name or phone.** A Bizum's sender is a player only when it equals one of the player's Bizum names (`player_bizum_names`, how they appear on Bizum, not a sign-up alias; the bank may show a player under several) or their phone; the player's name, aliases and any similarity only _suggest_. A name held by two players identifies nobody. Pairing adds that name (never replacing the others) or writes that phone; the rules pay only games on or before the booking date, and later games, and the debts of earlier seasons (only with money the Bizum's own season leaves), are paid only by the organiser's ruling; a waiting Bizum is judged again only by a pairing, a played game, a share moved to another holder or the organiser's ruling, always in `review` mode (never discards), oldest booking first.
+- **The organiser's ruling may pay other players' own shares from the sender's Bizum** (`BizumResolutionService.rule(..., others)`, `ShareSettler`'s `onBehalf`): the share keeps its holder; the payment records the sender as payer.
 - **A Bizum is processed once.** `BizumFeed` handles every bank entry in one transaction: its ledger row (`bizum_entries`, keyed by the bank's own identification, holding no sender, subject or amount), the kept Bizum and what the policy did with it commit together. A discarded entry keeps nothing but its key; nothing reads it again, also through a renewed connection.
 - **Money is integer cents** (`price_cents`, `paid_cents`).
 - Ties in the convocatoria sort break by name (`es` locale) so results are deterministic.

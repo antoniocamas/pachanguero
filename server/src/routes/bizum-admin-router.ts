@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   BizumRefusal,
   type BizumResolutionService,
+  type SharesFor,
 } from '../repo/bizum-resolution-service.js';
 import type { RestOfBizum } from '../repo/bizum-settlement-service.js';
 import type { SenderPairingService } from '../repo/sender-pairing-service.js';
@@ -48,9 +49,14 @@ export class BizumAdminRouter {
     });
     router.get('/bizums/:id/open-shares', (req, res) => {
       const playerId = this.idIn(req.query.playerId);
+      const ownOnly = req.query.own === '1';
       res.json(
         this.refused(() =>
-          this.resolution.openShares(this.idIn(req.params.id), playerId)
+          this.resolution.openShares(
+            this.idIn(req.params.id),
+            playerId,
+            ownOnly
+          )
         )
       );
     });
@@ -62,13 +68,14 @@ export class BizumAdminRouter {
       res.json({ ...result, waiting: this.resolution.waiting() });
     });
     router.post('/bizums/:id/rule', (req, res) => {
-      const { playerId, shares, rest } = this.bodyOf(req.body);
+      const { playerId, shares, rest, others } = this.bodyOf(req.body);
       const ruling = this.refused(() =>
         this.resolution.rule(
           this.idIn(req.params.id),
           this.idIn(playerId),
           typeof shares === 'number' ? shares : Number.NaN,
-          (rest ?? 'keep') as RestOfBizum
+          (rest ?? 'keep') as RestOfBizum,
+          this.othersIn(others)
         )
       );
       res.json({ ...ruling, waiting: this.resolution.waiting() });
@@ -85,6 +92,19 @@ export class BizumAdminRouter {
     return typeof body === 'object' && body !== null
       ? (body as Record<string, unknown>)
       : {};
+  }
+
+  /** Whom else the Bizum pays for: `[{ playerId, shares }]`, or nothing. */
+  private othersIn(value: unknown): SharesFor[] {
+    if (value === undefined) return [];
+    if (!Array.isArray(value)) throw new HttpError(400, 'Datos no válidos');
+    return value.map(item => {
+      const { playerId, shares } = this.bodyOf(item);
+      return {
+        playerId: this.idIn(playerId),
+        shares: typeof shares === 'number' ? shares : Number.NaN,
+      };
+    });
   }
 
   private idIn(value: unknown): number {

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { PlayerDetail } from '../api';
+import type { DirectoryRow } from '../api';
 
 /**
  * One player's data, open for correction: principal name, aliases, who
@@ -15,9 +15,10 @@ export function PlayerEditor({
   onRemoveAlias,
   onSeasons,
   onMerge,
+  onDelete,
 }: {
-  player: PlayerDetail;
-  everyone: Pick<PlayerDetail, 'id' | 'name'>[];
+  player: Pick<DirectoryRow, 'id' | 'name' | 'introducedBy' | 'aliases'>;
+  everyone: Pick<DirectoryRow, 'id' | 'name'>[];
   /** Seasons of seniority this season; null when not enrolled. */
   seasons: number | null;
   onRename: (name: string, keepOldAsAlias: boolean) => Promise<boolean>;
@@ -27,6 +28,8 @@ export function PlayerEditor({
   onSeasons: (seasons: number) => void;
   /** Folds another player into this one; false when refused. */
   onMerge: (fromId: number) => Promise<boolean>;
+  /** Deletes this player, created by mistake; the server refuses one with a history. */
+  onDelete: () => void;
 }) {
   const [name, setName] = useState(player.name);
   const [keepOld, setKeepOld] = useState(true);
@@ -163,6 +166,21 @@ export function PlayerEditor({
           }}
         >
           Fundir
+        </button>
+      </div>
+      <div className="actions">
+        <button
+          className="btn link danger"
+          onClick={() => {
+            if (
+              window.confirm(
+                `¿Borrar a ${player.name}? Solo se puede si nunca ha estado en una lista, un partido, una deuda o un pago y no tiene usuario.`
+              )
+            )
+              onDelete();
+          }}
+        >
+          Borrar jugador
         </button>
       </div>
     </div>

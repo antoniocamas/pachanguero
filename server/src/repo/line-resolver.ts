@@ -14,10 +14,11 @@ export interface UnresolvedEntry {
   field: LineField;
   /**
    * 'collision' is a new name that turned out to belong to an existing player;
-   * 'duplicate' is a guest whose name is already in the list with another host.
+   * 'duplicate' is a guest whose name is already in the list with another host;
+   * 'noHost' is an invitado written without a host when none is known for them.
    */
-  reason: 'unmatched' | 'ambiguous' | 'collision' | 'duplicate';
-  /** Players the name could be; empty when nothing matched. */
+  reason: 'unmatched' | 'ambiguous' | 'collision' | 'duplicate' | 'noHost';
+  /** Players the name could be; empty when nothing matched; for 'noHost', the invitado. */
   candidates: { id: number; name: string }[];
 }
 

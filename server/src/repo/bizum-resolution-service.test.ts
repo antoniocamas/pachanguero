@@ -70,6 +70,84 @@ describe('BizumResolutionService', () => {
     });
   });
 
+  describe('paying for other players', () => {
+    let ana: number;
+    let beto: number;
+
+    beforeEach(() => {
+      ana = rig.player('Ana López');
+      beto = rig.player('Beto Ruiz');
+    });
+
+    it('pays the sender’s share and those of the players they pay for, keeping each holder', async () => {
+      const game = rig.owes(luis, '2026-10-05');
+      rig.flow.participations.set(game, ana, { played: true });
+      rig.flow.debts.insert(game, { playerId: ana }, ana, 400);
+      rig.owes(beto, '2026-10-06');
+      await arrive('r1', 1200, { name: 'Luis P.R.' });
+
+      resolution().rule(rig.idOf('r1'), luis, 1, 'keep', [
+        { playerId: ana, shares: 1 },
+        { playerId: beto, shares: 1 },
+      ]);
+
+      const paid = rig.conn
+        .prepare(
+          'SELECT beneficiary_player_id AS b, holder_player_id AS h, payer_player_id AS p FROM payments ORDER BY id'
+        )
+        .all();
+      expect(paid).toEqual([
+        { b: luis, h: luis, p: luis },
+        { b: ana, h: ana, p: luis },
+        { b: beto, h: beto, p: luis },
+      ]);
+      expect(rig.handlingOf('r1')).toMatchObject({
+        status: 'settled',
+        unallocatedCents: 0,
+      });
+    });
+
+    it('may pay only for others when the sender owes nothing', async () => {
+      rig.owes(ana, '2026-10-05');
+      await arrive('r1', 400, { name: 'Luis P.R.' });
+
+      resolution().rule(rig.idOf('r1'), luis, 0, 'keep', [
+        { playerId: ana, shares: 1 },
+      ]);
+
+      expect(rig.payments()).toHaveLength(1);
+    });
+
+    it('lists only a player’s own shares for paying them on their behalf', async () => {
+      const own = rig.owes(ana, '2026-10-05');
+      await arrive('r1', 800, { name: 'Luis P.R.' });
+
+      expect(
+        resolution()
+          .openShares(rig.idOf('r1'), ana, true)
+          .map(s => s.gameId)
+      ).toEqual([own]);
+    });
+
+    it('refuses more than the Bizum covers, more shares than they owe, and the sender as another', async () => {
+      rig.owes(luis, '2026-10-05');
+      rig.owes(ana, '2026-10-05');
+      await arrive('r1', 400, { name: 'Luis P.R.' });
+      const id = rig.idOf('r1');
+
+      expect(() =>
+        resolution().rule(id, luis, 1, 'keep', [{ playerId: ana, shares: 1 }])
+      ).toThrow('El Bizum no cubre 2 cuotas');
+      expect(() =>
+        resolution().rule(id, luis, 0, 'keep', [{ playerId: ana, shares: 2 }])
+      ).toThrow('solo tiene 1 cuota abierta');
+      expect(() =>
+        resolution().rule(id, luis, 0, 'keep', [{ playerId: luis, shares: 1 }])
+      ).toThrow('Sus propias cuotas se eligen arriba');
+      expect(rig.payments()).toEqual([]);
+    });
+  });
+
   it.each([0, -1, 1.5, Number.NaN])('refuses %s shares', async shares => {
     rig.owes(luis, '2026-10-05');
     await arrive('r1', 800, { name: 'Luis P.R.' });

@@ -36,10 +36,21 @@ describe('debtLines', () => {
     expect(line.date).toMatch(/7/);
   });
 
-  it('shows a guest share as "invitado", with no name', () => {
-    const lines = debtLines([debt({ kind: 'guest' }), debt({ kind: 'guest' })]);
-    expect(lines.map(l => l.tag)).toEqual(['invitado', 'invitado']);
+  it("says a guest's share is the host's guest, naming a named one", () => {
+    const lines = debtLines([
+      debt({ kind: 'guest' }),
+      debt({ kind: 'guest', forName: 'Adri' }),
+    ]);
+    expect(lines.map(l => l.tag)).toEqual([
+      'tu invitado (+1)',
+      'tu invitado Adri',
+    ]);
     expect(new Set(lines.map(l => l.key)).size).toBe(2);
+  });
+
+  it('names the player whose share they answer for', () => {
+    const [line] = debtLines([debt({ kind: 'other', forName: 'Adri' })]);
+    expect(line.tag).toBe('por Adri');
   });
 
   it('is empty when nothing is owed', () => {

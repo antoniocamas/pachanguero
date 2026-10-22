@@ -16,6 +16,9 @@ import {
   type CandidateLine,
   type CandidateRow,
 } from './candidate-resolution-service.js';
+import { GuestRoleService } from './guest-role-service.js';
+import { PlayerHostRepository } from './player-host-repository.js';
+import { SeasonRoleRepository } from './season-role-repository.js';
 import { CandidateLineRepository } from './candidate-line-repository.js';
 import { ConvocatoriaRepository } from './convocatoria-repository.js';
 import { ConvocatoriaService } from './convocatoria-service.js';
@@ -110,6 +113,11 @@ describe('WP-001 candidate list requirements', () => {
         standings,
         players,
         conn
+      ),
+      new GuestRoleService(
+        new SeasonRoleRepository(conn),
+        new PlayerHostRepository(conn),
+        new PlayerRepository(conn)
       ),
       conn
     );
@@ -212,19 +220,42 @@ describe('WP-001 candidate list requirements', () => {
       ]);
     });
 
-    it('already known from an earlier game: resolves like any known player, no special case', () => {
-      // Given "Juan (David)" where Juan is already a known player (even one
-      // David introduced)
+    it("already known from an earlier game: an invitado is still the host's guest", () => {
+      // Given "Juan (David)" where Juan is already a known player David
+      // introduced, and nobody made him a fijo
       const david = enrol('David');
       const juan = players.register('Juan', david).id;
 
       // When the organiser saves the list
       const rows = candidates.save(gameId, L('Juan (David)'));
 
-      // Then Juan is an ordinary candidate: matched, and not a guest
+      // Then Juan is David's guest again: he ranks by arrival and David answers for him
       expect(rows[0]).toMatchObject({
         status: 'matched',
-        candidate: { playerId: juan, guest: null },
+        candidate: {
+          playerId: juan,
+          guest: 'named',
+          hostPlayerId: david,
+          role: 'invitado',
+        },
+      });
+      expect(guests.list(gameId)).toEqual([
+        { position: 1, player_id: juan, host_player_id: david },
+      ]);
+    });
+
+    it('a fijo written with a host is still a fijo', () => {
+      // Given Juan, whom the organiser made a fijo this season
+      enrol('David');
+      const juan = enrol('Juan');
+      new SeasonRoleRepository(conn).set(seasonId, juan, 'fijo');
+
+      // When a list names him with a host
+      const rows = candidates.save(gameId, L('Juan (David)'));
+
+      // Then he is an ordinary candidate, not a guest
+      expect(rows[0]).toMatchObject({
+        candidate: { playerId: juan, guest: null, role: 'fijo' },
       });
       expect(guests.list(gameId)).toEqual([]);
     });

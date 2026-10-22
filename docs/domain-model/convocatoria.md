@@ -1,11 +1,12 @@
 # El algoritmo de convocatoria
 
 Se ejecuta sobre los candidatos de un partido (la lista pegada de WhatsApp, ver
-[`ciclo-del-partido.md`](ciclo-del-partido.md)). Si los **habituales** son 14 o
-menos, juegan todos y no hay nada que decidir: los invitados ocupan las plazas
-que sobren por orden de llegada. El algoritmo de abajo (puntos, mercy rule)
-solo entra cuando los habituales por sí solos son **más de 14**; entonces
-compiten todos, invitados incluidos.
+[`ciclo-del-partido.md`](ciclo-del-partido.md)). Los **fijos** van siempre antes
+que los invitados. Si los fijos son 14 o menos, juegan todos y no hay nada que
+decidir: los invitados ocupan las plazas que sobren por orden de llegada. El
+algoritmo de abajo (puntos, mercy rule) solo entra cuando los fijos por sí solos
+son **más de 14**; entonces compiten solo ellos y los invitados quedan fuera, detrás de
+ellos por orden de llegada.
 
 ## Parámetros
 
@@ -30,11 +31,8 @@ datos** de `Pagos`. En el sistema nuevo es una tabla de inscripciones explícita
 
 > **Qué son hoy los «apuntados».** Ya no es una lectura directa de `signed_up`:
 > es el conjunto de candidatos resuelto al pegar la lista de WhatsApp — los
-> habituales más los invitados (nombrados y anónimos). Mientras los habituales
-> quepan en las plazas, todos entran y los invitados ocupan el resto por orden
-> de llegada; si los habituales solos desbordan las plazas, todos compiten por
-> puntos (un invitado anónimo entra con 0 puntos y ocupa plaza como cualquiera;
-> se identifica por su anfitrión y su número de orden). Este documento describe
+> fijos más los invitados (nombrados y anónimos; un anónimo se identifica por su
+> anfitrión y su número de orden). Este documento describe
 > la **selección**, no lo que pasó en el campo: quién jugó se deduce de la
 > convocatoria al marcar el partido como jugado, y los pagos se registran aparte.
 

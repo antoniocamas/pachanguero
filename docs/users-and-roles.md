@@ -61,9 +61,11 @@ the user's sessions end**: they must sign in again. Passwords are stored hashed
 
 ## What a player sees of the others
 
-Nothing, with one exception: if whoever brought guests answers for a share of
-theirs, the player sees **that host's name** on that share. Anonymous guests show
-as "invitado".
+Only the players tied to them by a share, and only by name:
+
+- on a share of theirs someone else answers for, **that player's name**;
+- on a share they answer for, **why**: their guest, named ("tu invitado Adri") or
+  not ("tu invitado (+1)"), or a share the organiser moved to them ("por Ana").
 
 A player sees neither the standings, nor their position in them, nor anyone
 else's debts, nor anyone's identifier. These rules live in a single class,
@@ -76,8 +78,7 @@ identification of it nor what was left unallocated. The server leaves those out 
 answer, for the player and for an admin looking as them. The organiser, in the payment
 cell, opens the detail of a Bizum payment.
 
-They do see, and can change, their own **contact data**: email and phone, both
-optional. The application sends nothing with them; they are there so the organiser
+They do see, and can change, their own **contact data**: up to five emails and a phone, all optional; the organiser can change them too. The application sends nothing with them; they are there so the organiser
 knows how to reach them. A phone also identifies its player as the sender of a
 Bizum, so changing it changes whose Bizums the system recognises; the player is never
 shown that, nor any other bank datum.

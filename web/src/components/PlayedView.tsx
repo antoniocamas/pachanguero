@@ -3,7 +3,7 @@ import type { GameDetail, PaymentMethod, Player } from '../api';
 import { useTeamsPaste } from '../hooks/useTeamsPaste';
 import { usePayments } from '../hooks/usePayments';
 import { columnsFor, sortRows, toggleSort, type Sort } from '../lib/columns';
-import type { GameRow, GameTable } from '../lib/gameRows';
+import { guestsOf, type GameRow, type GameTable } from '../lib/gameRows';
 import { paymentCell } from '../lib/paymentCell';
 import { GameLayout } from './GameLayout';
 import { PaymentCell } from './PaymentCell';
@@ -82,7 +82,11 @@ export function PlayedView({
               <h2>
                 Equipos<small>opcional</small>
               </h2>
-              <TeamsPanel paste={teams} players={players} />
+              <TeamsPanel
+                paste={teams}
+                players={players}
+                guestOf={guestsOf(table.rows)}
+              />
             </div>
           ),
         },

@@ -313,7 +313,7 @@ describe('ConvocatoriaService', () => {
       });
     });
 
-    it('ranks guests with everyone once regulars alone overflow the slots', () => {
+    it('keeps every guest out once the fijos alone overflow the slots, however many points they have', () => {
       const { game, ids } = freshGame(15);
       const star = namedGuest(game, 'Star', 16, ids[0]);
       guests.put(game, {
@@ -321,7 +321,7 @@ describe('ConvocatoriaService', () => {
         player_id: null,
         host_player_id: ids[1],
       });
-      // Give the guest points no regular can match: three paid games.
+      // Give the guest points no fijo can match: three paid games.
       const earlier = games.create(seasonId, '2025-09-01').id;
       const earlier2 = games.create(seasonId, '2025-09-02').id;
       const earlier3 = games.create(seasonId, '2025-09-03').id;
@@ -332,16 +332,18 @@ describe('ConvocatoriaService', () => {
       const result = service.create(game);
 
       expect(result.oversubscribed).toBe(true);
-      const starEntry = result.entries.find(e => e.playerId === star)!;
-      expect(starEntry.position).toBe(1);
-      expect(starEntry.playing).toBe(true);
-      // Three people are cut (16 real + 1 anonymous = 17 for 14 slots); the
-      // anonymous guest, at zero points, is among them but is never stored.
+      const playing = result.entries.filter(e => e.playing);
+      expect(playing).toHaveLength(14);
+      expect(playing.every(e => ids.includes(e.playerId))).toBe(true);
+      // The guests come after the fijos, in the order they arrived, and stay out.
+      expect(result.entries.slice(-2)).toMatchObject([
+        { playerId: star, position: 16, outcome: 'excluded', playing: false },
+        { position: 17, outcome: 'excluded', playing: false },
+      ]);
       const stored = entryRows(game);
       expect(stored).toHaveLength(17);
       expect(stored.filter(r => r.player_id === null)).toHaveLength(1);
       expect(stored.filter(r => r.playing === 1)).toHaveLength(14);
-      expect(result.entries.find(e => e.playerId < 0)).toBeDefined();
     });
 
     it('leaves participations.played untouched on both branches', () => {
