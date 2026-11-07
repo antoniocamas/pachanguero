@@ -1,0 +1,29 @@
+@startuml
+title WP-007 — where a backup goes, and who produces and checks it
+skinparam componentStyle rectangle
+
+package "pachanguero repository" {
+  [Backup writer\n(server/src/db, cli, domain)] as BW
+  [Chart\n(deploy/helm)] as CH
+  [Build\n(Dockerfile, build.sh, deploy.sh)] as BU
+  [Release flow and checks\n(release skill, verify-release.sh)] as RF
+  [Currency\n(3pp-update skill)] as CU
+  [Production copy\n(prod-copy.sh)] as PC
+}
+package "erebor" {
+  folder "/var/backups/erebor/pachanguero\n(hostPath, uid 1000)" as ST
+  [backup-shipper CronJob\n(trade4me-server, apps: entry)] as SH
+}
+database "papiros\nNetBackup/erebor/pachanguero" as PA
+
+CH --> ST : mounts as /backups
+BW --> ST : periodic_/release_ files\n(written hidden, renamed)
+RF --> BW : pachanguero-admin backup\n--kind release --version X
+PC --> ST : newest file by mtime
+SH --> ST : pushes, trims
+SH --> PA : encrypted .enc
+CU --> BU : moves pins
+CU --> RF : hands over a patch release
+RF --> CH : deploy.sh --tag X
+BU --> CH : image, OS refresh
+@enduml

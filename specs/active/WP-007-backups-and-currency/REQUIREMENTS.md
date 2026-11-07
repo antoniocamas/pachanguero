@@ -41,7 +41,7 @@ Then the staging folder holds `<kind>_<UTC timestamp>_<version>.db`, a complete 
 
 | trigger | actor | kind | version in the name |
 |---|---|---|---|
-| the daily run at 02:00 UTC | the backup sidecar | `periodic` | 0.3.0, the running version |
+| the weekly run, Tuesday 08:15 Madrid time | the backup sidecar | `periodic` | 0.3.0, the running version |
 | `pachanguero-admin backup` typed by the operator | the operator | `periodic` | 0.3.0, the running version |
 | the start of an image 0.4.0 whose schema is newer than the stored one | the app container | `release` | 0.4.0, the version of the code that migrates |
 | the step before the deploy of 0.4.0 | the release skill | `release` | 0.4.0, the version about to be deployed |
@@ -67,13 +67,13 @@ Then a second file `periodic_20261107T020000Z_0.3.0-2.db` is written (the suffix
 #### UC-007-01-S4 — The backup cannot be written
 
 Given the staging folder has no free space
-When the backup sidecar takes the daily backup
-Then no file with a final name exists (the partial one is removed), the command prints `✗ <reason>` and exits 1, the sidecar logs the failure and tries again the next day; and, for the migrator, the server does not migrate (existing behaviour)
+When the backup sidecar takes the weekly backup
+Then no file with a final name exists (the partial one is removed), the command prints `✗ <reason>` and exits 1, the sidecar logs the failure and tries again the next week; and, for the migrator, the server does not migrate (existing behaviour)
 
 #### UC-007-01-S5 — The application never deletes
 
 Given the staging folder holds 20 backups
-When the backup sidecar runs its daily backup
+When the backup sidecar runs its weekly backup
 Then 21 files are in the folder: nothing was deleted (the shipper trims the folder)
 
 #### UC-007-01-S6 — The staging folder is missing
@@ -125,7 +125,7 @@ Then it leads from papiros to the running application without a missing step, an
 
 Given backups taken before this change exist only in the old backup storage
 When the change goes live
-Then each of them is among the copies on papiros too
+Then the newest of them is among the copies on papiros too, renamed to the current names (the older ones are not carried over, by the author's decision)
 
 #### UC-007-02-S4 — The old storage is retired only when nothing depends on it
 
@@ -283,7 +283,7 @@ Exact paths are the design's and the tasks'; the groups below are what this work
 | use case | the check that fails if it is unmet |
 |---|---|
 | UC-007-01 | unit tests of the backup names, the hidden-then-renamed write, the `-2` clash and no deletion; a test that every name the code can make matches the shipper's pattern; `helm template` shows the hostPath and the version variable; `deploy.sh --tag latest` exits non-zero; the production copy tool run against a staging folder with both kinds |
-| UC-007-02 | one restore drill from papiros on a real copy: it opens, `PRAGMA integrity_check` answers `ok`, the players and games answer, and the date is recorded; the backups of before the change are listed among the copies on papiros; the old storage is deleted only after that |
+| UC-007-02 | one restore drill from papiros on a real copy: it opens, `PRAGMA integrity_check` answers `ok`, the players and games answer, and the date is recorded; the newest backup of before the change is listed among the copies on papiros; the old storage is deleted only after that |
 | UC-007-03 | the report run twice: the second lists only held items with reasons; two builds on different days differ in their OS layer; a deliberate break is not committed |
 | UC-007-04 | the pre-push checks run once and fail on a broken tree; after a deploy the pod's version, a request and the logs are checked; the next upgrade-only release is a patch |
 | UC-007-05 | a read of each piece of information in UC-007-05-S1 in the documents, and a search of the repositories for the old names (`pachanguero-*.db`, "not automated") finds none |
