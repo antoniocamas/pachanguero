@@ -1,0 +1,28 @@
+@startuml
+left to right direction
+actor "Operator" as op
+actor "Reader" as reader
+
+rectangle "WP-007 backups and currency" {
+  usecase "UC-007-01\nKeep every production backup\nstaged for the shipper" as uc1
+  usecase "UC-007-02\nRecover production\nfrom papiros" as uc2
+  usecase "UC-007-03\nKeep the stack current" as uc3
+  usecase "UC-007-04\nRelease an upgrade safely" as uc4
+  usecase "UC-007-05\nThe information is documented" as uc5
+}
+
+rectangle "Used as it is" {
+  usecase "Backup shipper\n(trade4me-server)" as shipper
+}
+
+op --> uc1
+op --> uc2
+op --> uc3
+op --> uc4
+reader --> uc5
+
+uc3 ..> uc4 : <<include>>\nchecks and release
+uc4 ..> uc1 : <<include>>\nbackup before deploy
+uc2 ..> shipper : reads copies
+uc1 ..> shipper : staged files
+@enduml
