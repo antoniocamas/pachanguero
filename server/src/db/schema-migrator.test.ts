@@ -11,7 +11,6 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { Clock } from '../domain/clock.js';
-import { LocalCalendar } from '../domain/local-calendar.js';
 import { DatabaseBackup } from './database-backup.js';
 import { PaymentBizumLinkMigration } from './payment-bizum-link-migration.js';
 import { PaymentMethodMigration } from './payment-method-migration.js';
@@ -36,7 +35,7 @@ const legacySchema = readFileSync(join(here, 'fixtures/schema-v0.sql'), 'utf8');
 
 class FixedClock implements Clock {
   now(): Date {
-    return new Date(2026, 9, 11, 19, 30, 0);
+    return new Date('2026-10-11T17:30:00.000Z');
   }
 }
 
@@ -71,7 +70,7 @@ describe('SchemaMigrator', () => {
     return conn;
   };
   const backupFor = (conn: Database.Database) =>
-    new DatabaseBackup(conn, backupDir, new FixedClock(), new LocalCalendar());
+    new DatabaseBackup(conn, backupDir, new FixedClock(), '0.4.0');
   const migrator = (
     conn: Database.Database,
     steps: MigrationStep[] = [],
@@ -217,13 +216,13 @@ describe('SchemaMigrator', () => {
     const first = legacyDatabase();
     migrator(first).run();
     expect(readdirSync(backupDir)).toEqual([
-      'pachanguero-20261011-193000-before-migration.db',
+      'release_20261011T173000Z_0.4.0.db',
     ]);
 
     const again = connect();
     migrator(again).run();
     expect(readdirSync(backupDir)).toEqual([
-      'pachanguero-20261011-193000-before-migration.db',
+      'release_20261011T173000Z_0.4.0.db',
     ]);
     expect(version(again)).toBe(LATEST_SCHEMA_VERSION);
   });

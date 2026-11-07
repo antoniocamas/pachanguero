@@ -1,6 +1,10 @@
 # One image serves the app and the API on one port. Everything is configured by environment
-# (see .env.example); the data and the backups live on two volumes.
-FROM node:26-slim AS build
+# (see .env.example); the data lives on one volume and the backups in one folder (on erebor,
+# the staging folder of the backup shipper).
+# The one place that pins the Node base image: exact tag, no digest. Both stages use it.
+ARG NODE_IMAGE=node:26-slim
+
+FROM ${NODE_IMAGE} AS build
 WORKDIR /app
 # The workspaces must all be present for `npm ci` to resolve the lockfile. No install scripts:
 # the git hook installer has no repository here and better-sqlite3 ships prebuilt binaries.
@@ -13,7 +17,7 @@ COPY server server
 COPY web web
 RUN npm run build && npm prune --omit=dev
 
-FROM node:26-slim
+FROM ${NODE_IMAGE}
 ENV NODE_ENV=production \
     PORT=8787 \
     HOST=0.0.0.0 \

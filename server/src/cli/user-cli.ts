@@ -1,4 +1,5 @@
 import { parseArgs } from 'node:util';
+import { BACKUP_KINDS, type BackupKind } from '../domain/backup-name.js';
 import type { Role } from '../domain/types.js';
 import {
   UserAdminError,
@@ -14,7 +15,7 @@ export interface CliIo {
 
 /** What the operator's `backup` needs: one consistent copy of the live database, and where it went. */
 export interface BackupWriter {
-  create(): string;
+  create(kind: BackupKind, version?: string): string;
 }
 
 /** What the operator's `views` needs: the latest times an admin looked at the app as a player. */
@@ -40,7 +41,7 @@ Comandos:
   demote     --username <nombre>
   link       --username <nombre> --player <id|nombre>
   views
-  backup
+  backup     [--kind <periodic|release>] [--version <versión>]
 
 Las contraseñas se piden por teclado (o por la entrada estándar), nunca como argumento.`;
 
@@ -177,14 +178,26 @@ export class UserCli {
   }
 
   private backup(args: string[]): number {
-    this.options(args, {});
+    const { kind = 'periodic', version } = this.options(args, {
+      kind: { type: 'string' },
+      version: { type: 'string' },
+    });
+    if (!this.isKind(kind)) {
+      throw new UsageError(
+        `--kind debe ser ${BACKUP_KINDS.join(' o ')}, no «${kind}»`
+      );
+    }
     try {
-      this.io.out(`✓ ${this.backups.create()}`);
+      this.io.out(`✓ ${this.backups.create(kind, version)}`);
       return 0;
     } catch (error) {
       this.io.err(`✗ No se pudo crear la copia: ${(error as Error).message}`);
       return 1;
     }
+  }
+
+  private isKind(value: string): value is BackupKind {
+    return (BACKUP_KINDS as readonly string[]).includes(value);
   }
 
   private list(): number {

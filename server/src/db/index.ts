@@ -3,7 +3,6 @@ import { readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SystemClock } from '../domain/clock.js';
-import { LocalCalendar } from '../domain/local-calendar.js';
 import { DatabaseBackup } from './database-backup.js';
 import { LATEST_SCHEMA_VERSION, SchemaMigrator } from './schema-migrator.js';
 import { PaymentMethodMigration } from './payment-method-migration.js';
@@ -19,10 +18,13 @@ export const DB_PATH = resolve(
   process.env.PACHANGUERO_DB ?? join(here, '../../../data/pachanguero.db')
 );
 
-/** Where backups are written: its own volume in a container, `backups/` beside the database otherwise. */
+/** Where backups are written: the staging folder mounted at `/backups` in a container, `backups/` beside the database otherwise. */
 export const BACKUP_DIR = resolve(
   process.env.PACHANGUERO_BACKUPS ?? join(dirname(DB_PATH), 'backups')
 );
+
+/** The version of the running code, set by the chart; unset in development, where backups say `unreleased`. */
+export const BACKUP_VERSION = process.env.PACHANGUERO_VERSION;
 
 let instance: Database.Database | null = null;
 
@@ -34,7 +36,7 @@ export function db(): Database.Database {
     conn,
     BACKUP_DIR,
     new SystemClock(),
-    new LocalCalendar()
+    BACKUP_VERSION
   );
   const schema = readFileSync(join(here, 'schema.sql'), 'utf8');
   try {

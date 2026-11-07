@@ -9,13 +9,4 @@ describe('LocalCalendar', () => {
       '2026-10-11'
     );
   });
-
-  it('writes a moment as YYYYMMDD-HHMMSS in local time, padded', () => {
-    expect(calendar.timestampOf(new Date(2026, 9, 11, 19, 30, 0))).toBe(
-      '20261011-193000'
-    );
-    expect(calendar.timestampOf(new Date(2026, 0, 2, 3, 4, 5))).toBe(
-      '20260102-030405'
-    );
-  });
 });

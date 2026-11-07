@@ -1,4 +1,9 @@
-{{- $image := printf "%s/%s:%s" .Values.registry .Values.image.name (default .Chart.AppVersion .Values.image.tag) }}
+{{- $version := default .Chart.AppVersion .Values.image.tag }}
+{{- $image := printf "%s/%s:%s" .Values.registry .Values.image.name $version }}
+{{- /* The backup sidecar compares `date +%a` (LC_ALL=C), so the weekday must be one of these. */}}
+{{- if not (has .Values.backup.weekday (list "Mon" "Tue" "Wed" "Thu" "Fri" "Sat" "Sun")) }}
+{{- fail "backup.weekday must be one of Mon Tue Wed Thu Fri Sat Sun" }}
+{{- end }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -35,6 +40,8 @@ spec:
         env:
         - name: PACHANGUERO_PUBLIC_URL
           value: {{ .Values.publicUrl | quote }}
+        - name: PACHANGUERO_VERSION
+          value: {{ $version | quote }}
         envFrom:
         - secretRef:
             name: pachanguero
@@ -60,20 +67,26 @@ spec:
           failureThreshold: 3
       {{- if .Values.backup.enabled }}
       # Same pod = same node, so it can use the live database through the same volume.
+      # One backup a week, at {{ .Values.backup.weekday }} {{ .Values.backup.timeMadrid }} Madrid time. The app never deletes
+      # backups: the folder is the staging area of the backup shipper, which trims it.
       - name: backup
         image: {{ $image }}
         imagePullPolicy: Always
+        env:
+        - name: PACHANGUERO_VERSION
+          value: {{ $version | quote }}
         command:
         - /bin/sh
         - -c
         - |
+          last=""
           while true; do
-            now=$(date +%s)
-            next=$(date -u -d "today {{ printf "%02d" (int .Values.backup.hourUtc) }}:00" +%s)
-            [ "$next" -le "$now" ] && next=$(date -u -d "tomorrow {{ printf "%02d" (int .Values.backup.hourUtc) }}:00" +%s)
-            sleep $((next - now))
-            pachanguero-admin backup || echo "backup failed"
-            ls -1t /backups/pachanguero-[0-9]*.db | grep -v before-migration | tail -n +$(({{ .Values.backup.keep }} + 1)) | xargs -r rm -f
+            key=$(LC_ALL=C TZ=Europe/Madrid date '+%a %H:%M')
+            if [ "$key" = "{{ .Values.backup.weekday }} {{ .Values.backup.timeMadrid }}" ] && [ "$key" != "$last" ]; then
+              last="$key"
+              pachanguero-admin backup || echo "backup failed"
+            fi
+            sleep 30
           done
         volumeMounts:
         - name: data
@@ -91,6 +104,9 @@ spec:
       - name: data
         persistentVolumeClaim:
           claimName: pachanguero-data
+      # The staging folder of the backup shipper on erebor. It must exist (type Directory):
+      # without it the pod stays in ContainerCreating and nothing creates it.
       - name: backups
-        persistentVolumeClaim:
-          claimName: pachanguero-backups
+        hostPath:
+          path: {{ .Values.backup.stagingPath }}
+          type: Directory

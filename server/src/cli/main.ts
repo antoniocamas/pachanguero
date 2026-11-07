@@ -1,8 +1,7 @@
 import { args } from '../load-env.js';
 import { DatabaseBackup } from '../db/database-backup.js';
-import { BACKUP_DIR, db } from '../db/index.js';
+import { BACKUP_DIR, BACKUP_VERSION, db } from '../db/index.js';
 import { SystemClock } from '../domain/clock.js';
-import { LocalCalendar } from '../domain/local-calendar.js';
 import { PasswordHasher } from '../domain/password-hasher.js';
 import { PasswordPolicy } from '../domain/password-policy.js';
 import { UsernamePolicy } from '../domain/username-policy.js';
@@ -28,7 +27,7 @@ const cli = new UserCli(
     out: text => console.log(text),
     err: text => console.error(text),
   },
-  new DatabaseBackup(db(), BACKUP_DIR, new SystemClock(), new LocalCalendar()),
+  new DatabaseBackup(db(), BACKUP_DIR, new SystemClock(), BACKUP_VERSION),
   new ViewAsLogRepository(db())
 );
 

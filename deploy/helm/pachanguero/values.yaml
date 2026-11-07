@@ -18,12 +18,16 @@ service:
 storage:
   className: data-disk
   dataSize: 1Gi
-  backupsSize: 2Gi
 
 backup:
   enabled: true
-  hourUtc: 2 # daily at this hour (UTC)
-  keep: 14 # manual backups kept; before-migration backups are never pruned
+  # One periodic backup a week. Names carry UTC time; the schedule is Madrid time, like the
+  # backup shipper's, and papiros is up from 08:00.
+  weekday: Tue # one of Mon Tue Wed Thu Fri Sat Sun (`date +%a`); the day after the game
+  timeMadrid: '08:15' # HH:MM, Europe/Madrid
+  # Where backups are written on erebor, mounted at /backups. The backup shipper reads and trims it.
+  # The folder must exist, owned by uid 1000.
+  stagingPath: /var/backups/erebor/pachanguero
 
 resources:
   requests:

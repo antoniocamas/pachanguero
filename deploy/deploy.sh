@@ -1,7 +1,8 @@
 #!/bin/bash
 # Install or upgrade pachanguero on erebor (namespace pachanguero) with Helm.
 # Usage: deploy/deploy.sh [--tag VERSION] [--restart]
-#   --tag      image tag to deploy (default: the chart's appVersion)
+#   --tag      image tag to deploy, a version like 0.4.0 (default: the chart's appVersion);
+#              anything else, "latest" included, is refused
 #   --restart  roll the pod even if nothing changed (pulls a re-pushed image)
 # KUBE_CONTEXT selects the cluster (default: erebor).
 set -e
@@ -16,9 +17,11 @@ HELM_ARGS=()
 RESTART="false"
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --tag) HELM_ARGS+=(--set "image.tag=$2"); shift 2 ;;
+        --tag)
+            [[ "$2" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "Error: --tag needs a version like 0.4.0, not '$2'" >&2; exit 1; }
+            HELM_ARGS+=(--set "image.tag=$2"); shift 2 ;;
         --restart) RESTART="true"; shift ;;
-        -h|--help) sed -n '2,6p' "$0"; exit 0 ;;
+        -h|--help) sed -n '2,7p' "$0"; exit 0 ;;
         *) echo "Unknown option: $1" >&2; exit 1 ;;
     esac
 done

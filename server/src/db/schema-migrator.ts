@@ -1,11 +1,12 @@
 import type Database from 'better-sqlite3';
+import type { BackupKind } from '../domain/backup-name.js';
 
 /** The schema version this application writes. Raise it with each new `MigrationStep`. */
 export const LATEST_SCHEMA_VERSION = 7;
 
 /** Something that can write a copy of the database before it is changed. */
 export interface MigrationBackup {
-  create(label?: string): string;
+  create(kind: BackupKind, version?: string): string;
 }
 
 /** One change to an existing database, applied when its stored version is below `version`. */
@@ -43,7 +44,7 @@ export class SchemaMigrator {
     } else if (version === this.latest) {
       this.conn.exec(this.schemaSql);
     } else {
-      this.backup.create('before-migration');
+      this.backup.create('release');
       this.useWriteAheadLog();
       this.conn.transaction(() => this.migrate()).immediate();
     }

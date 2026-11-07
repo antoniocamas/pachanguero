@@ -6,7 +6,6 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { DatabaseBackup } from '../db/database-backup.js';
 import { TestDatabase } from '../db/test-support.js';
 import { ManualClock } from '../domain/clock-test-support.js';
-import { LocalCalendar } from '../domain/local-calendar.js';
 import { PasswordHasher } from '../domain/password-hasher.js';
 import { PasswordPolicy } from '../domain/password-policy.js';
 import { UsernamePolicy } from '../domain/username-policy.js';
@@ -43,7 +42,7 @@ describe('UserCli', () => {
       conn,
       mkdtempSync(join(tmpdir(), 'cli-backups-')),
       new ManualClock(new Date('2026-10-11T10:00:00.000Z')),
-      new LocalCalendar()
+      '0.3.0'
     )
   ) => {
     const prompt = new ScriptedPrompt(answers);
@@ -244,7 +243,7 @@ describe('UserCli', () => {
     let dir: string;
     const clock = new ManualClock(new Date('2026-10-11T10:00:00.000Z'));
     const writer = (source: Database.Database, into = dir) =>
-      new DatabaseBackup(source, into, clock, new LocalCalendar());
+      new DatabaseBackup(source, into, clock, '0.3.0');
 
     beforeEach(() => {
       dir = mkdtempSync(join(tmpdir(), 'cli-backup-'));
@@ -274,12 +273,42 @@ describe('UserCli', () => {
 
       const files = readdirSync(dir);
       expect(files).toHaveLength(1);
-      expect(files[0]).toMatch(/^pachanguero-\d{8}-\d{6}\.db$/);
+      expect(files[0]).toBe('periodic_20261011T100000Z_0.3.0.db');
       expect(out.join('\n')).toBe(`✓ ${join(dir, files[0])}`);
       const copy = new Database(join(dir, files[0]), { readonly: true });
       expect(tableCounts(copy)).toEqual(tableCounts(conn));
       expect(tableCounts(copy).length).toBeGreaterThan(5);
       copy.close();
+    });
+
+    it('takes a release copy of the version it is told', async () => {
+      expect(
+        await cli(undefined, writer(conn)).run(
+          'backup',
+          '--kind',
+          'release',
+          '--version',
+          '0.4.0'
+        )
+      ).toBe(0);
+      expect(readdirSync(dir)).toEqual(['release_20261011T100000Z_0.4.0.db']);
+      expect(out.join('\n')).toBe(`✓ ${join(dir, readdirSync(dir)[0])}`);
+    });
+
+    it('is a misuse, exit 2 and no file, when the kind is neither periodic nor release', async () => {
+      expect(
+        await cli(undefined, writer(conn)).run('backup', '--kind', 'daily')
+      ).toBe(2);
+      expect(err.join('\n')).toContain('--kind');
+      expect(readdirSync(dir)).toEqual([]);
+    });
+
+    it('refuses a version the shipper would ignore, exit 1 and no file', async () => {
+      expect(
+        await cli(undefined, writer(conn)).run('backup', '--version', '0.3_1')
+      ).toBe(1);
+      expect(err.join('\n')).toContain('✗');
+      expect(readdirSync(dir)).toEqual([]);
     });
 
     it('works with no users at all, since it needs no account and no password', async () => {
