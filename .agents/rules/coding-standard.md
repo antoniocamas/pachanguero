@@ -28,7 +28,7 @@ organizes its logic as classes.
   `PointsCalculator.compute(...)`; `seniorityPoints`/`seasonContribution` → `SeniorityCurve`;
   `buildConvocatoria`/`selectPromotees`/`selectDemotees` → `ConvocatoriaBuilder`; `waitCounter`/
   `mercyCount`/`demotionCount` → methods on the class that holds a player's exclusion history
-  (e.g. `ExclusionHistory`); the `matching.ts` module drafted in WP-001's Increment 0
+  (e.g. `ExclusionHistory`); a draft `matching.ts` module
   (`stripDecorations`, `matchName`) → a `NameMatcher` class.
 - A pure calculation is still a method — on a class instantiated with (or constructed from) the
   data it operates over. "Pure" and "object-oriented" are not in tension; only "pure" and
@@ -50,7 +50,7 @@ organizes its logic as classes.
   (persistence) is not a `Season` (the entity's own rules) is not a `SeasonRulesValidator`.
 - **O — Open/Closed.** New behavior extends via a new class or a composed strategy, not another
   branch inside an existing method. Example: the regulars-vs-guests arrival-order rule
-  (UC-001-03-S6) is a second `SelectionStrategy` implementation alongside the existing
+  is a second `SelectionStrategy` implementation alongside the existing
   points-based one, not an `if` added inside one method that does both.
 - **L — Liskov Substitution.** A subclass must be usable anywhere its base type or interface is
   expected, with no strengthened precondition and no weakened guarantee.

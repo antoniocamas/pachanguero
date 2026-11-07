@@ -58,7 +58,7 @@ The release backup, the image check and the deployed check are part of the flow,
    If the backup fails, stop: do not deploy. The shipper takes the file to papiros at its next run.
    _One-time exception:_ the first release after backups were named for the shipper runs on a pod
    whose `backup` has no `--kind`. Take the backup with the old command and adopt it into the staging
-   folder as the cutover procedure in [`docs/deployment.md`](../../../docs/deployment.md) says.
+   folder as the [cutover procedure](../../../docs/deployment.md#cutover-to-staged-backups) says.
 9. **Ask, then deploy.** `deploy/deploy.sh --tag X.Y.Z` (a version only: `latest` is refused).
 10. **Verify production.** `scripts/verify-release.sh deployed --version X.Y.Z` (both containers
     ready, the pod runs X.Y.Z, `GET /` answers 200, no error in either log), plus, after a schema

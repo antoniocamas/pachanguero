@@ -28,7 +28,7 @@ describe('the bank access requirements', () => {
       error: extra.error ?? null,
     });
 
-  describe('UC-006-01-S1 — The panel before any connection', () => {
+  describe('The panel before any connection', () => {
     it('shows no connection, the chosen bank and a button that can be pressed', () => {
       const panel = rig.service.panel();
 
@@ -39,7 +39,7 @@ describe('the bank access requirements', () => {
     });
   });
 
-  describe('UC-006-01-S2 — The panel when the setup is incomplete', () => {
+  describe('The panel when the setup is incomplete', () => {
     it.each([
       [
         'the application id',
@@ -67,7 +67,7 @@ describe('the bank access requirements', () => {
     );
   });
 
-  describe('UC-006-01-S3 — Connecting starts', () => {
+  describe('Connecting starts', () => {
     it('stores a pending authorisation and sends the browser to the bank, redirecting to the callback', async () => {
       const { url } = await rig.service.connect();
 
@@ -85,7 +85,7 @@ describe('the bank access requirements', () => {
     });
   });
 
-  describe('UC-006-01-S4 — The bank redirects back and the connection completes', () => {
+  describe('The bank redirects back and the connection completes', () => {
     it('exchanges the code, stores the session, its end and the accounts, and the panel shows when it ends', async () => {
       await rig.service.connect();
 
@@ -105,7 +105,7 @@ describe('the bank access requirements', () => {
     });
   });
 
-  describe('UC-006-01-S5 — Refusals at the callback', () => {
+  describe('Refusals at the callback', () => {
     beforeEach(async () => {
       await rig.service.connect();
       rig.clock.advance(5 * MINUTE);
@@ -147,7 +147,7 @@ describe('the bank access requirements', () => {
     });
   });
 
-  describe('UC-006-01-S8 — The panel while connected', () => {
+  describe('The panel while connected', () => {
     it('shows the end, the days left and the account only as currency, type and last four', async () => {
       await rig.connectAndApprove('state-1');
       rig.clock.advance(159 * DAY);
@@ -168,7 +168,7 @@ describe('the bank access requirements', () => {
     });
   });
 
-  describe('UC-006-01-S9 — Renewal while the access is valid', () => {
+  describe('Renewal while the access is valid', () => {
     it('stores the new session, closes the old one only after the new works, and shows the new end', async () => {
       await rig.connectAndApprove('state-1');
       rig.clock.advance(100 * DAY);
@@ -189,7 +189,7 @@ describe('the bank access requirements', () => {
     });
   });
 
-  describe('UC-006-01-S10 — The organiser is warned before it ends (server data)', () => {
+  describe('The organiser is warned before it ends (server data)', () => {
     it.each([
       { daysAhead: 164, show: false, daysLeft: 15 },
       { daysAhead: 169, show: true, daysLeft: 10 },
@@ -218,7 +218,7 @@ describe('the bank access requirements', () => {
     });
   });
 
-  describe('UC-006-01-S11 — The access ends early', () => {
+  describe('The access ends early', () => {
     it.each(['CLOSED_SESSION', 'EXPIRED_SESSION', 'REVOKED_SESSION'])(
       '%s: reconnection needed with that reason, and the banner stays',
       async code => {
@@ -239,7 +239,7 @@ describe('the bank access requirements', () => {
     );
   });
 
-  describe('UC-006-01-S12 — Secrets never leave', () => {
+  describe('Secrets never leave', () => {
     it('the panel and banner carry no session id, account uid, state or code', async () => {
       await rig.service.connect();
       await callback('state-1', { code: 'the-secret-code' });
@@ -267,7 +267,7 @@ describe('the bank access requirements', () => {
     });
   });
 
-  describe('UC-006-01-S13 — The organiser disconnects', () => {
+  describe('The organiser disconnects', () => {
     it('closes the session at the bank, deletes the stored one, and leaves what was recorded as it was', async () => {
       await rig.connectAndApprove('state-1');
       rig.conn.exec(

@@ -34,7 +34,7 @@ class Entry {
 }
 
 describe('the bank entry requirements', () => {
-  describe('UC-006-02-S1 — A Bizum judged matched or dubious is kept', () => {
+  describe('A Bizum judged matched or dubious is kept', () => {
     it.each([
       ['4.00', '2026-10-12', 'Marta G.L.', 'pachanga', 400],
       ['8.00', '2026-10-13', '+34600000000', '', 800],
@@ -60,7 +60,7 @@ describe('the bank entry requirements', () => {
     );
   });
 
-  describe('UC-006-02-S2 — What is not kept', () => {
+  describe('What is not kept', () => {
     it.each([
       [
         'an outgoing Bizum',
@@ -86,7 +86,7 @@ describe('the bank entry requirements', () => {
     });
   });
 
-  describe('UC-006-02-S4 — Two Bizums that look the same are two Bizums', () => {
+  describe('Two Bizums that look the same are two Bizums', () => {
     it('keys them apart by the bank identification', () => {
       const first = new Entry().with({ entry_reference: 'a' }).recognised();
       const second = new Entry().with({ entry_reference: 'b' }).recognised();
@@ -98,7 +98,7 @@ describe('the bank entry requirements', () => {
     });
   });
 
-  describe('UC-006-02-S5 — Amounts are kept exactly', () => {
+  describe('Amounts are kept exactly', () => {
     it.each([
       ['4.00', 400],
       ['12.00', 1200],

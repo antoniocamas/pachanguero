@@ -20,6 +20,7 @@ Run from the repository root.
 | `npm run test:sandbox`                          | Opt-in: the bank connector's read-only contract against the bank's sandbox, from a standing session. Skipped, with a message, unless the sandbox variables of `.env.example` are set; never part of `npm test` |
 | `npm run lint` / `lint:fix`                     | ESLint                                                                                                                                                                                                         |
 | `npm run format` / `format:check`               | Prettier                                                                                                                                                                                                       |
+| `npm run dev:prod-copy`                         | The API and the web against the local copy of production, see [A copy of production](#a-copy-of-production)                                                                                                    |
 | `npm run seed`                                  | Imports the 2024/2025 season from `data/seed/*.csv`; `-- --reset` first wipes the imported season's rows. See [Trying the app by hand](#trying-the-app-by-hand)                                                |
 | `npm run admin --workspace=server -- <command>` | The operator tool, see [The admin tool](#the-admin-tool)                                                                                                                                                       |
 
@@ -43,7 +44,8 @@ The server and the admin tool are configured by environment variables.
 | `PORT`                       | `8787`                          |                                                                                                                                                                                                        |
 | `HOST`                       | `0.0.0.0`                       | Set it to `127.0.0.1` behind Caddy                                                                                                                                                                     |
 | `PACHANGUERO_DB`             | `data/pachanguero.db`           | Path of the SQLite file                                                                                                                                                                                |
-| `PACHANGUERO_BACKUPS`        | `backups/` next to the database | Folder for the backups                                                                                                                                                                                 |
+| `PACHANGUERO_BACKUPS`        | `backups/` next to the database | Folder for the backups (on erebor, the staging folder of the backup shipper)                                                                                                                           |
+| `PACHANGUERO_VERSION`        | — (backups say `unreleased`)    | The running version, written into each backup's name. The chart sets it from the image tag; leave it unset elsewhere                                                                                   |
 | `PACHANGUERO_PUBLIC_URL`     | — (the bank access needs it)    | Address the browser reaches the app at, `https://…` (or `http://localhost:<port>`). The bank sends the browser back to `<it>/api/bank/callback`, which must be registered at the bank's developer side |
 | `ENABLE_BANKING_APP_ID`      | — (the bank access needs it)    | The application's id at Enable Banking                                                                                                                                                                 |
 | `ENABLE_BANKING_PRIVATE_KEY` | — (the bank access needs it)    | The PEM private key of the application (PKCS#8), on one line with `\n` for line breaks in a `.env` file. A secret                                                                                      |
@@ -85,17 +87,17 @@ server/dist/index.js`) and the admin tool read `.env` at start-up, wherever
 exist only through it; there is no registration (see
 [`users-and-roles.md`](users-and-roles.md)).
 
-| Command                                                                  | What it does                                                                                                                                                         |
-| ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `create --username <name> --role <admin\|regular> [--player <id\|name>]` | Creates a user. A regular user needs a player; an admin may have one                                                                                                 |
-| `list`                                                                   | Lists the users: role, player, active or not, locked or not                                                                                                          |
-| `reset-pwd --username <name>`                                            | Sets a new password and ends all the user's sessions                                                                                                                 |
-| `unlock --username <name>`                                               | Lifts a lock-out after too many wrong passwords                                                                                                                      |
-| `activate` / `deactivate --username <name>`                              | Allows or forbids signing in (deactivating ends the sessions)                                                                                                        |
-| `link --username <name> --player <id\|name>`                             | Gives a user that has no player its player (ends the user's sessions, so they sign in again). Refuses a user who already has one, or a player who already has a user |
-| `promote` / `demote --username <name>`                                   | Makes a user an admin, or a regular user (which needs a player)                                                                                                      |
-| `views`                                                                  | Lists the latest times an admin looked at the app as another player: when, who, as whom                                                                              |
-| `backup`                                                                 | Writes a consistent copy of the live database, see [`backup_and_restore.md`](backup_and_restore.md)                                                                  |
+| Command                                                                  | What it does                                                                                                                                                                                                |
+| ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `create --username <name> --role <admin\|regular> [--player <id\|name>]` | Creates a user. A regular user needs a player; an admin may have one                                                                                                                                        |
+| `list`                                                                   | Lists the users: role, player, active or not, locked or not                                                                                                                                                 |
+| `reset-pwd --username <name>`                                            | Sets a new password and ends all the user's sessions                                                                                                                                                        |
+| `unlock --username <name>`                                               | Lifts a lock-out after too many wrong passwords                                                                                                                                                             |
+| `activate` / `deactivate --username <name>`                              | Allows or forbids signing in (deactivating ends the sessions)                                                                                                                                               |
+| `link --username <name> --player <id\|name>`                             | Gives a user that has no player its player (ends the user's sessions, so they sign in again). Refuses a user who already has one, or a player who already has a user                                        |
+| `promote` / `demote --username <name>`                                   | Makes a user an admin, or a regular user (which needs a player)                                                                                                                                             |
+| `views`                                                                  | Lists the latest times an admin looked at the app as another player: when, who, as whom                                                                                                                     |
+| `backup [--kind <periodic\|release>] [--version <version>]`              | Writes a consistent copy of the live database as `<kind>_<UTC>_<version>.db` (default kind `periodic`; the version defaults to `PACHANGUERO_VERSION`), see [`backup_and_restore.md`](backup_and_restore.md) |
 
 Passwords are never an argument: `create` and `reset-pwd` ask for them on the
 keyboard, twice, or read two lines from standard input. A password needs at least
@@ -135,7 +137,7 @@ An admin created without a player can be given one later with `link --username a
 The repository ships a `Dockerfile` (for x86_64) that builds an image with the
 application and the `pachanguero-admin` tool. All configuration comes from the
 environment and there are two volumes: `/data` (the database) and `/backups` (the
-backups). The Kubernetes deployment to `erebor` is in [`deployment.md`](deployment.md);
+backups; on erebor it is the shipper's staging folder). The Kubernetes deployment to `erebor` is in [`deployment.md`](deployment.md);
 TLS is done by the proxy in front.
 
 ```bash
@@ -152,6 +154,8 @@ docker run -d --init --name pachanguero -p 8787:8787 \
 - `--init` makes `docker stop` stop the application at once.
 - The image already sets `PACHANGUERO_DB=/data/pachanguero.db` and
   `PACHANGUERO_BACKUPS=/backups`, `PORT=8787`, `HOST=0.0.0.0`.
+- `build.sh` pulls the base image and upgrades the OS packages once a day (see
+  [`deployment.md`](deployment.md#releasing)); a plain `docker build` does not.
 - Mounting host folders instead of volumes, and taking the backups out, are in
   [`backup_and_restore.md`](backup_and_restore.md).
 
@@ -193,3 +197,34 @@ the real one; this is also why the seed does not read `.env`.
 PACHANGUERO_DB=/tmp/prueba.db npm run seed
 PACHANGUERO_DB=/tmp/prueba.db JWT_SECRET=$(openssl rand -base64 48) npm run dev
 ```
+
+### A copy of production
+
+To try a change against the real players, games and debts, copy the production
+database from `erebor`:
+
+```bash
+scripts/prod-copy.sh
+npm run dev:prod-copy
+```
+
+Then sign in at http://localhost:5173 with any production username and the
+password `Pachanguero-dev-1`.
+
+- **Where:** `data/prod-copy/pachanguero.db`, replaced on every run.
+  `data/prod-copy/.env` is created by the first run with its own newly generated
+  `JWT_SECRET`, never production's, and then kept, so edit it freely;
+  `npm run dev:prod-copy` reads it instead of the repository's `.env`.
+- **Scrubbed:** production sessions ended, every account's password set to
+  `Pachanguero-dev-1` and unlocked, and the bank connection removed (its session
+  id is a live credential). Everything else stays.
+- **Production is only read**, except with `--fresh`, which first takes a new
+  `periodic` backup in the pod (it stays in the staging folder and is shipped like any other)
+  instead of copying the newest `periodic_` or `release_` one there.
+- **`--keep-bank`** keeps the bank connection. To read the bank with it, add the
+  bank settings to `data/prod-copy/.env`; Bizums read then land in the copy only.
+- The other options: `scripts/prod-copy.sh --help`.
+
+It needs the `erebor` kube context
+([`deployment.md`](deployment.md#one-time-setup)). Treat the copy like a backup:
+it holds players' contact data ([`backup_and_restore.md`](backup_and_restore.md#where-the-backups-are)).

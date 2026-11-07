@@ -17,7 +17,6 @@ settled by the author's approval.
 ## CLI
 
 Use `wp.py` for work package management:
-
 ```bash
 python3 wp.py create --name feature-name --importance must  # Create new WP
 python3 wp.py list                                          # List active WPs
@@ -48,7 +47,7 @@ nothing — the inventory is a query, because an index that is maintained is an 
 citations transitively, printing each hop with the file and line that defines it. `<wp-id>` accepts
 `WP-042`, `42`, `042`, or the full `WP-042-name`. `--all` searches every work package instead of
 scoping to one. **It exits non-zero when any identifier in the closure
-resolves nowhere**, and names those: a query that silently drops a citation reports _contained_ when
+resolves nowhere**, and names those: a query that silently drops a citation reports *contained* when
 it is not. Identifier syntax is strict rather than fuzzy — `REQ-nnn`,
 `UC-nnn-nn[-Snn]`, `MT-LEVEL-nn`, `ACT-nnn`, `OI-nn`, `A-nnn`, `D-nnn`, `R-nnn`, `Q-nn`, and the
 element ids `Rn` and `Fn` — and anything else is rejected rather than matched loosely.

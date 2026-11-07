@@ -2,9 +2,16 @@
 # (see .env.example); the data lives on one volume and the backups in one folder (on erebor,
 # the staging folder of the backup shipper).
 # The one place that pins the Node base image: exact tag, no digest. Both stages use it.
-ARG NODE_IMAGE=node:26-slim
+ARG NODE_IMAGE=node:26.13.0-trixie-slim
+# OS packages: each stage upgrades them in a layer keyed by OS_REFRESH, a date that build.sh sets
+# (UTC day), so the layer re-runs on a new day and is cached within one. Without the argument
+# (a plain `docker build`) the layer is cached until the base image changes.
 
 FROM ${NODE_IMAGE} AS build
+ARG OS_REFRESH=unset
+RUN apt-get update \
+ && apt-get upgrade -y --no-install-recommends \
+ && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 # The workspaces must all be present for `npm ci` to resolve the lockfile. No install scripts:
 # the git hook installer has no repository here and better-sqlite3 ships prebuilt binaries.
@@ -18,6 +25,10 @@ COPY web web
 RUN npm run build && npm prune --omit=dev
 
 FROM ${NODE_IMAGE}
+ARG OS_REFRESH=unset
+RUN apt-get update \
+ && apt-get upgrade -y --no-install-recommends \
+ && rm -rf /var/lib/apt/lists/*
 ENV NODE_ENV=production \
     PORT=8787 \
     HOST=0.0.0.0 \

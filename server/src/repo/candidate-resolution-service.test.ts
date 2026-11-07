@@ -174,14 +174,14 @@ describe('CandidateResolutionService', () => {
       expect(rows).toHaveLength(3);
     });
 
-    it('drops the Reservas section and headings from a paste', () => {
+    it('drops the Reservas heading and group headings from a paste', () => {
       enrol('Ana');
       const rows = service.preview(
         gameId,
         [],
         'Claros\n-----\n1 Ana\nReservas\n2 Beto'
       );
-      expect(rows.map(r => r.text)).toEqual(['Ana']);
+      expect(rows.map(r => r.text)).toEqual(['Ana', 'Beto']);
     });
 
     it('reports an ambiguous name with the players it could be', () => {

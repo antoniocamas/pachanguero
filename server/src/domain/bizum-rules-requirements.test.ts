@@ -125,7 +125,7 @@ const playedOn = (verdict: Verdict) =>
   verdict.action === 'settle' ? verdict.shares.map(s => s.playedOn) : [];
 
 describe('how a Bizum is judged', () => {
-  describe('UC-006-03-S1 — A sender is recognised as a player', () => {
+  describe('A sender is recognised as a player', () => {
     it.each([
       {
         knowledge: 'paired `Luis P.R.` with Luis Pérez',
@@ -182,7 +182,7 @@ describe('how a Bizum is judged', () => {
     });
   });
 
-  describe('UC-006-03-S2 — A bizum of whole shares settles the nearest open debts first', () => {
+  describe('A bizum of whole shares settles the nearest open debts first', () => {
     it.each([
       {
         share: 400,
@@ -219,7 +219,7 @@ describe('how a Bizum is judged', () => {
     );
   });
 
-  describe("UC-006-03-S3 — A host's Bizum settles the shares the host holds", () => {
+  describe("A host's Bizum settles the shares the host holds", () => {
     const hostGroup = () => {
       const group = new Group();
       group.bizumNames = [{ playerId: marta.id, bizumName: 'Marta G.L.' }];
@@ -252,7 +252,7 @@ describe('how a Bizum is judged', () => {
     });
   });
 
-  describe('UC-006-03-S4 — An amount that is not whole shares is discarded unless the subject names Pachanguero', () => {
+  describe('An amount that is not whole shares is discarded unless the subject names Pachanguero', () => {
     const group = () => {
       const g = new Group().luisOwes('2026-09-30', '2026-10-07');
       g.bizumNames = [{ playerId: luis.id, bizumName: 'Luis P.R.' }];
@@ -283,7 +283,7 @@ describe('how a Bizum is judged', () => {
     );
   });
 
-  describe('UC-006-03-S7 — A Bizum larger than the open debts', () => {
+  describe('A Bizum larger than the open debts', () => {
     it.each([
       { amount: 1200, action: 'wait', rule: 'R4' },
       { amount: 2800, action: 'wait', rule: 'R4' },
@@ -300,7 +300,7 @@ describe('how a Bizum is judged', () => {
     });
   });
 
-  describe('UC-006-03-S8 — The first matching rule decides', () => {
+  describe('The first matching rule decides', () => {
     const group = () => {
       const g = new Group().luisOwes('2026-09-30', '2026-10-07');
       g.bizumNames = [{ playerId: luis.id, bizumName: 'Luis P.R.' }];
@@ -368,7 +368,7 @@ describe('how a Bizum is judged', () => {
     );
   });
 
-  describe('UC-006-04-S5 — An unknown sender comes with a suggestion', () => {
+  describe('An unknown sender comes with a suggestion', () => {
     it.each([
       {
         sender: 'Marta G.L.',
@@ -412,7 +412,7 @@ describe('how a Bizum is judged', () => {
     });
   });
 
-  describe("UC-006-11-S1 — Only debts of the Bizum's own season are paid", () => {
+  describe("Only debts of the Bizum's own season are paid", () => {
     // The season of a Bizum is read where the debts are gathered; here the open shares are
     // already restricted to it, so what the rules must do is count only those.
     it('a Bizum with no debt in its own season waits', () => {
@@ -436,7 +436,7 @@ describe('how a Bizum is judged', () => {
     });
   });
 
-  describe("UC-006-11-S2 — A Bizum larger than the season's open debts waits, whatever other seasons hold", () => {
+  describe("A Bizum larger than the season's open debts waits, whatever other seasons hold", () => {
     it('two shares against one open debt waits', () => {
       const group = new Group().luisOwes('2026-10-07');
       group.bizumNames = [{ playerId: luis.id, bizumName: 'Luis P.R.' }];

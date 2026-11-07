@@ -11,7 +11,7 @@ All commands, the settings and the `.env` file are described in `docs/commands.m
 ```bash
 npm install          # workspaces: server + web
 npm run dev          # API on :8787 (tsx watch), web on :5173 (vite, proxies /api); the API needs `JWT_SECRET` (32+ characters): copy `.env.example` to `.env` (git-ignored; the server and the admin tool read it on their own, and `--env-file <path>` picks another; variables already in the environment win; `npm run seed` does not read it) and put a real one in it
-npm run admin --workspace=server -- <command>   # operator tool: create, list, reset-pwd, unlock, activate, deactivate, promote, demote, link, views, backup (passwords are asked for, never an argument)
+npm run admin --workspace=server -- <command>   # operator tool: create, list, reset-pwd, unlock, activate, deactivate, promote, demote, link, views, backup [--kind periodic|release] [--version V] (passwords are asked for, never an argument)
 npm run seed         # import the 2024/2025 season from data/seed/*.csv (-- --reset to wipe first); with PACHANGUERO_DB set to a throwaway database it also creates `admin` (no player), `jefe` (admin and player) and `jugador` (regular), all with the password `Pachanguero-dev-1` (`DevAccountSeeder.PASSWORD`)
 npm test             # domain/route tests (vitest, server workspace) and the web lib/ tests (vitest, web workspace)
 npm run test:e2e     # full-stack browser tests (playwright, e2e workspace); specs share one database, see docs/test-strategy.md
@@ -58,7 +58,13 @@ Production runs on `erebor`; procedure and restores: `docs/deployment.md`.
 
 **Read [`ai-kit/skills/pachanguero-release/SKILL.md`](ai-kit/skills/pachanguero-release/SKILL.md) before any version bump, image build or push, tag or deploy.** **Read [`ai-kit/skills/pachanguero-deployment-management/SKILL.md`](ai-kit/skills/pachanguero-deployment-management/SKILL.md) before any `kubectl` or `helm` operation, including refreshing the kubeconfig.**
 
+**Read [`ai-kit/skills/pachanguero-3pp-update/SKILL.md`](ai-kit/skills/pachanguero-3pp-update/SKILL.md) before updating any third-party version** (the Node base image, npm dependencies, `@types/node`).
+
 **Read [`docs/deployment.md`](docs/deployment.md#deployment-impact-of-a-change) before changing a setting (environment variable), a secret, a port, a volume, backups, the `Dockerfile`, the build layout or the Helm chart.**
+
+## Copying the production database or testing
+
+To test against real data: `scripts/prod-copy.sh && npm run dev:prod-copy` ([`docs/commands.md`](docs/commands.md#a-copy-of-production)). **Read [`ai-kit/skills/pachanguero-setup-production-copy/SKILL.md`](ai-kit/skills/pachanguero-setup-production-copy/SKILL.md) before copying, refreshing or querying the production copy.** For seeded test data instead: `docs/commands.md#trying-the-app-by-hand`.
 
 ## Coding standard
 
@@ -84,8 +90,9 @@ server/src/domain/    classes: PointsCalculator, SeniorityCurve, ConvocatoriaBui
 server/src/db/        better-sqlite3 singleton; SchemaMigrator runs schema.sql on open and
                       keeps the file's version in `PRAGMA user_version`. A new file gets
                       schema.sql; an older one is first copied by DatabaseBackup to
-                      `<PACHANGUERO_BACKUPS, default backups/ beside the DB>/pachanguero-<time>-before-migration.db`
-                      and then migrated in one transaction. A changed table definition is a
+                      `<PACHANGUERO_BACKUPS, default backups/ beside the DB>/release_<UTC>_<version>.db`
+                      (backup names are `<periodic|release>_<UTC>_<version>.db`, the backup shipper's
+                      contract: `docs/backup_and_restore.md`) and then migrated in one transaction. A changed table definition is a
                       new MigrationStep (raise LATEST_SCHEMA_VERSION) plus the same change in
                       schema.sql for new files. Only a throwaway local database is deleted
                       with its -wal/-shm and reseeded (`npm run seed`; `--reset` only removes

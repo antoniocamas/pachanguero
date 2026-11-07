@@ -232,13 +232,14 @@ Then the system shows the candidates it matched cleanly, alongside the unresolve
 view to resolve it (link to an existing player, or register a new one per UC-001-04) — and creates
 no candidate entry for that line until it is resolved.
 
-#### UC-001-03-S3 — A "Reservas" section is not turned into candidates
+#### UC-001-03-S3 — The names under "Reservas" are candidates too
 
 Given a pasted list that includes a trailing "Reservas" heading and names beneath it
 When the Organizer submits the paste
-Then the names under "Reservas" are not created as candidate entries and are not treated as
-unresolved names requiring action — reserve/standby names are outside this system by the author's
-decision (retracts Study's Q-04 variant).
+Then the heading is dropped and the names under it become candidate entries after the ones above
+it; the convocatoria decides who plays. The game's header line (one with a date or a time, such as
+"Lunes, 26/10 22:00, Samaranch.") is dropped too. (Reverses the author's earlier decision to
+discard everything under "Reservas", 2026-10-27.)
 
 #### UC-001-03-S4 — Named occasional guest in the candidate list (outline, corrected)
 

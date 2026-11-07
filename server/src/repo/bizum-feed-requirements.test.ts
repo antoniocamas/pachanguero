@@ -30,7 +30,7 @@ describe('the bank feed requirements', () => {
     rig.connect();
   });
 
-  describe('UC-006-02-S1 — A Bizum judged matched or dubious is kept', () => {
+  describe('A Bizum judged matched or dubious is kept', () => {
     it.each([
       [
         '4.00',
@@ -84,7 +84,7 @@ describe('the bank feed requirements', () => {
     );
   });
 
-  describe('UC-006-02-S2 — What is not kept', () => {
+  describe('What is not kept', () => {
     it('keeps nothing of an outgoing Bizum', async () => {
       rig.connector.scriptedEntries = [
         {
@@ -175,7 +175,7 @@ describe('the bank feed requirements', () => {
     });
   });
 
-  describe('UC-006-02-S3 — An entry already processed is not processed again', () => {
+  describe('An entry already processed is not processed again', () => {
     const entries = () => [
       bizum('settled', '2026-10-12', 400, { name: 'Luis P.R.' }),
       bizum('waiting', '2026-10-12', 800, { phone: '+34611111111' }),
@@ -226,7 +226,7 @@ describe('the bank feed requirements', () => {
     });
   });
 
-  describe('UC-006-02-S4 — Two Bizums that look the same are two Bizums', () => {
+  describe('Two Bizums that look the same are two Bizums', () => {
     it('processes both, each once', async () => {
       rig.connector.scriptedEntries = [
         bizum('a', '2026-10-12', 400, { name: 'Marta G.L.' }),
@@ -242,7 +242,7 @@ describe('the bank feed requirements', () => {
     });
   });
 
-  describe('UC-006-02-S5 — Amounts are kept exactly', () => {
+  describe('Amounts are kept exactly', () => {
     it.each([400, 1200, 450])('keeps %i cents as %i cents', async cents => {
       rig.connector.scriptedEntries = [
         bizum('r1', '2026-10-12', cents, { name: 'Marta G.L.' }, 'pachanga'),
@@ -254,7 +254,7 @@ describe('the bank feed requirements', () => {
     });
   });
 
-  describe('UC-006-02-S6 — A read of many Bizums', () => {
+  describe('A read of many Bizums', () => {
     it('processes all 150 in the first read', async () => {
       rig.connector.scriptedEntries = Array.from({ length: 150 }, (_, i) =>
         bizum(
@@ -273,7 +273,7 @@ describe('the bank feed requirements', () => {
     });
   });
 
-  describe('UC-006-02-S7 — A read that fails', () => {
+  describe('A read that fails', () => {
     it.each([
       [
         'its rate limit',
@@ -325,7 +325,7 @@ describe('the bank feed requirements', () => {
     );
   });
 
-  describe('UC-006-02-S8 — A Bizum is processed within a day', () => {
+  describe('A Bizum is processed within a day', () => {
     it('is read within a day of being booked, by the schedule alone', async () => {
       rig.poller.start();
       await rig.scheduler.fire();
@@ -357,7 +357,7 @@ describe('the bank feed requirements', () => {
     });
   });
 
-  describe('UC-006-02-S9 — The organiser forces a read', () => {
+  describe('The organiser forces a read', () => {
     it('reads at once, by the same rules, and shows the new time of the last read', async () => {
       rig.owes(luis, '2026-10-07');
       await rig.poller.requestRead();
@@ -391,7 +391,7 @@ describe('the bank feed requirements', () => {
     });
   });
 
-  describe('UC-006-02-S10 — A forced read that cannot run', () => {
+  describe('A forced read that cannot run', () => {
     it('a read is in progress', async () => {
       rig.connector.scriptedEntries = [];
       const first = rig.poller.requestRead();
@@ -473,7 +473,7 @@ describe('the bank feed requirements', () => {
     });
   });
 
-  describe('UC-006-03-S5 — A settled Bizum leaves a payment that says how it was paid', () => {
+  describe('A settled Bizum leaves a payment that says how it was paid', () => {
     it('shows the method Bizum, the link to that Bizum, and the date the money arrived', async () => {
       const game = rig.owes(luis, '2026-10-07');
       rig.connector.scriptedEntries = [
@@ -498,7 +498,7 @@ describe('the bank feed requirements', () => {
     });
   });
 
-  describe('UC-006-03-S6 — Nothing to settle yet', () => {
+  describe('Nothing to settle yet', () => {
     it('settles nothing and the Bizum waits when the sender has no open debt', async () => {
       rig.connector.scriptedEntries = [
         bizum('r1', '2026-10-12', 400, { name: 'Luis P.R.' }),
@@ -519,7 +519,7 @@ describe('the bank feed requirements', () => {
     });
   });
 
-  describe('UC-006-04-S3 — A waiting Bizum stays until something resolves it', () => {
+  describe('A waiting Bizum stays until something resolves it', () => {
     it('is still listed, once, unchanged, after 30 days of daily reads', async () => {
       rig.connector.scriptedEntries = [
         bizum('r1', '2026-10-19', 800, { phone: '+34611111111' }),

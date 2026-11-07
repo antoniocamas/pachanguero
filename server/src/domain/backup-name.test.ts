@@ -9,8 +9,8 @@ import { BackupName, type BackupKind } from './backup-name.js';
 const SHIPPER_NAME_RE =
   /^(release|periodic)_[0-9]{8}T[0-9]{6}Z_[A-Za-z0-9.+-]+\.[a-z0-9.]+$/;
 
-// hard requirement UC-007-01: a backup name is one the shipper takes
-describe('BackupName (hard requirement UC-007-01)', () => {
+// A backup name is one the shipper takes
+describe('BackupName', () => {
   const at = new Date('2026-11-07T02:00:00.000Z');
 
   it('writes kind, UTC time and version', () => {

@@ -21,8 +21,8 @@ class FixedClock implements Clock {
   }
 }
 
-// hard requirement UC-007-01: complete file, hidden name then rename, never deleted
-describe('DatabaseBackup (hard requirement UC-007-01)', () => {
+// Complete file, hidden name then rename, never deleted
+describe('DatabaseBackup', () => {
   let root: string;
   let conn: Database.Database;
   let backupDir: string;

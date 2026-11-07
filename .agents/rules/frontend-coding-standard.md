@@ -41,8 +41,7 @@ style being messy," it was the absence of this standard.
 
 - New behavior is a new component, a new hook, or a prop/render-prop that changes what's composed —
   not a new `if`/ternary branch added inside an existing component that already has several.
-- Example forward-looking case from WP-001: the candidate-vs-final paste views (UC-001-03,
-  UC-001-06) share a resolution UI (link/register/alias). That shared piece is one component taking
+- Example forward-looking case: the candidate-vs-final paste views share a resolution UI (link/register/alias). That shared piece is one component taking
   props/callbacks, used by both screens — not one component with a `mode: 'candidate' | 'final'`
   prop branching its whole render tree.
 

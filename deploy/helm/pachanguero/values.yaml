@@ -23,7 +23,7 @@ backup:
   enabled: true
   # One periodic backup a week. Names carry UTC time; the schedule is Madrid time, like the
   # backup shipper's, and papiros is up from 08:00.
-  weekday: Tue # one of Mon Tue Wed Thu Fri Sat Sun (`date +%a`); the day after the game
+  weekday: Tue # one of Mon Tue Wed Thu Fri Sat Sun (`date +%a`); a day without a game
   timeMadrid: '08:15' # HH:MM, Europe/Madrid
   # Where backups are written on erebor, mounted at /backups. The backup shipper reads and trims it.
   # The folder must exist, owned by uid 1000.

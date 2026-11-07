@@ -34,12 +34,12 @@ import { SeasonRepository } from './season-repository.js';
 import { StandingsService } from './standings-service.js';
 
 /**
- * The core-logic requirements of WP-001 UC-001-03 (candidate list) and
- * UC-001-08 (which game), as Given/When/Then, run through the real services
+ * The core-logic requirements of the candidate list and of
+ * which game a list belongs to, as Given/When/Then, run through the real services
  * from the list the organiser saves to the convocatoria it produces. How the
  * list is edited on screen is a UX matter and is not decided here.
  */
-describe('WP-001 candidate list requirements', () => {
+describe('candidate list requirements', () => {
   let conn: Database.Database;
   let players: PlayerRepository;
   let participations: ParticipationRepository;
@@ -136,7 +136,7 @@ describe('WP-001 candidate list requirements', () => {
     );
   });
 
-  describe('UC-001-03-S1 — clean paste, everyone matched', () => {
+  describe('clean paste, everyone matched', () => {
     it('makes every line a signed-up candidate and leaves no name unresolved', () => {
       // Given a numbered WhatsApp-style list whose names all match a player or alias
       enrol('Ana');
@@ -156,7 +156,7 @@ describe('WP-001 candidate list requirements', () => {
     });
   });
 
-  describe('UC-001-03-S2 — an unmatched name blocks nothing silently', () => {
+  describe('an unmatched name blocks nothing silently', () => {
     it('shows the matched candidates beside the unresolved name and creates no candidate for it', () => {
       // Given a list where one line matches no canonical name or alias
       enrol('Ana');
@@ -172,8 +172,8 @@ describe('WP-001 candidate list requirements', () => {
     });
   });
 
-  describe('UC-001-03-S3 — a "Reservas" section is not turned into candidates', () => {
-    it('drops the names beneath it without asking to resolve them', () => {
+  describe('the names under "Reservas" are candidates too', () => {
+    it('drops the heading and keeps the names beneath it, after the others', () => {
       // Given a list with a trailing "Reservas" heading and names beneath it
       enrol('Ana');
 
@@ -184,12 +184,12 @@ describe('WP-001 candidate list requirements', () => {
         '1. Ana\nReservas\n2. Beto\n3. Cris'
       );
 
-      // Then those names are neither candidates nor unresolved names
-      expect(rows.map(r => r.text)).toEqual(['Ana']);
+      // Then the heading is gone and those names follow the ones above it
+      expect(rows.map(r => r.text)).toEqual(['Ana', 'Beto', 'Cris']);
     });
   });
 
-  describe('UC-001-03-S4 — named occasional guest', () => {
+  describe('named occasional guest', () => {
     it('first appearance: stores the guest as "Adri" alone, with David as the host link', () => {
       // Given a line "Adri (David)" where Adri matches no existing player
       const david = enrol('David');
@@ -261,7 +261,7 @@ describe('WP-001 candidate list requirements', () => {
     });
   });
 
-  describe('UC-001-03-S5 — anonymous plus-one is an ephemeral candidate', () => {
+  describe('anonymous plus-one is an ephemeral candidate', () => {
     it('creates a slot for the companion without a player record, attributed to the host', () => {
       // Given a line "Álvaro +1" naming a known player and an unnamed companion
       const alvaro = enrol('Álvaro');
@@ -279,7 +279,7 @@ describe('WP-001 candidate list requirements', () => {
     });
   });
 
-  describe('UC-001-03-S6 — guests compete by arrival order, not points', () => {
+  describe('guests compete by arrival order, not points', () => {
     it("runs the organiser's example: 11 regulars + Adri #8, Álvaro +1 #12, Juan #13, Rubén #14", () => {
       // Given 11 regulars and four guests at list positions 8, 12, 13 and 14
       const regulars = Array.from({ length: 11 }, (_, i) =>
@@ -343,7 +343,7 @@ describe('WP-001 candidate list requirements', () => {
     });
   });
 
-  describe('UC-001-08 — the game is resolved from the weekly schedule', () => {
+  describe('the game is resolved from the weekly schedule', () => {
     it('S1: pasting before game day targets the upcoming game, created if missing', () => {
       // Given a weekly game day (Monday) and no game yet for the next one
       // When a list is made on the Tuesday before it

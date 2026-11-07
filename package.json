@@ -10,6 +10,7 @@
   ],
   "scripts": {
     "dev": "npm run dev --workspace=server & npm run dev --workspace=web",
+    "dev:prod-copy": "npm run dev --workspace=server -- --env-file ../data/prod-copy/.env & npm run dev --workspace=web",
     "build": "npm run build --workspace=web && npm run build --workspace=server",
     "start": "npm run start --workspace=server",
     "test": "npm run test --workspace=server && npm run test --workspace=web",

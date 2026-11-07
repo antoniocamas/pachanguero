@@ -7,7 +7,10 @@ export type ParsedLine =
 
 const PLUS_ONE = /\+\s*1\s*$/;
 const HOST_ANNOTATION = /\(([^)]+)\)\s*$/;
-const RESERVAS = /^reservas\b/i;
+/** The "Reservas" heading alone on its line, colon optional. */
+const RESERVAS = /^reservas\s*:?$/i;
+/** A day and month (`26/10`) or a time (`22:00`): the game's header, never a name. */
+const WHEN = /\b\d{1,2}\/\d{1,2}\b|\b\d{1,2}:\d{2}\b/;
 /** One symbol repeated five or more times: `-----`, `=====`, `_____`. */
 const SEPARATOR = /^([^\p{L}\p{N}\s])\1{4,}$/u;
 
@@ -16,10 +19,12 @@ export class CandidateLineParser {
   constructor(private readonly stripper: NameStripper) {}
 
   /**
-   * Every candidate line of a paste, numbered from 1. The "Reservas" heading
-   * and everything after it is dropped; so are blank lines and every group
-   * heading — a separator line and the nearest non-blank line above it, which
-   * is whatever the group is called ("Claros", "Equipo A"). None takes a number.
+   * Every candidate line of a paste, numbered from 1. Dropped, taking no
+   * number: blank lines, the "Reservas" heading (the names beneath it stay
+   * candidates, after the ones above), a line with a date or a time (the game's
+   * header, "Lunes, 26/10 22:00, Samaranch.") and every group heading — a
+   * separator line and the nearest non-blank line above it, which is whatever
+   * the group is called ("Claros", "Equipo A").
    */
   parseAll(text: string): ParsedLine[] {
     return this.texts(text).map((line, i) => this.parseStripped(line, i + 1));
@@ -27,9 +32,7 @@ export class CandidateLineParser {
 
   /** The same candidate lines as `parseAll`, as cleaned text rather than parsed. */
   texts(text: string): string[] {
-    const raw = text.split(/\r?\n/).map(l => l.trim());
-    const reservas = raw.findIndex(l => RESERVAS.test(this.stripper.strip(l)));
-    const lines = reservas === -1 ? raw : raw.slice(0, reservas);
+    const lines = text.split(/\r?\n/).map(l => l.trim());
     const dropped = new Set<number>();
     lines.forEach((line, i) => {
       if (!SEPARATOR.test(line)) return;
@@ -44,7 +47,7 @@ export class CandidateLineParser {
     return lines
       .filter((_, i) => !dropped.has(i))
       .map(l => this.stripper.strip(l))
-      .filter(l => l !== '');
+      .filter(l => l !== '' && !RESERVAS.test(l) && !WHEN.test(l));
   }
 
   parse(rawLine: string, position: number): ParsedLine {

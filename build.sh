@@ -12,6 +12,8 @@ usage() {
     echo ""
     echo "Builds ${IMAGE_NAME}:<version> and ${IMAGE_NAME}:latest from the Dockerfile."
     echo "<version> is read from package.json."
+    echo "Always pulls the base image and upgrades the OS packages of both stages: a build"
+    echo "argument with today's UTC date re-runs that layer on a new day (cached within a day)."
     echo ""
     echo "Options:"
     echo "  --push          Push both tags to the registry after building"
@@ -39,7 +41,8 @@ echo "Building: ${IMAGE_NAME}"
 echo "Version:  ${VERSION}"
 echo "=========================================="
 
-DOCKER_BUILDKIT=1 docker build -t "${IMAGE_NAME}:${VERSION}" "$SCRIPT_DIR"
+OS_REFRESH="${OS_REFRESH:-$(date -u +%F)}"
+DOCKER_BUILDKIT=1 docker build --pull --build-arg "OS_REFRESH=${OS_REFRESH}" -t "${IMAGE_NAME}:${VERSION}" "$SCRIPT_DIR"
 
 docker tag "${IMAGE_NAME}:${VERSION}" "${IMAGE_NAME}:latest"
 docker tag "${IMAGE_NAME}:${VERSION}" "${REGISTRY}/${IMAGE_NAME}:${VERSION}"

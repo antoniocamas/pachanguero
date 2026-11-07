@@ -32,7 +32,7 @@ describe('the waiting Bizums requirements', () => {
     rig.connect();
   });
 
-  describe('UC-006-04-S1 — A waiting Bizum is listed with why it waits', () => {
+  describe('A waiting Bizum is listed with why it waits', () => {
     it('lists "Luis P.R." with 2 open debts and 12.00: Luis Pérez owes 2 shares and the Bizum is 3 (R4)', async () => {
       const luisId = luis();
       rig.owes(luisId, '2026-10-05');
@@ -93,13 +93,13 @@ describe('the waiting Bizums requirements', () => {
     });
   });
 
-  describe('UC-006-04-S2 — The list when nothing waits', () => {
+  describe('The list when nothing waits', () => {
     it('is empty', () => {
       expect(rig.flow.bizumResolution.waiting()).toEqual([]);
     });
   });
 
-  describe('UC-006-04-S3 — A waiting Bizum stays until something resolves it', () => {
+  describe('A waiting Bizum stays until something resolves it', () => {
     it('is listed once and unchanged after 30 days of daily reads', async () => {
       await rig.arrive(
         bizum('r1', '2026-10-12', 800, { phone: '+34611111111' })
@@ -116,7 +116,7 @@ describe('the waiting Bizums requirements', () => {
     });
   });
 
-  describe('UC-006-04-S5 — An unknown sender comes with a suggestion', () => {
+  describe('An unknown sender comes with a suggestion', () => {
     it.each([
       ['Marta G.L.', ['Marta', 'Luis Pérez'], ['Marta']],
       ['Alberto H.M.', ['Alberto', 'Alberto H.'], ['Alberto', 'Alberto H.']],
@@ -154,7 +154,7 @@ describe('the waiting Bizums requirements', () => {
     });
   });
 
-  describe('UC-006-05-S1 — Pairing settles what now qualifies', () => {
+  describe('Pairing settles what now qualifies', () => {
     it('pairs "Luis P.R." with 2 debts: both Bizums settle one debt each, the nearest first', async () => {
       const luisId = luis(null);
       const older = rig.owes(luisId, '2026-10-05');
@@ -264,7 +264,7 @@ describe('the waiting Bizums requirements', () => {
     });
   });
 
-  describe('UC-006-05-S2 — The organiser rules that a waiting Bizum pays shares, whatever its amount', () => {
+  describe('The organiser rules that a waiting Bizum pays shares, whatever its amount', () => {
     it.each([
       [450, 1, 50],
       [600, 1, 200],
@@ -334,7 +334,7 @@ describe('the waiting Bizums requirements', () => {
     });
   });
 
-  describe('UC-006-05-S3 — A Bizum name given to two players', () => {
+  describe('A Bizum name given to two players', () => {
     it('warns of the other holder, and later Bizums of that sender wait as ambiguous', async () => {
       const garcia = rig.player('Marta García', 'Marta G.L.');
       const gomez = rig.player('Marta Gómez');
@@ -355,7 +355,7 @@ describe('the waiting Bizums requirements', () => {
     });
   });
 
-  describe('UC-006-05-S4 — The organiser removes a pairing', () => {
+  describe('The organiser removes a pairing', () => {
     it('leaves no Bizum name, judges later Bizums as unknown, and keeps the payments', async () => {
       const luisId = luis();
       rig.owes(luisId, '2026-10-05');
@@ -386,7 +386,7 @@ describe('the waiting Bizums requirements', () => {
     });
   });
 
-  describe('UC-006-05-S5 — The organiser dismisses a Bizum forever', () => {
+  describe('The organiser dismisses a Bizum forever', () => {
     it('leaves nothing of it but the bank identification and that it was dismissed', async () => {
       await rig.arrive(
         bizum('r1', '2026-10-12', 800, { phone: '+34611111111' }, 'reforma')
@@ -415,7 +415,7 @@ describe('the waiting Bizums requirements', () => {
     });
   });
 
-  describe('UC-006-05-S6 — A dismissed Bizum stays dismissed', () => {
+  describe('A dismissed Bizum stays dismissed', () => {
     let luisId: number;
 
     beforeEach(async () => {
@@ -482,7 +482,7 @@ describe('the waiting Bizums requirements', () => {
     });
   });
 
-  describe('UC-006-10-S1 — The game is marked played and the waiting Bizum settles', () => {
+  describe('The game is marked played and the waiting Bizum settles', () => {
     it('settles the debt of the game with method Bizum, the link and the booking date', async () => {
       const luisId = luis();
       await rig.arrive(bizum('r1', '2026-10-08', 400, { name: 'Luis P.R.' }));
@@ -507,7 +507,7 @@ describe('the waiting Bizums requirements', () => {
     });
   });
 
-  describe('UC-006-10-S2 — Only Bizums that can now settle are touched', () => {
+  describe('Only Bizums that can now settle are touched', () => {
     it.each([
       [
         '4.00 booked 10-08',
@@ -581,7 +581,7 @@ describe('the waiting Bizums requirements', () => {
     });
   });
 
-  describe('UC-006-10-S3 — Re-evaluation never discards and never touches other seasons', () => {
+  describe('Re-evaluation never discards and never touches other seasons', () => {
     it('does not discard a Bizum whose exclude word was added later: R3 settles it', async () => {
       const luisId = luis();
       await rig.arrive(
@@ -608,7 +608,7 @@ describe('the waiting Bizums requirements', () => {
     });
   });
 
-  describe('UC-006-10-S4 — Several waiting Bizums, one debt', () => {
+  describe('Several waiting Bizums, one debt', () => {
     it('settles the one booked first, whatever the order they arrived in', async () => {
       const luisId = luis();
       await rig.arrive(
@@ -625,7 +625,7 @@ describe('the waiting Bizums requirements', () => {
   });
 });
 
-describe('UC-006-04-S4 — Only the admin view shows the list', () => {
+describe('Only the admin view shows the list', () => {
   let app: AuthTestApp;
   let admin: string;
   const tokens: Record<string, string> = {};

@@ -63,13 +63,58 @@ describe('CandidateLineParser', () => {
       );
     });
 
-    it('drops the Reservas heading and everything after it', () => {
-      const lines = parser.parseAll('1 Ana\n2 Beto\nReservas:\n3 Cris\n4 Dani');
-      expect(lines).toHaveLength(2);
+    it('drops the Reservas heading and keeps the names beneath it', () => {
+      const lines = parser.parseAll('1 Ana\n2 Beto\nReservas:\nCris\nDani');
+      expect(lines.map(l => [l.position, 'name' in l ? l.name : null])).toEqual(
+        [
+          [1, 'Ana'],
+          [2, 'Beto'],
+          [3, 'Cris'],
+          [4, 'Dani'],
+        ]
+      );
     });
 
     it('recognises the heading with decoration and any case', () => {
-      expect(parser.parseAll('1 Ana\n📋 RESERVAS\n2 Beto')).toHaveLength(1);
+      expect(parser.parseAll('1 Ana\n📋 RESERVAS\n2 Beto')).toHaveLength(2);
+    });
+
+    it("drops the game's header, a line with a date or a time", () => {
+      expect(
+        parser.texts(
+          'Lunes, 26/10 22:00, Samaranch.\n\n1. Ana\nMiércoles 21:30\n2. Beto'
+        )
+      ).toEqual(['Ana', 'Beto']);
+    });
+
+    it('reads a WhatsApp list with a header and reservas', () => {
+      const paste = [
+        'Lunes, 26/10 22:00, Samaranch.',
+        '',
+        '1. David',
+        '5. \u2060Nacho',
+        '7. Álvaro C',
+        '8. \u2060Victor ',
+        '9. \u2060Facu',
+        '',
+        'Reservas:',
+        'Javi (Caro)',
+        'Adrián (Facu )',
+      ].join('\n');
+      expect(parser.parseAll(paste)).toEqual([
+        { position: 1, kind: 'plain', name: 'David' },
+        { position: 2, kind: 'plain', name: 'Nacho' },
+        { position: 3, kind: 'plain', name: 'Álvaro C' },
+        { position: 4, kind: 'plain', name: 'Victor' },
+        { position: 5, kind: 'plain', name: 'Facu' },
+        { position: 6, kind: 'hostAnnotated', name: 'Javi', hostName: 'Caro' },
+        {
+          position: 7,
+          kind: 'hostAnnotated',
+          name: 'Adrián',
+          hostName: 'Facu',
+        },
+      ]);
     });
 
     it('drops a separator and the heading above it, whatever it says', () => {
@@ -100,12 +145,12 @@ describe('CandidateLineParser', () => {
   });
 
   describe('texts', () => {
-    it('gives each candidate line cleaned of decoration, headings and reservas', () => {
+    it('gives each candidate line cleaned of decoration and headings', () => {
       expect(
         parser.texts(
           'Claros\n-----\n1. Ana ⚽\n2. Tave +1\n3. Adri (David)\n\nReservas\n4. Beto'
         )
-      ).toEqual(['Ana', 'Tave +1', 'Adri (David)']);
+      ).toEqual(['Ana', 'Tave +1', 'Adri (David)', 'Beto']);
     });
 
     it('feeds back into parse without changing the line', () => {

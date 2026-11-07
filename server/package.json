@@ -8,6 +8,7 @@
     "start": "node dist/index.js",
     "test": "vitest run",
     "seed": "tsx scripts/import-season.ts",
+    "scrub-prod-copy": "tsx scripts/scrub-production-copy.ts",
     "admin": "tsx src/cli/main.ts",
     "test:sandbox": "vitest run --config vitest.sandbox.config.ts"
   },

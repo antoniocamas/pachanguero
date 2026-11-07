@@ -78,8 +78,8 @@ implica que vaya a jugar. Cómo se arma y se guarda la lista:
 ## Reserva
 
 No es un concepto del modelo. Si la lista pegada tiene un encabezado
-`Reservas`, ese encabezado y todo lo que viene debajo se descarta: no son
-candidatos ni nombres pendientes de resolver.
+`Reservas`, se descarta solo el encabezado: los nombres de debajo son candidatos
+como los demás, detrás de los de arriba. La convocatoria decide quién juega.
 
 ## Fijo e invitado
 

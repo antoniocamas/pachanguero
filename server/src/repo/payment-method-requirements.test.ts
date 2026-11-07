@@ -24,7 +24,7 @@ describe('payment method requirements', () => {
     flow.played(gameId);
   });
 
-  describe('UC-006-08-S1 — A manual payment records its method', () => {
+  describe('A manual payment records its method', () => {
     it.each([
       { share: 400, method: 'efectivo' },
       { share: 500, method: 'otro' },
@@ -57,7 +57,7 @@ describe('payment method requirements', () => {
     );
   });
 
-  describe('UC-006-08-S2 — The rules of payment do not change', () => {
+  describe('The rules of payment do not change', () => {
     it('keeps refusing a payment of two shares with a custom amount, with today’s message', () => {
       const dani = enrol('Dani');
       expect(() =>
@@ -72,7 +72,7 @@ describe('payment method requirements', () => {
     });
   });
 
-  describe('UC-006-08-S3 — Undoing a manual payment', () => {
+  describe('Undoing a manual payment', () => {
     it('returns the debt as today and keeps nothing of the method', () => {
       const [payment] = flow.paymentService.pay(gameId, {
         method: 'efectivo',
@@ -87,7 +87,7 @@ describe('payment method requirements', () => {
     });
   });
 
-  describe('UC-006-08-S5 — Payments from before this feature carry a method', () => {
+  describe('Payments from before this feature carry a method', () => {
     it('reads "otro" for a payment inserted without one', () => {
       flow.conn.exec(`
         INSERT INTO payments (game_id, holder_player_id, beneficiary_player_id, payer_player_id, amount_cents, paid_on)
@@ -97,7 +97,7 @@ describe('payment method requirements', () => {
     });
   });
 
-  describe('UC-006-07-S1 — The method shows on every payment', () => {
+  describe('The method shows on every payment', () => {
     it.each(['efectivo', 'otro', 'bizum'] as const)(
       'a payment recorded by hand as %s is listed with it',
       method => {
@@ -117,7 +117,7 @@ describe('payment method requirements', () => {
     });
   });
 
-  describe('UC-006-07-S5 — The method cannot be edited', () => {
+  describe('The method cannot be edited', () => {
     it('no operation of the payment repository or service changes a recorded method', () => {
       const names = (target: object) =>
         Object.getOwnPropertyNames(Object.getPrototypeOf(target));

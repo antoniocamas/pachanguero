@@ -33,7 +33,7 @@ describe('the Bizum correction and traceability requirements', () => {
     luis = rig.player('Luis Pérez', 'Luis P.R.');
   });
 
-  describe('UC-006-06-S1 — Undoing an automatic payment returns the debt and the Bizum', () => {
+  describe('Undoing an automatic payment returns the debt and the Bizum', () => {
     it('opens the debt again and lists the Bizum with its original data', async () => {
       const game = rig.owes(luis, '2026-10-07');
       await rig.arrive(bizum('r1', '2026-10-12', 400, 'miércoles'));
@@ -63,7 +63,7 @@ describe('the Bizum correction and traceability requirements', () => {
     });
   });
 
-  describe('UC-006-06-S2 — A Bizum that paid several shares is undone as a whole', () => {
+  describe('A Bizum that paid several shares is undone as a whole', () => {
     it.each(['2026-10-07', '2026-09-30'])(
       'undoing the payment of the game of %s undoes both and returns the Bizum',
       async chosen => {
@@ -106,7 +106,7 @@ describe('the Bizum correction and traceability requirements', () => {
     });
   });
 
-  describe('UC-006-06-S3 — Undoing a payment that no Bizum made is unchanged', () => {
+  describe('Undoing a payment that no Bizum made is unchanged', () => {
     it.each(['efectivo', 'bizum'] as const)(
       'undoes a payment recorded by hand as %s and lists no Bizum',
       method => {
@@ -128,7 +128,7 @@ describe('the Bizum correction and traceability requirements', () => {
     );
   });
 
-  describe('UC-006-07-S2 — A Bizum payment can be traced to its Bizum', () => {
+  describe('A Bizum payment can be traced to its Bizum', () => {
     it('shows the Bizum, its rest and that the organiser decided', async () => {
       const game = rig.owes(luis, '2026-10-07');
       await rig.arrive(bizum('r1', '2026-10-12', 450, 'pachanga'));
@@ -180,7 +180,7 @@ describe('the Bizum correction and traceability requirements', () => {
     });
   });
 
-  describe('UC-006-07-S3 — A Bizum recorded by hand has no Bizum behind it', () => {
+  describe('A Bizum recorded by hand has no Bizum behind it', () => {
     it('shows it as recorded by hand, with no Bizum', () => {
       const game = rig.owes(luis, '2026-10-07');
       rig.flow.paymentService.pay(game, {
@@ -199,7 +199,7 @@ describe('the Bizum correction and traceability requirements', () => {
     });
   });
 
-  describe('UC-006-07-S4 — A player sees the method and nothing of the Bizum', () => {
+  describe('A player sees the method and nothing of the Bizum', () => {
     let app: AuthTestApp;
     const viewers: Record<string, string> = {};
 

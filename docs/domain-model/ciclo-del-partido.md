@@ -70,7 +70,9 @@ busca entre los jugadores y sus apodos, sin importar mayúsculas ni tildes:
   resolver» y no se apunta a nadie hasta que el organizador decide: elegir al
   jugador (solo para esa línea), elegirlo y recordar el apodo, o registrar a uno
   nuevo. Nunca se adivina.
-- Lo que hay bajo un encabezado `Reservas` se descarta.
+- Se descartan el encabezado `Reservas` (los nombres de debajo siguen siendo
+  candidatos, detrás de los de arriba) y la cabecera del partido: una línea con
+  una fecha o una hora (`Lunes, 26/10 22:00, Samaranch.`).
 - Si un jugador es fijo o invitado, y de quién, lo decide su papel en la
   temporada, no la línea: ver [fijo e invitado](glossary.md#fijo-e-invitado) e
   [invitado nombrado](glossary.md#invitado-nombrado).

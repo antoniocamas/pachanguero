@@ -31,12 +31,12 @@ UC-007-05. Write every document for the state tasks 02–04 built, before anythi
 2. Change a backup name in a thought experiment and trace its dependants through `docs/deployment.md`'s impact table, ending at the shipper pattern and the staging folder (UC-007-05-S2).
 
 ## Definition of Done
-- [ ] The search finds no old name
-- [ ] The reviewing agent's report lists each UC-007-05-S1 row with its document; gaps fixed
-- [ ] The impact table names the staging hostPath, the pinned versions and `PACHANGUERO_VERSION`; the shipper's name pattern and staging folder are reachable from it
-- [ ] "Restore drills" line exists with an empty date for task 06
-- [ ] **Graduation**: UC-007-05 → `document` (the documents themselves); UC-007-02-S2 → `document` (restore chapter)
-- [ ] **Documentation**: the documents of design §4, one by one, as the task's output
-- [ ] **Tests**: `npm test`
-- [ ] **Regression**: `npm test`
-- [ ] **Code checks**: `npm run format:check`, `npm run lint`
+- [x] The search finds no old name
+- [x] The reviewing agent's report lists each UC-007-05-S1 row with its document; gaps fixed
+- [x] The impact table names the staging hostPath, the pinned versions and `PACHANGUERO_VERSION`; the shipper's name pattern and staging folder are reachable from it
+- [x] "Restore drills" line exists with an empty date for task 06
+- [x] **Graduation**: UC-007-05 → `document` (the documents themselves); UC-007-02-S2 → `document` (restore chapter)
+- [x] **Documentation**: the documents of design §4, one by one, as the task's output
+- [x] **Tests**: `npm test`
+- [x] **Regression**: `npm test`
+- [x] **Code checks**: `npm run format:check`, `npm run lint`

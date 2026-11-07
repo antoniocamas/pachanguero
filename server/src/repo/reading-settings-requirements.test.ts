@@ -13,7 +13,7 @@ describe('the reading settings requirements', () => {
     rig = new BankSettingsRig();
   });
 
-  describe('UC-006-01-S6 — The account to read is chosen by a parameter', () => {
+  describe('The account to read is chosen by a parameter', () => {
     it('stores the connection, reads nothing yet, and asks to choose between the two EUR accounts', () => {
       // Given the bank exposes 4 accounts and the currency to read is EUR (its default)
       expect(rig.settings.get().currency).toBe('EUR');
@@ -34,7 +34,7 @@ describe('the reading settings requirements', () => {
     });
   });
 
-  describe('UC-006-01-S7 — The choice, outline', () => {
+  describe('The choice, outline', () => {
     beforeEach(() => rig.connect());
 
     it('USD: selects the one USD account by itself', () => {
@@ -71,7 +71,7 @@ describe('the reading settings requirements', () => {
     });
   });
 
-  describe('UC-006-01-S14 — The organiser edits the words that keep or discard a Bizum', () => {
+  describe('The organiser edits the words that keep or discard a Bizum', () => {
     it('starts with the four include words and no exclude word', () => {
       expect(rig.keywords.include()).toEqual([
         'pachanga',
@@ -103,7 +103,7 @@ describe('the reading settings requirements', () => {
     });
   });
 
-  describe('UC-006-01-S15 — The bank is chosen in the panel', () => {
+  describe('The bank is chosen in the panel', () => {
     it('not connected, none chosen yet: the bank is shown, preselected', () => {
       const { bank } = rig.service.panelPart();
 
@@ -127,7 +127,7 @@ describe('the reading settings requirements', () => {
     });
   });
 
-  describe('UC-006-09-S1 — The organiser sets the start date', () => {
+  describe('The organiser sets the start date', () => {
     it('shows the date once set, so only Bizums booked from it are read', () => {
       expect(rig.service.panelPart().startDate).toBeNull();
 
@@ -137,7 +137,7 @@ describe('the reading settings requirements', () => {
     });
   });
 
-  describe('UC-006-09-S2 — Nothing is read before the setup is complete', () => {
+  describe('Nothing is read before the setup is complete', () => {
     beforeEach(() => rig.connect());
 
     it('no start date is set', () => {
