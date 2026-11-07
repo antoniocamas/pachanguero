@@ -23,7 +23,7 @@
 |---|------|------|--------|-----------|
 | 01 | Pin the base image once | 1 | done | 2026-11-07 |
 | 02 | Backups named and staged | 1 | done | 2026-11-07 |
-| 03 | Release flow and checks | 1 | pending | — |
+| 03 | Release flow and checks | 1 | done | 2026-11-07 |
 | 04 | OS refresh and 3pp skill | 1 | pending | — |
 | 05 | Documentation | 1 | pending | — |
 | 06 | Real upgrade, release and cutover | 1 | pending | — |

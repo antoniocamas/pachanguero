@@ -30,6 +30,16 @@ kubectl --context erebor -n pachanguero exec -it deploy/pachanguero -c pachangue
 
 `pachanguero-admin` commands are in [`docs/commands.md`](../../../docs/commands.md#the-admin-tool).
 
+## Backups on erebor
+
+`/backups` in both containers is the host folder `/var/backups/erebor/pachanguero` (the staging folder
+of the backup shipper). The application only adds files there; the shipper trims it. The weekly
+`periodic_` backup is taken by the `backup` container; a one-off is
+`kubectl --context erebor -n pachanguero exec deploy/pachanguero -c backup -- pachanguero-admin backup [--kind release --version X.Y.Z]`.
+List the folder with `... exec deploy/pachanguero -c backup -- ls -l /backups`. Anything that needs
+papiros (a shipper job, a fetch) works only between 08:00 and 01:00 Madrid time. After a deploy,
+`scripts/verify-release.sh deployed --version X.Y.Z` is the check; the release skill says when.
+
 ## Refreshing the kubeconfig context
 
 When: `kubectl --context erebor get nodes` fails with `x509`, `Unable to connect` or an
