@@ -23,3 +23,4 @@ specs/*/WP-005-*/poc/local*/
 
 # Helm secrets (JWT_SECRET for the cluster)
 deploy/helm/**/values.secrets.yaml
+*.tsbuildinfo
