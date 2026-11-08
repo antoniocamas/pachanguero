@@ -5,8 +5,9 @@ description: Operate the production pachanguero on erebor (k3s) with kubectl and
 
 # Pachanguero deployment management
 
-Procedures for release, data and backups are in [`docs/deployment.md`](../../../docs/deployment.md)
-and [`docs/backup_and_restore.md`](../../../docs/backup_and_restore.md); do not restate them.
+The deployment strategy is in [`docs/deployment.md`](../../../docs/deployment.md);
+backup names, kinds and restores in [`docs/backup_and_restore.md`](../../../docs/backup_and_restore.md).
+Do not restate them. Nothing here requires reading them first.
 
 ## Rules
 

@@ -57,10 +57,6 @@ change it only with `scripts/bump-version.sh`.
     is in the staging folder:
     `kubectl --context erebor -n pachanguero exec deploy/pachanguero -c backup -- ls -l /backups`.
     If the backup fails, stop: do not deploy.
-    _One-time exception:_ the first release after backups were named for the shipper runs on a pod
-    whose `backup` has no `--kind`. Take the backup with the old command and adopt it into the
-    staging folder as the [cutover procedure](../../../docs/deployment.md#cutover-to-staged-backups)
-    says.
 13. **Ask, then deploy.** `deploy/deploy.sh --tag X.Y.Z` (a version only: `latest` is refused).
 14. **Verify production.** `scripts/verify-release.sh deployed --version X.Y.Z`, plus, after a schema
     change, the new `release_<UTC>_X.Y.Z.db` the migration took, in the same `ls -l /backups`. Ask

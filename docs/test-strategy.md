@@ -140,7 +140,7 @@ is no server, no database and no cluster.
 **Use when:** a change adds, renames or removes a setting. The test fails until the deployment
 catches up, so a variable that works locally through `.env` cannot be silently missing in the
 cluster. The rest of what a change owes the deployment is in
-[`deployment.md`](deployment.md#deployment-impact-of-a-change).
+[`deployment-impact.md`](../.agents/rules/deployment-impact.md).
 
 **Do not use for:** whether a value is correct, or whether the chart renders (`helm lint` and
 `helm template` do that). It only finds variables read as `env.X` or `env['X']`.

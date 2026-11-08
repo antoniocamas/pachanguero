@@ -147,7 +147,7 @@ describe('deployment settings', () => {
     expect(
       unaccounted,
       `Not set by the Dockerfile or the Helm chart, and not listed as left to the application default: ${unaccounted.join(', ')}. ` +
-        'Add it to the chart or the Dockerfile (see "Deployment impact of a change" in docs/deployment.md), or list it here with the reason.'
+        'Add it to the chart or the Dockerfile (see .agents/rules/deployment-impact.md), or list it here with the reason.'
     ).toEqual([]);
   });
 
