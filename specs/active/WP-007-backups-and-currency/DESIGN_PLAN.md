@@ -489,7 +489,7 @@ sentence that goes stale, with the greps that found them (`-c backup`, `/backups
 - *The chart, staging precondition, release order and light checks, impact-table rows* →
   `docs/deployment.md`.
 - *`backup` flags, `PACHANGUERO_VERSION`, volumes in Docker* → `docs/commands.md`, `.env.example`.
-- *What is kept current and the policy* → the 3pp skill (`SKILL.md`, `pins.md`); `AGENTS.md` and
+- *What is kept current and the policy* → the 3pp skill (`SKILL.md`, `ecosystems.md`) and, for the decisions taken, `.3pp-management.md`; `AGENTS.md` and
   `docs/deployment.md` carry a one-line pointer only.
 - *The light checks tier* → `docs/test-strategy.md`.
 - *The shipper and papiros facts* → `home-network-map` (its own `AGENTS.md` rules: one canonical file per

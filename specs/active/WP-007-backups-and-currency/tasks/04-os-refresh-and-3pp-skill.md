@@ -17,18 +17,18 @@ UC-007-03. F6: every build carries current OS packages: `build.sh` builds with `
 
 ## Guidelines
 1. **F6**: add the `apt` upgrade layer and a date build argument to the Dockerfile and `build.sh`; nothing is installed on this machine. Keep the single pin of task 01.
-2. **F7**: SKILL.md short; the pins and the policy (LTS, else newest; majors included; held items need a reason) in `references/pins.md`; the report format in a reference. Every pin the study found is listed: base image tag, npm, `@types/node`, `jose`, `@dnd-kit/core`, the typescript mismatch (`study/currency.md`).
-3. A held item and its reason are written where the next run reads them (a section of `pins.md`), so the second report lists only held items.
+2. **F7**: SKILL.md short; the policy (LTS, else newest; majors included) and how to collect in `references/ecosystems.md`; what was decided about an item that could not simply move (alternatives presented, the user chooses, the skill records it) in `.3pp-management.md`; the report format in a reference. Every pin the study found is listed: base image tag, npm, `@types/node`, `jose`, `@dnd-kit/core`, the typescript mismatch (`study/currency.md`).
+3. A held item and its reason are written where the next run reads them (`.3pp-management.md`), so the second report lists only held items.
 4. Do not run the skill for real here; that is task 06.
 
 ## Scenario map
 
 | Scenario | Where in `pachanguero-3pp-update` |
 |---|---|
-| UC-007-03-S1 report | Report steps 2-3; `references/pins.md` (table: home, report command, target); `references/report.md` |
+| UC-007-03-S1 report | Report steps 2-3; `references/ecosystems.md` (table: home, report command, target); `references/report.md` |
 | UC-007-03-S2 everything moves | Update step 2 (majors included, no asking) |
-| UC-007-03-S3 asks only for a risky primary major | Update step 2 exception; `pins.md` list of what asks; declined item goes to Held |
-| UC-007-03-S4 nothing left unexplained | Update step 6; `pins.md#held`; `report.md` Held table |
+| UC-007-03-S3 asks only for a risky primary major | Update step 2 exception; `ecosystems.md#when-the-item-cannot-simply-move`; the user's choice goes to the decisions file |
+| UC-007-03-S4 nothing left unexplained | Update step 6; `.3pp-management.md`; `report.md` Decisions table |
 | UC-007-03-S6 broken update not committed | Update step 4; On failure (no commit, three choices) |
 | UC-007-03-S7 passing update committed | Update steps 8-9 (one commit, never pushed, release offered) |
 

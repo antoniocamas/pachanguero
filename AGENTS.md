@@ -58,7 +58,7 @@ Production runs on `erebor`; procedure and restores: `docs/deployment.md`.
 
 **Read [`ai-kit/skills/pachanguero-release/SKILL.md`](ai-kit/skills/pachanguero-release/SKILL.md) before any version bump, image build or push, tag or deploy.** **Read [`ai-kit/skills/pachanguero-deployment-management/SKILL.md`](ai-kit/skills/pachanguero-deployment-management/SKILL.md) before any `kubectl` or `helm` operation, including refreshing the kubeconfig.**
 
-**Read [`ai-kit/skills/pachanguero-3pp-update/SKILL.md`](ai-kit/skills/pachanguero-3pp-update/SKILL.md) before updating any third-party version** (the Node base image, npm dependencies, `@types/node`).
+**Read [`ai-kit/skills/pachanguero-3pp-update/SKILL.md`](ai-kit/skills/pachanguero-3pp-update/SKILL.md) before updating any third-party version** (the Node base image, npm dependencies, `@types/node`); the decisions taken about them are in [`.3pp-management.md`](.3pp-management.md).
 
 **Read [`docs/deployment.md`](docs/deployment.md#deployment-impact-of-a-change) before changing a setting (environment variable), a secret, a port, a volume, backups, the `Dockerfile`, the build layout or the Helm chart.**
 

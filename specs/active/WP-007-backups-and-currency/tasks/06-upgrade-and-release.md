@@ -17,7 +17,7 @@ This task builds nothing new; it uses what 01–05 left. Operator work with a st
 ## Guidelines
 1. Read the three skills and `docs/deployment.md` first; follow them as written. Where a skill is wrong or missing a step, stop and tell the user: do not improvise around it.
 2. Never read or print the passphrase or any secret. No force-push; nothing pushed or deployed without the user's explicit yes.
-3. The only file this task writes in the repository: the drill date in the "Restore drills" line of `docs/backup_and_restore.md`; and the second 3pp report's held items, if any, in `pins.md`.
+3. The only file this task writes in the repository: the drill date in the "Restore drills" line of `docs/backup_and_restore.md`; and the second 3pp report's standing decisions, if any, in `.3pp-management.md`.
 4. Also carry out the manual plans of tasks 02 and 03 (staging folder content, manual backup, restart, `prod-copy.sh` with and without `--fresh`, `deployed` mode) and the 3pp acceptance checks of task 04 (second report lists only held items; a deliberate break on a scratch copy is not committed).
 
 ## Tests
