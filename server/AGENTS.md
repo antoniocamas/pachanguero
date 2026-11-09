@@ -29,6 +29,7 @@ Data flows `src/routes/` → `src/repo/` → `src/domain/`; respect it.
 - `.agents/rules/bizum-constraints.md` — changing `bizum/`, `bank/` or how a Bizum settles
 - `.agents/rules/bizum-feed-constraints.md` — changing how bank entries are read and kept
 - `.agents/rules/own-data-access.md` — adding or changing a route, or what a player is told
+- `.agents/rules/route-tests.md` — writing or changing a route test
 - `.agents/rules/view-as-log.md` — changing the admin's view as another player
 - `.agents/rules/schema-changes.md` — changing a table
 - `.agents/rules/bizum-bank-boundary.md` — adding an import to `src/bizum/` or a bank name anywhere

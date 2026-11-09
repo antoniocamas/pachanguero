@@ -3,7 +3,7 @@
 Wednesday 7-a-side football: signing up, paying, and deciding who plays when more
 than 14 sign up.
 
-It replaces the `Futbol_Miercoles` spreadsheet and its Apps Script. The rules are
+The rules are
 documented in [`docs/domain-model/`](docs/domain-model/) (in Spanish) — start with
 its [README](docs/domain-model/README.md).
 
@@ -35,39 +35,26 @@ its [README](docs/domain-model/README.md).
   (September to August), and the day and time of the weekly game can be changed
   without rewriting past weeks.
 - **Past games**, recorded with just their date.
-- **Login with two roles.** The organiser (admin) sees everything; a player sees
-  only their own debts, payments, statistics and contact data. See
-  [`docs/users-and-roles.md`](docs/users-and-roles.md).
+- **Login with two roles**, organiser and player: [`docs/users-and-roles.md`](docs/users-and-roles.md).
 
 How a week flows, step by step:
 [`ciclo-del-partido.md`](docs/domain-model/ciclo-del-partido.md).
 
 ## Commands and configuration
 
-Running, configuring and operating it (npm scripts, the environment variables and
-the `.env` file, the `pachanguero-admin` tool, the container, trying the app by
-hand) is all in [`docs/commands.md`](docs/commands.md).
+Run `npm install`, copy [`.env.example`](.env.example) to `.env` (it explains every variable; `JWT_SECRET` is required) and use the scripts of `package.json`. The operator tool is `pachanguero-admin`; run it with no arguments for its usage, or in development as `npm run admin --workspace=server -- <command>`.
 
-The game rules are **per season**, editable from Ajustes: places, mercy seats,
-games waiting, demotion direction, and whether a mercy seat resets the counter to
-zero or subtracts N from it.
+### Trying the app by hand
+
+`npm run seed` imports the 2024/2025 season. If `PACHANGUERO_DB` is set **in the environment** to a **throwaway** database (not yours), it also creates three accounts, all with the password `Pachanguero-dev-1`: `admin` (no player), `jefe` (admin and player) and `jugador` (regular). If the variable is not set it creates none, because that database might be the real one; this is also why the seed does not read `.env`.
 
 ## Deployment
 
-The server serves the SPA and the API on a single port, so a reverse proxy such as
-Caddy only has to forward to one upstream. The steps for the Raspberry Pi (systemd
-unit, `JWT_SECRET`, Caddy) and for the container are in
-[`docs/commands.md`](docs/commands.md); backups and restoring are in
-[`docs/backup_and_restore.md`](docs/backup_and_restore.md); putting it on the Internet is in
-[`docs/deployment.md`](docs/deployment.md).
+Production: [`docs/deployment.md`](docs/deployment.md); backups and restoring are in [`docs/backup_and_restore.md`](docs/backup_and_restore.md).
 
 ## Users and access
 
-The application asks for a login, with two roles: the admin (the organiser, who
-sees everything) and the regular user (a player, who sees only their own data).
-Users are created only by the operator, with `pachanguero-admin`; there is no
-registration. The rules are in [`docs/users-and-roles.md`](docs/users-and-roles.md)
-and the commands in [`docs/commands.md`](docs/commands.md#the-admin-tool).
+Roles, accounts and views: [`docs/users-and-roles.md`](docs/users-and-roles.md).
 
 ## What changes with respect to the spreadsheet
 

@@ -1,3 +1,5 @@
+CODENAME: SD-USERS-AND-ROLES-340
+
 # Users and roles
 
 The application asks for a login. There are two roles, and everyone who signs in
@@ -31,9 +33,7 @@ who sets a new password. Passwords are asked for on the keyboard or read from
 standard input, never taken as an argument, so they do not end up in the shell
 history.
 
-The commands (`create`, `list`, `reset-pwd`, `unlock`, `activate`, `deactivate`,
-`promote`, `demote`, `link`, `backup`) and how to run them in each environment are in
-[`commands.md`](commands.md#the-admin-tool).
+`link` gives an admin without a player the player that turns on "Ver como jugador".
 
 At least one active admin always remains: a command that would leave none is
 refused.

@@ -2,7 +2,7 @@
 
 ## Identity
 
-Pachanguero replaces the `Futbol_Miercoles` spreadsheet + Apps Script for a Wednesday 7-a-side football group: sign-ups, payments, and selecting the 14 who play when more than 14 sign up. The README, `AGENTS.md` and every document outside `docs/domain-model/` are in English; only the domain vocabulary stays Spanish (convocatoria, mercy seat, jugón, the game states…). `docs/domain-model/` is written in Spanish, and user-facing strings in the app are Spanish too: write UI copy in Spanish. The app has a login and two roles: an admin (the organiser, who sees everything) and a regular user (a player, who sees only their own data). Roles, accounts and views: `docs/users-and-roles.md`.
+Pachanguero replaces the `Futbol_Miercoles` spreadsheet + Apps Script for a Wednesday 7-a-side football group: sign-ups, payments, and selecting the 14 who play when more than 14 sign up. The README, `AGENTS.md` and every document outside `docs/domain-model/` are in English; only the domain vocabulary stays Spanish (convocatoria, mercy seat, jugón, the game states…). `docs/domain-model/` is written in Spanish, and user-facing strings in the app are Spanish too: write UI copy in Spanish. Roles, accounts and views: `docs/users-and-roles.md`.
 
 ### Project Profile
 
@@ -14,7 +14,7 @@ Pachanguero replaces the `Futbol_Miercoles` spreadsheet + Apps Script for a Wedn
 
 - `server/` — API, game rules, SQLite (`server/AGENTS.md`)
 - `web/` — React SPA (`web/AGENTS.md`)
-- `e2e/` — Playwright tests against the real server
+- `e2e/` — Playwright tests against the real server (`e2e/AGENTS.md`)
 - `docs/` — system documents; `docs/domain-model/` holds the game rules (Spanish)
 - `specs/` — work packages (`specs/AGENTS.md`)
 - `deploy/` — Helm chart and `deploy.sh`; `Dockerfile` and `build.sh` build the image
@@ -30,10 +30,10 @@ Pachanguero replaces the `Futbol_Miercoles` spreadsheet + Apps Script for a Wedn
 ## Rules
 
 - `.agents/rules/deployment-impact.md` — Read before changing a setting (environment variable), a secret, a port, a volume, backups, the `Dockerfile`, the build layout or the Helm chart
-- `server/AGENTS.md` and `web/AGENTS.md` list the rules for their code
+- `server/AGENTS.md`, `web/AGENTS.md` and `e2e/AGENTS.md` list the rules for their code
 
 ## System documents
 
 - `docs/architecture.md` — Read when designing a change that crosses layers
-- `docs/test-strategy.md` — Read when planning how a feature is tested
+- `docs/test-strategy.md` — Read when planning how a feature is tested or choosing the type of a test
 - `docs/deployment.md` — Read when planning a release or a change to production

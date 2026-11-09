@@ -7,7 +7,7 @@ CODENAME: SKILL-PACHANGUERO-RELEASE-628
 
 # Pachanguero release
 
-Registry, success checks and rollback are in [`docs/deployment.md`](../../../docs/deployment.md#releasing);
+Registry: [`docs/deployment.md`](../../../docs/deployment.md#what-runs-where); versions and rollback: [`docs/deployment.md`](../../../docs/deployment.md#releasing);
 cluster commands are the `pachanguero-deployment-management` skill.
 
 The version lives in `package.json`, `package-lock.json` and the chart's `version` and `appVersion`;
@@ -36,8 +36,8 @@ change it only with `scripts/bump-version.sh`.
    already exists, stop: that version is released.
 4. **Verify the tree.** Run the **Tree checks** of `skill: pachanguero-3pp-update`.
 5. If the release touches the bank feed, run `npm run test:sandbox` when the standing session is
-   configured (it skips otherwise), and ask the user to run the guided checklist in
-   [`docs/test-strategy.md`](../../../docs/test-strategy.md#guided-checklist-for-a-release-that-touches-the-bank-feed);
+   configured, and ask the user to run the guided checklist in
+   [`.agents/rules/references/bank-feed-release-checklist.md`](../../../.agents/rules/references/bank-feed-release-checklist.md);
    report it as not run until they confirm.
 6. **Bump.** `scripts/bump-version.sh X.Y.Z` (it fails unless the three places agree).
 7. **Commit.** Show the changes and ask; on yes, commit `package.json`, `package-lock.json` and

@@ -5,7 +5,7 @@ description: Rules for copying, refreshing and querying a local copy of the prod
 
 # Pachanguero production copy
 
-Commands, options and what the copy contains: [`docs/commands.md`](../../../docs/commands.md#a-copy-of-production).
+Options, the sign-in password and what the copy contains: `scripts/prod-copy.sh --help`. The copy lives in `data/prod-copy/`, whose own `.env` is created once and kept; run it with `npm run dev:prod-copy`.
 Cluster rules (context, namespace, go-ahead for mutations): the `pachanguero-deployment-management` skill.
 
 ## Rules

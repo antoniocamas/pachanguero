@@ -29,7 +29,7 @@ kubectl --context erebor -n pachanguero logs deploy/pachanguero -c backup
 kubectl --context erebor -n pachanguero exec -it deploy/pachanguero -c pachanguero -- pachanguero-admin <command>
 ```
 
-`pachanguero-admin` commands are in [`docs/commands.md`](../../../docs/commands.md#the-admin-tool).
+The admin tool must point at the same database as the server.
 
 ## Backups on erebor
 
